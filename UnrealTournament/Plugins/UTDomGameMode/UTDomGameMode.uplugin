@@ -1,0 +1,22 @@
+{
+	"FileVersion" : 3,
+	
+	"FriendlyName" : "Domination Game Modes",
+	"Version" : 1,
+	"VersionName" : "1.7",
+	"CreatedBy" : "Brian Alexander",
+	"EngineVersion" : "4.7.0",
+	"Description" : "Domination Game Modes - Capture and hold control points to win in the Classic Domination and Double Domination games",
+	"Category" : "UnrealTournament.GameMode",
+	"EnabledByDefault" : true,
+	"CanContainContent" : true,
+	
+	"Modules" :
+	[
+		{
+			"Name" : "UTDomGameMode",
+			"Type" : "Runtime",
+			"WhitelistPlatforms" : [ "Win32", "Win64", "Linux" ]
+		}
+	]
+}
