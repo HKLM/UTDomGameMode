@@ -3,9 +3,9 @@
 #include "UnrealTournament.h"
 #include "UTDomTeamInfo.h"
 #include "UTTeamInfo.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "UTDomSquadAI.h"
-#include "DominationObjective.h"
+#include "ControlPoint.h"
 
 AUTDomTeamInfo::AUTDomTeamInfo(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -51,17 +51,17 @@ void AUTDomTeamInfo::AssignDefaultSquadFor(AController* C)
 
 void AUTDomTeamInfo::NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName)
 {
-	if (Cast<ADominationObjective>(InObjective) == NULL)
+	if (Cast<AControlPoint>(InObjective) == NULL)
 	{
 		return;
 	}
 
-	ADominationObjective* d = Cast<ADominationObjective>(InObjective);
+	AControlPoint* d = Cast<AControlPoint>(InObjective);
 
 	for (AUTSquadAI* Squad : Squads)
 	{
 		// if this squads objective is no longer held by our team, let them know
-		if (Squad != NULL && !Squad->bPendingKillPending && Squad->Team->GetTeamNum() != d->GetControlPoint()->GetTeamNum())
+		if (Squad != NULL && !Squad->bPendingKillPending && Squad->Team->GetTeamNum() != d->GetTeamNum())
 		{
 			if (Squad->GetGameObjective() == d)
 			{

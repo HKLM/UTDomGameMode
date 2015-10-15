@@ -1,10 +1,9 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
-#include "UTDomSquadAI.h"
 #include "UTDomGameState.h"
 #include "UTSquadAI.h"
+#include "UTDomSquadAI.h"
 #include "ControlPoint.h"
-#include "DominationObjective.h"
 
 FName NAME_Attack(TEXT("Attack"));
 FName NAME_Defend(TEXT("Defend"));
@@ -75,19 +74,19 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		B->StartWaitForMove();
 		return true;
 	}
-	else if (GameObjective->GetCarriedObject() != NULL && GameObjective->GetCarriedObject()->GetTeamNum() != B->GetTeamNum() && B->LineOfSightTo(GameObjective->GetCarriedObject()))
+	else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum() && B->LineOfSightTo(GameObjective))
 	{
 		return B->TryPathToward(GameObjective, false, "Goto ControlPoint lineofsight");
 	}
-	else if (GameObjective != NULL && GameObjective->GetCarriedObject() != NULL && GameObjective->GetCarriedObject()->GetTeamNum() != B->GetTeamNum())
+	else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 	{
-		return B->TryPathToward(GameObjective->GetCarriedObject(), true, "Goto ControlPoint quickly");
+		return B->TryPathToward(GameObjective, true, "Goto ControlPoint quickly");
 	}
-	else if (GameObjective != NULL && GameObjective->GetCarriedObject() != NULL && GameObjective->GetCarriedObject()->GetTeamNum() == B->GetTeamNum())
+	else if (GameObjective != NULL && GameObjective->GetTeamNum() == B->GetTeamNum())
 	{
 		return Super::CheckSquadObjectives(B);
 	}
-	else if ((GameObjective == NULL || GameObjective->GetCarriedObject()->GetTeamNum() != B->GetTeamNum()) &&
+	else if ((GameObjective == NULL || GameObjective->GetTeamNum() != B->GetTeamNum()) &&
 			 ((B->GetEnemy() == NULL && B->Personality.Aggressiveness <= 0.0f) || GetWorld()->TimeSeconds - B->LastRespawnTime < 10.0f * (1.0f - B->Personality.Aggressiveness)) &&
 			 CheckSuperPickups(B, 5000))
 	{
@@ -114,7 +113,7 @@ bool AUTDomSquadAI::IsNearEnemyBase(const FVector& TestLoc)
 void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName)
 {
 	AUTGameObjective* InGameObjective = Cast<AUTGameObjective>(InObjective);
-	if (InstigatedBy != NULL && InGameObjective != NULL && InGameObjective->GetCarriedObject() != NULL && InGameObjective->GetCarriedObject()->Holder == InstigatedBy->PlayerState && Members.Contains(InstigatedBy))
+	if (InstigatedBy != NULL && InGameObjective != NULL&& InGameObjective->GetCarriedObjectHolder() == InstigatedBy->PlayerState && Members.Contains(InstigatedBy))
 	{
 		// re-enable alternate paths for flag carrier so it can consider them for planning its escape 
 		AUTBot* B = Cast<AUTBot>(InstigatedBy);
@@ -131,9 +130,9 @@ void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* Insti
 		AUTBot* B = Cast<AUTBot>(C);
 		if (B != NULL)
 		{
-			if (B->GetMoveTarget().Actor != NULL && (B->GetMoveTarget().Actor == InGameObjective || B->GetMoveTarget().Actor == InGameObjective->GetCarriedObject()))
+			if (B->GetMoveTarget().Actor != NULL && (B->GetMoveTarget().Actor == InGameObjective))
 			{
-				if (InGameObjective->GetCarriedObject()->GetTeamNum() == B->GetTeamNum())
+				if (InGameObjective->GetTeamNum() == B->GetTeamNum())
 				{
 					PickNewObjective(InGameObjective, Cast<AUTPlayerState>(B->PlayerState));
 					B->WhatToDoNext();
@@ -160,7 +159,7 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 			for (uint8 i = 0; i < GameControlPoints.Num(); i++)
 			{
 				// Find a near by control point that our team does not control
-				if ((TheOldObjective != GameControlPoints[i] && GameControlPoints[i]->GetCarriedObject()->GetTeamNum() != B->GetTeamNum() && B->LineOfSightTo(GameControlPoints[i])) || ((GameControlPoints[i]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 3000.0f))
+				if ((TheOldObjective != GameControlPoints[i] && GameControlPoints[i]->GetTeamNum() != B->GetTeamNum() && B->LineOfSightTo(GameControlPoints[i])) || ((GameControlPoints[i]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 3000.0f))
 				{
 					BestObjective = GameControlPoints[i];
 					break;
@@ -171,7 +170,7 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 				// Find just a control point that our team does not control
 				for (uint8 j = 0; j < GameControlPoints.Num(); j++)
 				{
-					if (TheOldObjective != GameControlPoints[j] && GameControlPoints[j]->GetCarriedObject()->GetTeamNum() != B->GetTeamNum())
+					if (TheOldObjective != GameControlPoints[j] && GameControlPoints[j]->GetTeamNum() != B->GetTeamNum())
 					{
 						BestObjective = GameControlPoints[j];
 						break;
@@ -196,7 +195,7 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 			for (uint8 p = 0; p < GameControlPoints.Num(); p++)
 			{
 				// Find a near by control point that our team does not control
-				if (GameControlPoints[p]->GetCarriedObject()->GetTeamNum() != B->GetTeamNum() && (B->LineOfSightTo(GameControlPoints[p]) || (GameControlPoints[p]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f))
+				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum() && (B->LineOfSightTo(GameControlPoints[p]) || (GameControlPoints[p]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f))
 				{
 					BestObjective = GameControlPoints[p];
 					break;
@@ -226,6 +225,9 @@ void AUTDomSquadAI::FindControlPoints()
 	GameControlPoints.Empty();
 	for (TActorIterator<AUTGameObjective> It(GetWorld()); It; ++It)
 	{
-		GameControlPoints.AddUnique(*It);
+		if (!It->bHidden)
+		{
+			GameControlPoints.AddUnique(*It);
+		}
 	}
 }

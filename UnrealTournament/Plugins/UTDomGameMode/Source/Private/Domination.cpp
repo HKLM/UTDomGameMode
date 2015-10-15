@@ -1,27 +1,16 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
-#include "Domination.h"
-#include "UTDomGameState.h"
 #include "UTDomGameMode.h"
-#include "UTADomTypes.h"
 #include "ControlPoint.h"
-#include "DominationObjective.h"
-//#include "UTMutator.h"
-//#include "UTDomStats.h"
 #include "UTDomTeamInfo.h"
-
-DEFINE_LOG_CATEGORY(Domination);
+#include "Domination.h"
 
 ADomination::ADomination(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	bKingOfTheHill = false;
-	GameStateClass = AUTDomGameState::StaticClass();
-	//DomStatsClass = AUTDomStats::StaticClass();
-	DominationObjectiveType = AControlPoint::StaticClass();
 	DisplayName = NSLOCTEXT("UTDomGameMode", "DOM", "Domination");
 	GoalScore = 150;
-	MaxSquadSize = 2;
 	MaxControlPoints = 8;
 }
 
@@ -31,18 +20,17 @@ void ADomination::InitGame(const FString& MapName, const FString& Options, FStri
 	bKingOfTheHill = EvalBoolOptions(ParseOption(Options, TEXT("KingOfTheHill")), bKingOfTheHill);
 }
 
-void ADomination::RegisterGameControlPoint(ADominationObjective* DomObj)
+void ADomination::RegisterGameControlPoint(AControlPoint* DomObj)
 {
-	if (DomObj != NULL && DomObj->MyControlPoint != NULL)
+	if (DomObj != NULL)
 	{
 		// Use only 1 control point for bKingOfTheHill
 		if (bKingOfTheHill && CDomPoints.Num() == 1)
 		{
-			if (CDomPoints[0] != DomObj->MyControlPoint)
+			if (CDomPoints[0] != DomObj)
 			{
-				DomObj->MyControlPoint->MyObjectiveType = EDomObjectiveType::Disabled;
-				DomObj->MyControlPoint->UpdateStatus();
-				DomGameState->RegisterControlPoint(DomObj->MyControlPoint, true);
+				DomObj->UpdateStatus();
+				DomGameState->RegisterControlPoint(DomObj, true);
 				return;
 			}
 		}
@@ -102,23 +90,3 @@ void ADomination::ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount)
 		}
 	}
 }
-
-//void ADomination::BuildServerResponseRules(FString& OutRules)
-//{
-//OutRules += FString::Printf(TEXT("Goal Score\t%i\t"), GoalScore);
-//OutRules += FString::Printf(TEXT("Time Limit\t%i\t"), TimeLimit);
-//OutRules += FString::Printf(TEXT("Forced Respawn\t%s\t"), bForceRespawn ? TEXT("True") : TEXT("False"));
-//OutRules += FString::Printf(TEXT("Translocator\t%s\t"), bAllowTranslocator ? TEXT("True") : TEXT("False"));
-
-//if (bKingOfTheHill)
-//{
-//	OutRules += FString::Printf(TEXT("King Of The Hill\tTrue\t"));
-//}
-
-//AUTMutator* Mut = BaseMutator;
-//while (Mut)
-//{
-//	OutRules += FString::Printf(TEXT("Mutator\t%s\t"), *Mut->DisplayName.ToString());
-//	Mut = Mut->NextMutator;
-//}
-//}

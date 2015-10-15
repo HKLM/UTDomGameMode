@@ -2,52 +2,31 @@
 #include "UnrealTournament.h"
 #include "UTDomGameMode.h"
 #include "UTDomGameState.h"
-//#include "UTDomStats.h"
-#include "UTTeamGameMode.h"
 #include "UTDomTeamInfo.h"
 #include "UTDomSquadAI.h"
-#include "UTADomTypes.h"
 #include "ControlPoint.h"
-#include "DominationObjective.h"
 #include "UTHUD_DOM.h"
 #include "UTWeap_Translocator.h"
-//#include "UTMutator.h"
-
-DEFINE_LOG_CATEGORY(UTDomGameMode);
 
 AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	GameStateClass = AUTDomGameState::StaticClass();
-	//DomStatsClass = AUTDomStats::StaticClass();
 	TeamClass = AUTDomTeamInfo::StaticClass();
 	SquadType = AUTDomSquadAI::StaticClass();
 	HUDClass = AUTHUD_DOM::StaticClass();
-	DominationObjectiveType = AControlPoint::StaticClass();
 	ScoreboardClassName = FString(TEXT("/Script/UTDomGameMode.UTDomScoreboard"));
 	MapPrefix = TEXT("DOM");
 	bAllowOvertime = false;
 	bUseTeamStarts = false;
-	//bAllowURLTeamCountOverride = true;
+	bAllowURLTeamCountOverride = true;
 	NumTeams = 2;
+	MaxSquadSize = 2;
 	bAllowTranslocator = true;
 	bHideInUI = false;
 	//Add the translocator
 	static ConstructorHelpers::FObjectFinder<UClass> WeapTranslocator(TEXT("BlueprintGeneratedClass'/Game/RestrictedAssets/Weapons/Translocator/BP_Translocator.BP_Translocator_C'"));
 	DefaultInventory.Add(WeapTranslocator.Object);
-}
-
-void AUTDomGameMode::PreInitializeComponents()
-{
-	Super::PreInitializeComponents();
-
-	//FActorSpawnParameters SpawnInfo;
-	//SpawnInfo.Instigator = Instigator;
-	//DomStats = GetWorld()->SpawnActor<AUTDomStats>(DomStatsClass, SpawnInfo);
-	//if (DomGameState)
-	//{
-	//	DomStats->DomGameState = DomGameState;
-	//}
 }
 
 void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -63,19 +42,19 @@ void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FS
 void AUTDomGameMode::GameObjectiveInitialized(AUTGameObjective* Obj)
 {
 	Super::GameObjectiveInitialized(Obj);
-	ADominationObjective* DomFact = Cast<ADominationObjective>(Obj);
+	AControlPoint* DomFact = Cast<AControlPoint>(Obj);
 	if (DomFact != NULL)
 	{
 		RegisterGameControlPoint(DomFact);
 	}
 }
 
-void AUTDomGameMode::RegisterGameControlPoint(ADominationObjective* DomObj)
+void AUTDomGameMode::RegisterGameControlPoint(AControlPoint* DomObj)
 {
-	if (DomObj != NULL && DomObj->MyControlPoint != NULL && CDomPoints.Num() <= MaxControlPoints)
+	if (DomObj != NULL && CDomPoints.Num() <= MaxControlPoints && !DomObj->bHidden)
 	{
-		CDomPoints.AddUnique(DomObj->MyControlPoint);
-		DomGameState->RegisterControlPoint(DomObj->MyControlPoint, false);
+		CDomPoints.AddUnique(DomObj);
+		DomGameState->RegisterControlPoint(DomObj, false);
 	}
 }
 
@@ -83,7 +62,6 @@ void AUTDomGameMode::InitGameState()
 {
 	Super::InitGameState();
 	DomGameState = Cast<AUTDomGameState>(GameState);
-	DomGameState->DomGameObjectiveType = DominationObjectiveType;
 }
 
 void AUTDomGameMode::BeginPlay()
@@ -137,10 +115,6 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 			DomGameState->SetWinner(BestPlayer);
 			EndGame(BestPlayer, FName(TEXT("TimeLimit")));
 			return true;
-		}
-		else{
-			UE_LOG(UTDomGameMode, All, TEXT("!!! GAME IS IN SUDDEN DEATH !!!"));
-			return false;
 		}
 	}
 	return false;
@@ -218,22 +192,22 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 	if (Winner != NULL)
 	{
 		// find control point owned by winning player
-		for (int n = 0; n < CDomPoints.Num(); n++)
+		for (int n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 		{
-			if (CDomPoints[n]->ControllingTeam != NULL && CDomPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum() && CDomPoints[n]->HomeBase->ActorIsNearMe(Winner))
+			if (DomGameState->GameControlPoints[n]->ControllingTeam != NULL && DomGameState->GameControlPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum() && DomGameState->GameControlPoints[n]->ActorIsNearMe(Winner))
 			{
-				WinningBase = CDomPoints[n];
+				WinningBase = DomGameState->GameControlPoints[n];
 				break;
 			}
 		}
 		if (WinningBase == NULL)
 		{
 			// find control point owned by winning player
-			for (int n = 0; n < CDomPoints.Num(); n++)
+			for (int n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 			{
-				if ((CDomPoints[n]->ControllingPawn == Winner) && (CDomPoints[n]->ControllingTeam != NULL) && (CDomPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum()))
 				{
-					WinningBase = CDomPoints[n];
+					WinningBase = DomGameState->GameControlPoints[n];
 					break;
 				}
 			}
@@ -241,90 +215,35 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 		// no winning player control point found, so find the first control point owned by winning team
 		if (WinningBase == NULL)
 		{
-			for (int i = 0; i < CDomPoints.Num(); i++)
+			for (int i = 0; i < DomGameState->GameControlPoints.Num(); i++)
 			{
-				if ((CDomPoints[i]->ControllingTeam != NULL) && (CDomPoints[i]->GetControllingTeamNum() == Winner->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->GetControllingTeamNum() == Winner->GetTeamNum()))
 				{
-					WinningBase = CDomPoints[i];
+					WinningBase = DomGameState->GameControlPoints[i];
 					break;
 				}
 			}
 		}
 	}
 
-	//if (WinningBase != NULL)
-	//{
-	//	PlacePlayersAroundDomBase(Winner->GetTeamNum(), WinningBase);
-	//}
-	AControlPoint* BaseToView = WinningBase;
 	// If we don't have a winner, view 1st base
-	if (BaseToView == NULL && CDomPoints[0] != NULL)
+	if (WinningBase == NULL && DomGameState->GameControlPoints[0] != NULL)
 	{
-		BaseToView = CDomPoints[0];
+		WinningBase = DomGameState->GameControlPoints[0];
 	}
 
-	if (BaseToView)
+	if (WinningBase)
 	{
-		EndGameFocus = BaseToView;
+		EndGameFocus = WinningBase;
 		EndGameFocus->bAlwaysRelevant = true;
 	}
 
 	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
 	{
 		AUTPlayerController* Controller = Cast<AUTPlayerController>(*Iterator);
-		if (Controller && Controller->UTPlayerState)
+		if ((EndGameFocus != NULL) && Controller && Controller->UTPlayerState)
 		{
-			if (BaseToView != NULL)
-			{
-				Controller->GameHasEnded(BaseToView, Controller->UTPlayerState->Team == Winner->Team);
-			}
-			else
-			{
-				Super::SetEndGameFocus(Winner);
-			}
-		}
-	}
-}
-
-void AUTDomGameMode::PlacePlayersAroundDomBase(int32 TeamNum, AControlPoint* DomBase)
-{
-	TArray<AController*> Members = Teams[TeamNum]->GetTeamMembers();
-	FVector FlagLoc = DomBase->HomeBase->GetActorLocation();
-	FlagLoc.Z += 50.0f;
-	const int32 MaxPlayers = FMath::Min(8, Members.Num());
-	float AngleSlices = 360.0f / MaxPlayers;
-	int32 PlacementCounter = 0;
-	for (AController* C : Members)
-	{
-		AUTCharacter* UTChar = C ? Cast<AUTCharacter>(C->GetPawn()) : NULL;
-		if (UTChar && !UTChar->IsDead())
-		{
-			while (PlacementCounter < MaxPlayers)
-			{
-				FRotator AdjustmentAngle(0, AngleSlices * PlacementCounter, 0);
-
-				PlacementCounter++;
-
-				FVector PlacementLoc = FlagLoc + AdjustmentAngle.RotateVector(FVector(230, 0, 0));
-				PlacementLoc.Z += UTChar->GetSimpleCollisionHalfHeight() * 1.1f;
-
-				FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(UTChar->GetSimpleCollisionRadius(), UTChar->GetSimpleCollisionHalfHeight());
-				static const FName NAME_FlagPlacement = FName(TEXT("FlagPlacement"));
-				FCollisionQueryParams CapsuleParams(NAME_FlagPlacement, false, this);
-				FCollisionResponseParams ResponseParam;
-				TArray<FOverlapResult> Overlaps;
-				bool bEncroached = GetWorld()->OverlapMultiByChannel(Overlaps, PlacementLoc, FQuat::Identity, ECC_Pawn, CapsuleShape, CapsuleParams, ResponseParam);
-				if (!bEncroached)
-				{
-					UTChar->SetActorLocation(PlacementLoc);
-					break;
-				}
-			}
-		}
-
-		if (PlacementCounter == 8)
-		{
-			break;
+			Controller->GameHasEnded(EndGameFocus, Controller->UTPlayerState->Team == Winner->Team);
 		}
 	}
 }
@@ -333,18 +252,3 @@ void AUTDomGameMode::ScoreKill_Implementation(AController* Killer, AController* 
 {
 	Super::AUTGameMode::ScoreKill_Implementation(Killer, Other, KilledPawn, DamageType);
 }
-//
-//void AUTDomGameMode::BuildServerResponseRules(FString& OutRules)
-//{
-//	OutRules += FString::Printf(TEXT("Goal Score\t%i\t"), GoalScore);
-//	OutRules += FString::Printf(TEXT("Time Limit\t%i\t"), TimeLimit);
-//	OutRules += FString::Printf(TEXT("Forced Respawn\t%s\t"), bForceRespawn ? TEXT("True") : TEXT("False"));
-//	OutRules += FString::Printf(TEXT("Translocator\t%s\t"), bAllowTranslocator ? TEXT("True") : TEXT("False"));
-//
-//	AUTMutator* Mut = BaseMutator;
-//	while (Mut)
-//	{
-//		OutRules += FString::Printf(TEXT("Mutator\t%s\t"), *Mut->DisplayName.ToString());
-//		Mut = Mut->NextMutator;
-//	}
-//}

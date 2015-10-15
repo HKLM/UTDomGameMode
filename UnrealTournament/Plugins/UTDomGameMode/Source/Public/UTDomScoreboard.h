@@ -5,7 +5,7 @@
 #include "UTTeamScoreboard.h"
 #include "UTDomScoreboard.generated.h"
 
-UCLASS()
+UCLASS(NotPlaceable)
 class UUTDomScoreboard : public UUTTeamScoreboard
 {
 	GENERATED_UCLASS_BODY()

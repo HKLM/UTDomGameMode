@@ -14,7 +14,7 @@ UUTDomGameMessage::UUTDomGameMessage(const FObjectInitializer& ObjectInitializer
 	bIsPartiallyUnique = true;
 }
 
-FLinearColor UUTDomGameMessage::GetMessageColor(int32 MessageIndex) const
+FLinearColor UUTDomGameMessage::GetMessageColor_Implementation(int32 MessageIndex) const
 {
 	switch (MessageIndex)
 	{

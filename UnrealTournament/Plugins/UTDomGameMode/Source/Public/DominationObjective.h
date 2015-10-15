@@ -1,20 +1,12 @@
-/**
-* This is the actor map authors place with in the map
-* that will spawn the correct type of ControlPoint
-* depending on what game mode it is.
-* Created by Brian 'Snake' Alexander, 2015
-**/
 #pragma once
 
 #include "UnrealTournament.h"
-#include "CollisionQueryParams.h"
-#include "ControlPoint.h"
+#include "UTGameObjective.h"
 #include "DominationObjective.generated.h"
 
-extern FCollisionResponseParams WorldResponseParams;
 
-UCLASS(Blueprintable, HideCategories = GameObject)
-class ADominationObjective : public AUTGameObjective
+UCLASS(deprecated)
+class ADEPRECATED_DominationObjective : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
 
@@ -22,20 +14,9 @@ class ADominationObjective : public AUTGameObjective
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
 		FString PointName;
 
-	/** The ControlPoint actor that is spawned at game time */
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = ControlPoint)
-		AControlPoint* MyControlPoint;
-
 	/** The sound to play when this point is captured */
 	UPROPERTY(BlueprintReadWrite, Category = ControlPoint)
 		USoundBase* ControlPointCaptureSound;
-
-	/**
-	* Internaly set by the UTDomGameMode->DominationObjectiveType
-	* Class of the control point to be spawned. 
-	*/
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
-		TSubclassOf<class ABaseControlPoint> MyDomObjectiveType;
 
 	/** point light component. Only for show in Editor, is not used in play. */
 	UPROPERTY()
@@ -59,7 +40,7 @@ class ADominationObjective : public AUTGameObjective
 
 	virtual uint8 GetTeamNum() const override
 	{
-		return (MyControlPoint != NULL) ? MyControlPoint->ControllingTeamNum : 255;
+		return 255;
 	}
 
 	/**
@@ -69,25 +50,19 @@ class ADominationObjective : public AUTGameObjective
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
 		virtual FString GetPointName();
 
-	/**
-	 * Gets control point spawned at this point.
-	 * @return	AControlPoint	the control point.
-	 */
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-		virtual AControlPoint* GetControlPoint();
-
 	virtual void InitializeObjective() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ObjectStateWasChanged(FName NewObjectState) override {};
-	virtual void ObjectWasDropped(AUTCharacter* LastHolder) override {};
 	virtual void ObjectWasPickedUp(AUTCharacter* NewHolder, bool bWasHome) override {};
+	virtual void ObjectWasDropped(AUTCharacter* LastHolder) override {};
 	virtual void ObjectReturnedHome(AUTCharacter* Returner) override {};
 	virtual AUTPlayerState* GetCarriedObjectHolder() override;
-	virtual FName GetCarriedObjectState() const override;
-
+	virtual void SetTeamForSideSwap_Implementation(uint8 NewTeamNum) override {};
+	
 protected:
-	virtual void CreateCarriedObject() override;
 
+	virtual void CreateCarriedObject() override;
+	virtual void OnObjectStateChanged() override {};
 	/** StaticMesh displayed only within the Editor */
 	UPROPERTY()
 	class UStaticMeshComponent* EditorMesh;

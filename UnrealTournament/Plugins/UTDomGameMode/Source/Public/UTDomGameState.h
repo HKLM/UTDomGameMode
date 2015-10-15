@@ -19,10 +19,6 @@ class AUTDomGameState : public AUTGameState
 	UPROPERTY(Replicated)
 		bool KingOfTheHill;
 
-	/** The ControlPoint class repliated to clients */
-	UPROPERTY(Replicated)
-		TSubclassOf<class ABaseControlPoint> DomGameObjectiveType;
-
 	/**
 	 * Registers the control point described by DomObj.
 	 * @param	DomObj	the AControlPoint.

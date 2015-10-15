@@ -2,47 +2,64 @@
 #pragma once
 
 #include "UnrealTournament.h"
-#include "BaseControlPoint.h"
+#include "UTLocalMessage.h"
+#include "UTDomTeamInfo.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
-#include "UTADomTypes.h"
 #include "ControlPoint.generated.h"
 
 extern FCollisionResponseParams WorldResponseParams;
 
-UCLASS(Blueprintable, NotPlaceable)
-class AControlPoint : public ABaseControlPoint
+UCLASS(HideCategories = GameObject)
+class AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
 
+		/** This points name to display on HUD */
+		UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = ControlPoint)
+		FString PointName;
+
+	/** The controlling pawn. */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
+		AUTPlayerState* ControllingPawn;
+
+	/** The controlling team. */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
+		AUTDomTeamInfo* ControllingTeam;
+
+	/** The controlling team number. */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
+		int32 ControllingTeamNum;
+
+	USceneComponent* SceneRoot;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = ControlPoint)
+		UCapsuleComponent* DomCollision;
+
 	/** Sound to play when point is captured */
-	UPROPERTY(BlueprintReadWrite, Category = Sound)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 		USoundBase* ControlPointCaptureSound;
 
 	UPROPERTY(Replicated)
 		float ControlledTime;
 
 	/** The mesh that makes up this base. */
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, EditAnywhere)
 	class UStaticMeshComponent* DomMesh;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly)
 	class URotatingMovementComponent* MeshSpinner;
 
 	/** The point light that displays the controlling teams color */
-	UPROPERTY(BlueprintReadWrite, Category = ControlPoint)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 	class UPointLightComponent* DomLight;
 
 	/** The dom light color. */
-	UPROPERTY(BlueprintReadWrite, Category = ControlPoint)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<FLinearColor> DomLightColor;
 
-	UPROPERTY(BlueprintReadOnly, Category = ControlPoint)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<UStaticMesh*> TeamMesh;
-
-	/** Type of my objective. */
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = DOM)
-		EDomObjectiveType MyObjectiveType;
 
 	/** will be 'true' if and when the domination point can be captured */
 	UPROPERTY()
@@ -52,13 +69,28 @@ class AControlPoint : public ABaseControlPoint
 	UPROPERTY(Replicated)
 		float ScoreTime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
+		TSubclassOf<UUTLocalMessage> MessageClass;
+
 	/** Timer that counts down the ScoreTime and then calls SendHomeWithNotify() */
 	FTimerHandle ScoreTimeNotifyHandle;
-	virtual void SendHomeWithNotify() override;
+	virtual void ScoreTimeNotify();
 
-	/**	@returns the Control Point */
+	/**
+	* Gets controlling team number.
+	* @return	int32	The controlling team number.
+	*/
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-		virtual AControlPoint* GetControlPoint();
+		virtual int32 GetControllingTeamNum();
+
+	/**
+	* Gets control point holder.
+	* @return	AUTPlayerState	the control point holder.
+	* ### summary	@returns the PlayerState of the UTCharacter holding CarriedObject otherwise
+	* 				returns NULL.
+	*/
+	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+		virtual AUTPlayerState* GetControlPointHolder();
 
 	/**
 	* Reset or reset and disable this control point. Clear controlling team, pawn, etc
@@ -67,17 +99,27 @@ class AControlPoint : public ABaseControlPoint
 	virtual void ResetPoint(bool IsEnabled);
 	virtual void Reset_Implementation();
 
+	// not applicable
+	virtual void SetTeamForSideSwap_Implementation(uint8 NewTeamNum) override
+	{}
+
+	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+		virtual uint8 GetTeamNum() const
+	{
+		return (ControllingTeamNum != 255) ? ControllingTeamNum : 255;
+	}
+
+	virtual void SetTeam(AUTTeamInfo* NewTeam);
+
+	/**
+	* Gets point name.
+	* @return	The point name.
+	*/
+	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+		virtual FString GetPointName();
+
 	/** Updates the status */
-	virtual void UpdateStatus() override;
-
-	virtual void UpdateStatus_ControlPoint();
-	virtual void UpdateStatus_xPoint();
-
-	UFUNCTION()
-		virtual void OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION(BlueprintNativeEvent)
-		void ProcessTouch(APawn* TouchedBy);
+		virtual void UpdateStatus();
 
 	/**
 	* Updates effects and send out messages when the status of this point has changed.
@@ -90,17 +132,8 @@ class AControlPoint : public ABaseControlPoint
 	UFUNCTION(NetMulticast, Reliable)
 		void UpdateTeamEffects(int32 TeamIndex);
 
-	/**
-	* Gets team event name.
-	* @param	TeamID	Identifier for the team.
-	* @return	The team event name.
-	*/
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-		virtual FName GetTeamEventName(int32 TeamID) const;
-
-	void Init(AUTGameObjective* NewBase);
+	//virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/** Disables the point and removes it from play */
 	void DisablePoint();
@@ -110,34 +143,21 @@ class AControlPoint : public ABaseControlPoint
 
 	/*** Override the following ***/
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void SetHolder(AUTCharacter* NewHolder) override;
-	void ChangeState(FName NewCarriedObjectState);
-	virtual void AttachTo(USkeletalMeshComponent* AttachToMesh) override {};
-	virtual void DetachFrom(USkeletalMeshComponent* AttachToMesh) override {};
-	virtual void SendHome() override {};
-	void Score_Implementation(FName Reason, AUTCharacter* ScoringPawn, AUTPlayerState* ScoringPS) override {};
-	void TryPickup_Implementation(AUTCharacter* Character) override {};
-	virtual void OnRep_AttachmentReplication() override {};
-	virtual void OnRep_ReplicatedMovement() override {};
-	virtual void GatherCurrentMovement() override {};
-	virtual float GetHeldTime(AUTPlayerState* TestHolder) override
-	{
-		return 0.0f;
-	};
-	virtual void OnObjectStateChanged() override;
-	virtual void FellOutOfWorld(const UDamageType& dmgType) override {};
+	virtual void ObjectStateWasChanged(FName NewObjectState) override {};
+	virtual void ObjectWasPickedUp(AUTCharacter* NewHolder, bool bWasHome) override {};
+	virtual void ObjectWasDropped(AUTCharacter* LastHolder) override {};
+	virtual void ObjectReturnedHome(AUTCharacter* Returner) override {};
+	virtual AUTPlayerState* GetCarriedObjectHolder() override;
 
 protected:
-	virtual void OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult) override;
+	virtual void CreateCarriedObject() {};
 
-	virtual void MoveToHome() override {};
-	virtual void TossObject(AUTCharacter* ObjectHolder) override {};
-	virtual void OnHolderChanged() override;
-	virtual void PickupDenied(AUTCharacter* Character) override {};
-	virtual void NoLongerHeld(AController* InstigatedBy = NULL) override {};
-	virtual bool CanBePickedUpBy(AUTCharacter* Character) override
-	{
-		return false;
-	};
-	virtual void SendGameMessage(uint32 Switch, APlayerState* PS1, APlayerState* PS2, UObject* OptionalObject = NULL) {};
+	UFUNCTION()
+		virtual void OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult);
+
+	UFUNCTION()
+		virtual void OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintNativeEvent)
+		void ProcessTouch(APawn* TouchedBy);
 };

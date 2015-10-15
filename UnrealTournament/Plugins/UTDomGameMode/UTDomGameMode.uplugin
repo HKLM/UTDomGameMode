@@ -1,12 +1,12 @@
 {
 	"FileVersion" : 3,
 	
-	"FriendlyName" : "Domination Game Modes",
+	"FriendlyName" : "Domination Game Mode",
 	"Version" : 1,
-	"VersionName" : "1.7",
+	"VersionName" : "2.0",
 	"CreatedBy" : "Brian Alexander",
 	"EngineVersion" : "4.7.0",
-	"Description" : "Domination Game Modes - Capture and hold control points to win in the Classic Domination and Double Domination games",
+	"Description" : "Domination Game Mode - Capture and hold control points to win",
 	"Category" : "UnrealTournament.GameMode",
 	"EnabledByDefault" : true,
 	"CanContainContent" : true,

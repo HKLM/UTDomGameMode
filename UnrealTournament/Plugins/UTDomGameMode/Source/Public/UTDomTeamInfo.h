@@ -4,7 +4,7 @@
 #include "UnrealTournament.h"
 #include "UTDomTeamInfo.generated.h"
 
-UCLASS()
+UCLASS(NotPlaceable)
 class AUTDomTeamInfo : public AUTTeamInfo
 {
 	GENERATED_UCLASS_BODY()

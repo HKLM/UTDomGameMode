@@ -3,14 +3,10 @@
 #include "UTDomGameState.h"
 #include "UTDomGameMode.h"
 #include "UTDomGameMessage.h"
+#include "UTDomTeamInfo.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
-#include "UTADomTypes.h"
-#include "UTCarriedObject.h"
-#include "BaseControlPoint.h"
 #include "ControlPoint.h"
-#include "UTRecastNavMesh.h"
-#include "UTDomTeamInfo.h"
 
 FCollisionResponseParams WorldResponseParams = []()
 {
@@ -23,7 +19,17 @@ FCollisionResponseParams WorldResponseParams = []()
 AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	bIgnoresOriginShifting = true;
+	SceneRoot = ObjectInitializer.CreateDefaultSubobject<USceneComponent, USceneComponent>(this, TEXT("DummyRoot"), false);
+	RootComponent = SceneRoot;
+
+	DomCollision = ObjectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("Collision"));
+	DomCollision->InitCapsuleSize(90.0f, 140.0f);
+	DomCollision->SetCollisionProfileName(FName(TEXT("Pickup")));
+	DomCollision->AttachParent = RootComponent;
+	DomCollision->RelativeLocation.Z = 140.0f;
+	DomCollision->OnComponentBeginOverlap.AddDynamic(this, &AControlPoint::OnOverlapBegin);
+	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd_Implementation);
+
 	// Load StaticMesh assets
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomR.DomR'"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint1Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomB.DomB'"));
@@ -43,30 +49,16 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomLightColor.Insert(FLinearColor::Yellow, 3);
 	DomLightColor.Insert(FLinearColor::Gray, 4);
 
-	// RootComponent
-	RootComponent = Collision;
-	Collision->InitCapsuleSize(90.0f, 160.0f);
-	Collision->SetCollisionProfileName(FName(TEXT("Pickup")));
-	Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	Collision->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
-	Collision->OnComponentBeginOverlap.Clear();
-	Collision->OnComponentBeginOverlap.AddDynamic(this, &AControlPoint::OnOverlapBegin);
-	Collision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd_Implementation);
-
-	// Mesh
-	DomMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, FName(TEXT("ControlPointBase")));
-	DomMesh->AttachParent = RootComponent;
-	DomMesh->SetNetAddressable();
-	DomMesh->SetIsReplicated(true);
-	DomMesh->SetEnableGravity(false);
+	DomMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, FName(TEXT("Mesh")));
+	DomMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DomMesh->SetStaticMesh(ControlPoint4Mesh.Object);
 	DomMesh->AlwaysLoadOnClient = true;
 	DomMesh->AlwaysLoadOnServer = true;
+	DomMesh->bCastDynamicShadow = true;
+	DomMesh->bAffectDynamicIndirectLighting = true;
 	DomMesh->bReceivesDecals = false;
-	DomMesh->SetMobility(EComponentMobility::Movable);
-	DomMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	DomMesh->SetCollisionProfileName(FName(TEXT("NoCollision")));
-	DomMesh->SetStaticMesh(ControlPoint4Mesh.Object);
-	DomMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -40.0f));
+	DomMesh->AttachParent = RootComponent;
+	DomMesh->RelativeLocation.Z = 10.0f;
 
 	// Spinner
 	MeshSpinner = ObjectInitializer.CreateDefaultSubobject<URotatingMovementComponent>(this, FName(TEXT("MeshSpinner")));
@@ -76,64 +68,62 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	// Light
 	DomLight = ObjectInitializer.CreateDefaultSubobject<UPointLightComponent>(this, FName(TEXT("Light")));
 	DomLight->AttachParent = RootComponent;
+	DomLight->RelativeLocation.Z = 90.0f;
 	DomLight->SetAttenuationRadius(900.0f);
 	DomLight->bUseInverseSquaredFalloff = false;
 	DomLight->SetAffectDynamicIndirectLighting(true);
 	DomLight->SetIntensity(10.0f);
-	DomLight->SetRelativeLocation(FVector(0.0f, 0.0f, 90.0f));
 	DomLight->SetLightColor(DomLightColor[4]);
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> CaptureSound(TEXT("SoundCue'/Game/RestrictedAssets/UTDomGameContent/Sounds/ControlSound_Cue.ControlSound_Cue'"));
+	ControlPointCaptureSound = CaptureSound.Object;
 
 	ScoreTime = 2.0f;
 	MessageClass = UUTDomGameMessage::StaticClass();
-	bReplicates = true;
+	ControllingTeamNum = 255;
 	SetReplicates(true);
 	bReplicateMovement = true;
 	bAlwaysRelevant = true;
-	ControllingTeamNum = 255;
 	NetPriority = 3.0;
-	MyObjectiveType = EDomObjectiveType::ControlPoint;
 }
 
 void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME_CONDITION(AControlPoint, MyObjectiveType, COND_InitialOnly);
 	DOREPLIFETIME(AControlPoint, DomMesh);
 	DOREPLIFETIME(AControlPoint, ScoreTime);
-}
-
-void AControlPoint::Init(AUTGameObjective* NewBase)
-{
-	//Super::Init(NewBase);
-	UpdateTeamEffects(4);
-	HomeBase = NewBase;
+	DOREPLIFETIME(AControlPoint, ControllingPawn);
+	DOREPLIFETIME(AControlPoint, ControllingTeam);
+	DOREPLIFETIME(AControlPoint, ControllingTeamNum);
+	DOREPLIFETIME_CONDITION(AControlPoint, PointName, COND_InitialOnly);
 }
 
 void AControlPoint::BeginPlay()
 {
 	Super::BeginPlay();
-	AUTRecastNavMesh* NavData = GetUTNavData(GetWorld());
-	if (NavData != NULL)
-	{
-		NavData->AddToNavigation(this);
-	}
+	SetActorLocation(GetActorLocation() + FVector(0.0f, 0.0f, 25.0f));
 }
 
-void AControlPoint::EndPlay(const EEndPlayReason::Type EndPlayReason)
+FString AControlPoint::GetPointName()
 {
-	Super::EndPlay(EndPlayReason);
-
-	GetWorldTimerManager().ClearAllTimersForObject(this);
-	AUTRecastNavMesh* NavData = GetUTNavData(GetWorld());
-	if (NavData != NULL)
-	{
-		NavData->RemoveFromNavigation(this);
-	}
+	return (PointName.IsEmpty()) ? TEXT("ControlPoint") : PointName;
 }
 
-AControlPoint* AControlPoint::GetControlPoint()
+AUTPlayerState* AControlPoint::GetControlPointHolder()
 {
-	return this;
+	return ControllingPawn;
+}
+
+int32 AControlPoint::GetControllingTeamNum()
+{
+	if (ControllingTeamNum == 255)
+	{
+		return 4;
+	}
+	else
+	{
+		return ControllingTeamNum;
+	}
 }
 
 void AControlPoint::OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -192,22 +182,6 @@ void AControlPoint::OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveCo
 
 void AControlPoint::UpdateStatus()
 {
-	if (MyObjectiveType == EDomObjectiveType::xPoint)
-	{
-		UpdateStatus_xPoint();
-	}
-	else if (MyObjectiveType == EDomObjectiveType::Disabled)
-	{
-		DisablePoint();
-	}
-	else
-	{
-		UpdateStatus_ControlPoint();
-	}
-}
-
-void AControlPoint::UpdateStatus_ControlPoint()
-{
 	int32 newTeam = 255;
 	if (ControllingPawn == NULL)
 	{
@@ -230,19 +204,21 @@ void AControlPoint::UpdateStatus_ControlPoint()
 	if (ControllingTeam == NULL || GetControllingTeamNum() == 4)
 	{
 		bScoreReady = false;
-		if (GS){
+		if (GS)
+		{
 			GS->UpdateControlPointFX(this, 4);
 		}
 	}
 	else
 	{
 		SetTeam(ControllingTeam);
-		if (GS){
+		if (GS)
+		{
 			GS->UpdateControlPointFX(this, GetControllingTeamNum());
 		}
-		SetHolder(ControllingPawn->GetUTCharacter());
-
-		if (ControlPointCaptureSound){
+		CarriedObjectHolder = ControllingPawn;
+		if (ControlPointCaptureSound)
+		{
 			UUTGameplayStatics::UTPlaySound(GetWorld(), ControlPointCaptureSound, this);
 		}
 		if (Role == ROLE_Authority)
@@ -250,13 +226,28 @@ void AControlPoint::UpdateStatus_ControlPoint()
 			if (!GetWorldTimerManager().IsTimerActive(ScoreTimeNotifyHandle))
 			{
 				bScoreReady = false;
-				GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::SendHomeWithNotify, ScoreTime, false);
+				GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::ScoreTimeNotify, ScoreTime, false);
+			}
+		}
+	}
+	ControllingPawn->MakeNoise(2.0);
+	AUTDomGameMode* GM = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
+	if (GM)
+	{
+		GM->BroadcastLocalized(this, MessageClass, GetControllingTeamNum(), NULL, NULL, this);
+	}
+
+	if (Role == ROLE_Authority)
+	{
+		if (GS != NULL)
+		{
+			for (AUTTeamInfo* Team : GS->Teams)
+			{
+				Team->NotifyObjectiveEvent(this, ControllingPawn->GetInstigatorController(), FName(TEXT("FlagStatusChange")));
 			}
 		}
 	}
 }
-
-void AControlPoint::UpdateStatus_xPoint() {}
 
 /**
  * @note this should not be called directly. Use AUTDomGameState->UpdateControlPointFX()
@@ -296,15 +287,10 @@ void AControlPoint::ResetPoint(bool IsEnabled)
 
 void AControlPoint::Reset_Implementation()
 {
-	LastHoldingPawn = HoldingPawn;
-	int32 AssistIndex = FindAssist(ControllingPawn);
-	float LastHeldTime = GetWorld()->GetTimeSeconds() - PickedUpTime;
-	if (AssistIndex >= 0 && AssistIndex < AssistTracking.Num())
-	{
-		AssistTracking[AssistIndex].TotalHeldTime += LastHeldTime;
-	}
 	ControllingPawn = NULL;
 	ControllingTeam = NULL;
+	CarriedObjectHolder = NULL;
+	ControllingTeamNum = 255;
 	ControlledTime = GetWorld()->TimeSeconds;
 	ForceNetUpdate();
 }
@@ -316,11 +302,11 @@ void AControlPoint::DisablePoint()
 
 void AControlPoint::Disable_Implementation()
 {
-	MyObjectiveType = EDomObjectiveType::Disabled;
 	ControllingPawn = NULL;
 	ControllingTeam = NULL;
+	CarriedObjectHolder = NULL;
 	ControllingTeamNum = 255;
-	Collision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DomCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	DomMesh->SetVisibility(false);
 	DomMesh->SetHiddenInGame(true);
 	DomLight->SetVisibility(false);
@@ -330,104 +316,22 @@ void AControlPoint::Disable_Implementation()
 	ForceNetUpdate();
 }
 
-FName AControlPoint::GetTeamEventName(int32 TeamID) const
+void AControlPoint::SetTeam(AUTTeamInfo* NewTeam)
 {
-	switch (TeamID)
+	ControllingTeam = Cast<AUTDomTeamInfo>(NewTeam);
+	if (ControllingTeamNum != NewTeam->GetTeamNum())
 	{
-		case 0:
-			return CarriedObjectState::Red;
-			break;
-		case 1:
-			return CarriedObjectState::Blue;
-			break;
-		case 2:
-			return CarriedObjectState::Green;
-			break;
-		case 3:
-			return CarriedObjectState::Gold;
-			break;
-		default:
-			return CarriedObjectState::Neutral;
-			break;
+		ControllingTeamNum = NewTeam->GetTeamNum();
 	}
+	ForceNetUpdate();
 }
 
-void AControlPoint::SetHolder(AUTCharacter* NewHolder)
+AUTPlayerState* AControlPoint::GetCarriedObjectHolder()
 {
-	// Sanity Checks
-	if (NewHolder == NULL || NewHolder->bPendingKillPending || NewHolder->PlayerState == NULL || Cast<AUTPlayerState>(NewHolder->PlayerState) == NULL)
-	{
-		return;
-	}
-	ChangeState(GetTeamEventName(GetControllingTeamNum()));
-	HoldingPawn = NewHolder;
-	Holder = Cast<AUTPlayerState>(HoldingPawn->PlayerState);
-	PickedUpTime = GetWorld()->GetTimeSeconds();
-	if (Role == ROLE_Authority)
-	{
-		OnHolderChanged();
-		//if (Holder)
-		//{
-		//	Holder->ModifyStatsValue(NAME_DomPointCaptures, 1);
-		//	if (Holder->Team)
-		//	{
-		//		Holder->Team->ModifyStatsValue(NAME_TeamDomPointCaptures, 1);
-		//	}
-		//}
-	}
-
-	// Track the pawns that have held this flag - used for 
-	//TODO$ Is this even needed?
-	int32 AssistIndex = FindAssist(Holder);
-	if (AssistIndex < 0)
-	{
-		FAssistTracker NewAssist;
-		NewAssist.Holder = Holder;
-		NewAssist.TotalHeldTime = 0.0f;
-		AssistIndex = AssistTracking.Add(NewAssist);
-	}
-
-	HoldingPawn->MakeNoise(2.0);
-	AUTDomGameMode* GM = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
-	if (GM)
-	{
-		GM->BroadcastLocalized(this, MessageClass, GetControllingTeamNum(), NULL, NULL, this);
-	}
-
-	if (Role == ROLE_Authority)
-	{
-		AUTGameState* GS = GetWorld()->GetGameState<AUTGameState>();
-		if (GS != NULL)
-		{
-			for (AUTTeamInfo* Team : GS->Teams)
-			{
-				Team->NotifyObjectiveEvent(HomeBase, NewHolder->Controller, FName(TEXT("FlagStatusChange")));
-			}
-		}
-	}
+	return ControllingPawn;
 }
 
-void AControlPoint::ChangeState(FName NewCarriedObjectState)
-{
-	if (Role == ROLE_Authority)
-	{
-		ObjectState = NewCarriedObjectState;
-		OnObjectStateChanged();
-		HomeBase->ObjectStateWasChanged(ObjectState);
-	}
-}
-
-void AControlPoint::OnObjectStateChanged()
-{
-	OnCarriedObjectStateChangedDelegate.Broadcast(this, ObjectState);
-}
-
-void AControlPoint::OnHolderChanged()
-{
-	OnCarriedObjectHolderChangedDelegate.Broadcast(this);
-}
-
-void AControlPoint::SendHomeWithNotify()
+void AControlPoint::ScoreTimeNotify()
 {
 	bScoreReady = true;
 }

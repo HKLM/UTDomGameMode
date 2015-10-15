@@ -7,10 +7,8 @@
 
 #include "UnrealTournament.h"
 #include "UTDomGameMode.h"
-#include "DominationObjective.h"
+#include "ControlPoint.h"
 #include "Domination.generated.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(Domination, Log, All);
 
 UCLASS(Config = UTDomGameMode)
 class ADomination : public AUTDomGameMode
@@ -28,9 +26,9 @@ class ADomination : public AUTDomGameMode
 
 	/**
 	* Logic to register a found DominationObjective with the game and gamestate.
-	* @param	DomObj	The DominationObjective to register
+	* @param	DomObj	The ControlPoint to register
 	*/
-	virtual void RegisterGameControlPoint(ADominationObjective* DomObj) override;
+	virtual void RegisterGameControlPoint(AControlPoint* DomObj) override;
 	virtual void DefaultTimer();
 
 	/**
@@ -40,5 +38,4 @@ class ADomination : public AUTDomGameMode
 	* @param	TeamScoreAmount		Amount of points to award to each team
 	*/
 	virtual void ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount);
-	//void BuildServerResponseRules(FString& OutRules);
 };

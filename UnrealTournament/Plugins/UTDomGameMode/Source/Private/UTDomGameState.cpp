@@ -1,9 +1,9 @@
 // Copyright 2007-2015 Brian 'Snake' Alexander, All Rights Reserved.
 
 #include "UnrealTournament.h"
-#include "UTDomGameState.h"
 #include "ControlPoint.h"
 #include "Net/UnrealNetwork.h"
+#include "UTDomGameState.h"
 
 DEFINE_LOG_CATEGORY(UTDomGameState);
 
@@ -15,8 +15,9 @@ AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
 void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//TODO - Change to only replicate TeamNum not entire point
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
-	DOREPLIFETIME_CONDITION(AUTDomGameState, DomGameObjectiveType, COND_None);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, KingOfTheHill, COND_InitialOnly);
 }
 

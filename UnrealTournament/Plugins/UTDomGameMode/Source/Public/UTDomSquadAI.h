@@ -4,7 +4,6 @@
 
 #include "UnrealTournament.h"
 #include "UTSquadAI.h"
-#include "DominationObjective.h"
 #include "UTDomSquadAI.generated.h"
 
 UCLASS(NotPlaceable)
