@@ -15,7 +15,6 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	TeamClass = AUTDomTeamInfo::StaticClass();
 	SquadType = AUTDomSquadAI::StaticClass();
 	HUDClass = AUTHUD_DOM::StaticClass();
-	ScoreboardClassName = FString(TEXT("/Script/UTDomGameMode.UTDomScoreboard"));
 	MapPrefix = TEXT("DOM");
 	bAllowOvertime = false;
 	bUseTeamStarts = false;
@@ -33,7 +32,6 @@ void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FS
 {
 	MaxControlPoints = FMath::Max(1, GetIntOption(Options, TEXT("MaxControlPoints"), MaxControlPoints));
 	Super::InitGame(MapName, Options, ErrorMessage);
-	bOnlyTheStrongSurvive = false;
 	bAllowOvertime = false;
 	bUseTeamStarts = false;
 	bAllowTranslocator = EvalBoolOptions(ParseOption(Options, TEXT("AllowTrans")), bAllowTranslocator);

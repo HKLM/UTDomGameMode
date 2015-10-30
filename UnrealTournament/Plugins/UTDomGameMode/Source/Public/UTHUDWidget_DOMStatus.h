@@ -33,6 +33,7 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
 		TArray<FPointInfo> CtrlPoints;  
 
+	/** Temp value of location on screen to draw the current ControlPoint icon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
 		FVector2D DomPosition;
 
@@ -40,7 +41,7 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
 		TArray<UTexture2D*> DomTeamIconTexture; 
 
-	/** draw direction arrow for each control point on HUD */
+	/** draw direction arrow (ArrowDirTexture) for each control point on HUD */
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
 		bool bDrawDirectionArrow;   
 

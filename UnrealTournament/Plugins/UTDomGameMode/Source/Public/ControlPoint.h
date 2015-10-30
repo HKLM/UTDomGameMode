@@ -15,8 +15,8 @@ class AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
 
-		/** This points name to display on HUD */
-		UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = ControlPoint)
+	/** This points name to display on HUD */
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = ControlPoint)
 		FString PointName;
 
 	/** The controlling pawn. */
@@ -58,6 +58,7 @@ class AControlPoint : public AUTGameObjective
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<FLinearColor> DomLightColor;
 
+	/** the staticmesh to display. Index = TeamNum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<UStaticMesh*> TeamMesh;
 
@@ -132,9 +133,6 @@ class AControlPoint : public AUTGameObjective
 	UFUNCTION(NetMulticast, Reliable)
 		void UpdateTeamEffects(int32 TeamIndex);
 
-	//virtual void OnConstruction(const FTransform& Transform) override;
-	virtual void BeginPlay() override;
-
 	/** Disables the point and removes it from play */
 	void DisablePoint();
 
@@ -142,6 +140,7 @@ class AControlPoint : public AUTGameObjective
 		virtual void Disable_Implementation();
 
 	/*** Override the following ***/
+	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ObjectStateWasChanged(FName NewObjectState) override {};
 	virtual void ObjectWasPickedUp(AUTCharacter* NewHolder, bool bWasHome) override {};

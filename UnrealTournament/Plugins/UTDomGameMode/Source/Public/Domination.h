@@ -25,7 +25,7 @@ class ADomination : public AUTDomGameMode
 	virtual void InitGameState() override;
 
 	/**
-	* Logic to register a found DominationObjective with the game and gamestate.
+	* Logic to register a found ControlPoint actor with the game and gamestate.
 	* @param	DomObj	The ControlPoint to register
 	*/
 	virtual void RegisterGameControlPoint(AControlPoint* DomObj) override;
