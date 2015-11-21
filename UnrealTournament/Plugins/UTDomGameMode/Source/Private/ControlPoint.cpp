@@ -80,7 +80,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 
 	ScoreTime = 2.0f;
 	MessageClass = UUTDomGameMessage::StaticClass();
-	ControllingTeamNum = 255;
+	TeamNum = 255;
 	SetReplicates(true);
 	bReplicateMovement = true;
 	bAlwaysRelevant = true;
@@ -94,7 +94,6 @@ void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	DOREPLIFETIME(AControlPoint, ScoreTime);
 	DOREPLIFETIME(AControlPoint, ControllingPawn);
 	DOREPLIFETIME(AControlPoint, ControllingTeam);
-	DOREPLIFETIME(AControlPoint, ControllingTeamNum);
 	DOREPLIFETIME_CONDITION(AControlPoint, PointName, COND_InitialOnly);
 }
 
@@ -112,18 +111,6 @@ FString AControlPoint::GetPointName()
 AUTPlayerState* AControlPoint::GetControlPointHolder()
 {
 	return ControllingPawn;
-}
-
-int32 AControlPoint::GetControllingTeamNum()
-{
-	if (ControllingTeamNum == 255)
-	{
-		return 4;
-	}
-	else
-	{
-		return ControllingTeamNum;
-	}
 }
 
 void AControlPoint::OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -147,8 +134,8 @@ void AControlPoint::ProcessTouch_Implementation(APawn* TouchedBy)
 		if (PS != NULL)
 		{
 			if (ControllingPawn == NULL ||
-				(PS != ControllingPawn) || (PS != ControllingPawn && PS->GetTeamNum() != GetControllingTeamNum())
-				|| (PS == ControllingPawn && PS->GetTeamNum() != GetControllingTeamNum()))
+				(PS != ControllingPawn) || (PS != ControllingPawn && PS->GetTeamNum() != TeamNum)
+				|| (PS == ControllingPawn && PS->GetTeamNum() != TeamNum))
 			{
 				ControllingPawn = PS;
 				UpdateStatus();
@@ -192,16 +179,16 @@ void AControlPoint::UpdateStatus()
 		newTeam = ControllingPawn->GetTeamNum();
 	}
 
-	if (newTeam == 255 || newTeam == GetControllingTeamNum())
+	if (newTeam == 255 || newTeam == TeamNum)
 	{
 		return;
 	}
 
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
-	ControllingTeamNum = newTeam;
+	TeamNum = newTeam;
 	ControllingTeam = Cast<AUTDomTeamInfo>(ControllingPawn->Team);
 	ControlledTime = GetWorld()->GetTimeSeconds();
-	if (ControllingTeam == NULL || GetControllingTeamNum() == 4)
+	if (ControllingTeam == NULL || TeamNum == 4)
 	{
 		bScoreReady = false;
 		if (GS)
@@ -214,37 +201,31 @@ void AControlPoint::UpdateStatus()
 		SetTeam(ControllingTeam);
 		if (GS)
 		{
-			GS->UpdateControlPointFX(this, GetControllingTeamNum());
+			GS->UpdateControlPointFX(this, TeamNum);
 		}
 		CarriedObjectHolder = ControllingPawn;
 		if (ControlPointCaptureSound)
 		{
 			UUTGameplayStatics::UTPlaySound(GetWorld(), ControlPointCaptureSound, this);
 		}
-		if (Role == ROLE_Authority)
+		if (Role == ROLE_Authority && !GetWorldTimerManager().IsTimerActive(ScoreTimeNotifyHandle))
 		{
-			if (!GetWorldTimerManager().IsTimerActive(ScoreTimeNotifyHandle))
-			{
-				bScoreReady = false;
-				GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::ScoreTimeNotify, ScoreTime, false);
-			}
+			bScoreReady = false;
+			GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::ScoreTimeNotify, ScoreTime, false);
 		}
 	}
 	ControllingPawn->MakeNoise(2.0);
 	AUTDomGameMode* GM = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
 	if (GM)
 	{
-		GM->BroadcastLocalized(this, MessageClass, GetControllingTeamNum(), NULL, NULL, this);
+		GM->BroadcastLocalized(this, MessageClass, TeamNum, NULL, NULL, this);
 	}
 
-	if (Role == ROLE_Authority)
+	if (Role == ROLE_Authority && GS != NULL)
 	{
-		if (GS != NULL)
+		for (AUTTeamInfo* Team : GS->Teams)
 		{
-			for (AUTTeamInfo* Team : GS->Teams)
-			{
-				Team->NotifyObjectiveEvent(this, ControllingPawn->GetInstigatorController(), FName(TEXT("FlagStatusChange")));
-			}
+			Team->NotifyObjectiveEvent(this, ControllingPawn->GetInstigatorController(), FName(TEXT("FlagStatusChange")));
 		}
 	}
 }
@@ -274,12 +255,12 @@ void AControlPoint::ResetPoint(bool IsEnabled)
 	{
 		if (IsEnabled)
 		{
-			ControllingTeamNum = 255;
+			TeamNum = 255;
 			GS->UpdateControlPointFX(this, 4);
 		}
 		else
 		{
-			ControllingTeamNum = 5;
+			TeamNum = 5;
 			GS->UpdateControlPointFX(this, 5);
 		}
 	}
@@ -290,7 +271,7 @@ void AControlPoint::Reset_Implementation()
 	ControllingPawn = NULL;
 	ControllingTeam = NULL;
 	CarriedObjectHolder = NULL;
-	ControllingTeamNum = 255;
+	TeamNum = 255;
 	ControlledTime = GetWorld()->TimeSeconds;
 	ForceNetUpdate();
 }
@@ -305,7 +286,7 @@ void AControlPoint::Disable_Implementation()
 	ControllingPawn = NULL;
 	ControllingTeam = NULL;
 	CarriedObjectHolder = NULL;
-	ControllingTeamNum = 255;
+	TeamNum = 255;
 	DomCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	DomMesh->SetVisibility(false);
 	DomMesh->SetHiddenInGame(true);
@@ -319,9 +300,9 @@ void AControlPoint::Disable_Implementation()
 void AControlPoint::SetTeam(AUTTeamInfo* NewTeam)
 {
 	ControllingTeam = Cast<AUTDomTeamInfo>(NewTeam);
-	if (ControllingTeamNum != NewTeam->GetTeamNum())
+	if (TeamNum != NewTeam->GetTeamNum())
 	{
-		ControllingTeamNum = NewTeam->GetTeamNum();
+		TeamNum = NewTeam->GetTeamNum();
 	}
 	ForceNetUpdate();
 }

@@ -27,12 +27,9 @@ void UUTDomScoreboard::DrawGamePanel(float RenderDelta, float& YOffset)
 		if (DefaultGame)
 		{
 			AUTDomGameState* GS = Cast<AUTDomGameState>(UTGameState);
-			if (GS != NULL) 
+			if (GS != NULL && GS->KingOfTheHill)
 			{
-				if (GS->KingOfTheHill)
-				{
-					GameName = NSLOCTEXT("UTDomScoreboard", "KingOfHill", "KING OF THE HILL");
-				}
+				GameName = NSLOCTEXT("UTDomScoreboard", "KingOfHill", "KING OF THE HILL");
 			}
 			if (GameName.IsEmpty())
 			{

@@ -25,14 +25,11 @@ void ADomination::RegisterGameControlPoint(AControlPoint* DomObj)
 	if (DomObj != NULL)
 	{
 		// Use only 1 control point for bKingOfTheHill
-		if (bKingOfTheHill && CDomPoints.Num() == 1)
+		if (bKingOfTheHill && CDomPoints.Num() == 1 && CDomPoints[0] != DomObj)
 		{
-			if (CDomPoints[0] != DomObj)
-			{
-				DomObj->UpdateStatus();
-				DomGameState->RegisterControlPoint(DomObj, true);
-				return;
-			}
+			DomObj->UpdateStatus();
+			DomGameState->RegisterControlPoint(DomObj, true);
+			return;
 		}
 		Super::RegisterGameControlPoint(DomObj);
 	}

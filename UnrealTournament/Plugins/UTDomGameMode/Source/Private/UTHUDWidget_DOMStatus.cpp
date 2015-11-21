@@ -2,7 +2,7 @@
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
 #include "ControlPoint.h"
-#include "UTHUD.h"
+//#include "UTHUD.h"
 #include "UTHUDWidget.h"
 #include "UTHUDWidget_DOMStatus.h"
 
@@ -14,9 +14,9 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	Origin = FVector2D(0.5f, 0.5f);
 	bDrawDirectionArrow = true;
 
-	new(TeamColors)FLinearColor(3.0f, 0.0f, 0.05f, 1.0f);
-	new(TeamColors)FLinearColor(0.0f, 0.0f, 3.0f, 1.0f);
-	new(TeamColors)FLinearColor(0.0f, 1.0f, 0.0f, 1.0f);
+	new(TeamColors)FLinearColor(0.8f, 0.0f, 0.05f, 1.0f);
+	new(TeamColors)FLinearColor(0.0f, 0.0f, 0.8f, 1.0f);
+	new(TeamColors)FLinearColor(0.0f, 0.8f, 0.0f, 1.0f);
 	new(TeamColors)FLinearColor(0.9f, 0.98f, 0.0f, 1.0f);
 	new(TeamColors)FLinearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -102,7 +102,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		// Set the team icon to display
 		if (CtrlPoints[i].thePoint != NULL && CtrlPoints[i].thePoint->ControllingTeam != NULL && CtrlPoints.IsValidIndex(i))
 		{
-			nTeam = CtrlPoints[i].thePoint->GetControllingTeamNum();
+			nTeam = CtrlPoints[i].thePoint->TeamNum;
 		}
 		else
 		{
@@ -119,32 +119,29 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		{
 			// Draw the points name
 			work = CtrlPoints[i].thePoint->PointName;
-			DrawText(FText::FromString(work), px + (IconSize / 2), py + (IconSize / 2), UTHUDOwner->TinyFont, FLinearColor::Black, 0.7f * RenderScale, UTHUDOwner->HUDWidgetSlateOpacity, FLinearColor::White, ETextHorzPos::Center, ETextVertPos::Bottom);
+			DrawText(FText::FromString(work), px + (IconSize / 2), py + (IconSize / 2), UTHUDOwner->TinyFont, FLinearColor::Black, 0.77f * RenderScale, FMath::Clamp(1.2f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Center, ETextVertPos::Bottom);
 			// Draw direction arrow
-			if (bDrawDirectionArrow)
+			if (bDrawDirectionArrow && UTPlayerOwner->GetPawn())
 			{
-				if (UTPlayerOwner->GetPawn())
-				{
-					APawn* P = UTPlayerOwner->GetPawn();
-					FRotator Dir = (CtrlPoints[i].thePoint->GetActorLocation() - P->GetActorLocation()).Rotation();
-					float Yaw = (Dir.Yaw - P->GetViewRotation().Yaw);
-					CtrlPoints[i].DomArrowDir.RotPivot = FVector2D(0.5, 0.5);
-					CtrlPoints[i].DomArrowDir.Rotation = Yaw;
-					DrawTexture(CtrlPoints[i].DomArrowDir.Atlas
-								, POS.X
-								, POS.Y
-								, IconSize
-								, IconSize
-								, CtrlPoints[i].DomArrowDir.UVs.U
-								, CtrlPoints[i].DomArrowDir.UVs.V
-								, CtrlPoints[i].DomArrowDir.UVs.UL
-								, CtrlPoints[i].DomArrowDir.UVs.VL
-								, UTHUDOwner->HUDWidgetBorderOpacity
-								, CtrlPoints[i].DomArrowDir.RenderColor
-								, CtrlPoints[i].DomArrowDir.RenderOffset
-								, CtrlPoints[i].DomArrowDir.Rotation
-								, CtrlPoints[i].DomArrowDir.RotPivot);
-				}
+				APawn* P = UTPlayerOwner->GetPawn();
+				FRotator Dir = (CtrlPoints[i].thePoint->GetActorLocation() - P->GetActorLocation()).Rotation();
+				float Yaw = (Dir.Yaw - P->GetViewRotation().Yaw);
+				CtrlPoints[i].DomArrowDir.RotPivot = FVector2D(0.5, 0.5);
+				CtrlPoints[i].DomArrowDir.Rotation = Yaw;
+				DrawTexture(CtrlPoints[i].DomArrowDir.Atlas
+							, POS.X
+							, POS.Y
+							, IconSize
+							, IconSize
+							, CtrlPoints[i].DomArrowDir.UVs.U
+							, CtrlPoints[i].DomArrowDir.UVs.V
+							, CtrlPoints[i].DomArrowDir.UVs.UL
+							, CtrlPoints[i].DomArrowDir.UVs.VL
+							, FMath::Clamp(1.2f * UTHUDOwner->HUDWidgetBorderOpacity, 0.0f, 1.0f)
+							, CtrlPoints[i].DomArrowDir.RenderColor
+							, CtrlPoints[i].DomArrowDir.RenderOffset
+							, CtrlPoints[i].DomArrowDir.Rotation
+							, CtrlPoints[i].DomArrowDir.RotPivot);
 			}
 		}
 	}

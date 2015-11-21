@@ -16,20 +16,16 @@ class AControlPoint : public AUTGameObjective
 	GENERATED_UCLASS_BODY()
 
 	/** This points name to display on HUD */
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = ControlPoint)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated, Category = ControlPoint)
 		FString PointName;
 
-	/** The controlling pawn. */
+	/** The controlling pawn. Replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
 		AUTPlayerState* ControllingPawn;
 
-	/** The controlling team. */
+	/** The controlling team.  replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
 		AUTDomTeamInfo* ControllingTeam;
-
-	/** The controlling team number. */
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
-		int32 ControllingTeamNum;
 
 	USceneComponent* SceneRoot;
 
@@ -44,7 +40,7 @@ class AControlPoint : public AUTGameObjective
 		float ControlledTime;
 
 	/** The mesh that makes up this base. */
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* DomMesh;
 
 	UPROPERTY(VisibleDefaultsOnly)
@@ -54,11 +50,11 @@ class AControlPoint : public AUTGameObjective
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 	class UPointLightComponent* DomLight;
 
-	/** The dom light color. */
+	/** Array of light colors for DomLight. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<FLinearColor> DomLightColor;
 
-	/** the staticmesh to display. Index = TeamNum */
+	/** Array of staticmeshes to display on DomMesh. Index = TeamNum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<UStaticMesh*> TeamMesh;
 
@@ -78,16 +74,8 @@ class AControlPoint : public AUTGameObjective
 	virtual void ScoreTimeNotify();
 
 	/**
-	* Gets controlling team number.
-	* @return	int32	The controlling team number.
-	*/
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-		virtual int32 GetControllingTeamNum();
-
-	/**
 	* Gets control point holder.
-	* @return	AUTPlayerState	the control point holder.
-	* ### summary	@returns the PlayerState of the UTCharacter holding CarriedObject otherwise
+	* @return	AUTPlayerState	the control point holder otherwise
 	* 				returns NULL.
 	*/
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
@@ -104,10 +92,20 @@ class AControlPoint : public AUTGameObjective
 	virtual void SetTeamForSideSwap_Implementation(uint8 NewTeamNum) override
 	{}
 
+	/**
+	* Returns a valid TeamNum for DOM
+	* @return	int8	Number( >= 0 && <= 4 )
+	* @note	0=Red Team
+	*		1=Blue Team
+	*		2=Green Team
+	*		3=Gold Team
+	*		4=Neutral/No Team
+	*		5=Disabled (Reserved for DDOM)
+	*/
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
 		virtual uint8 GetTeamNum() const
 	{
-		return (ControllingTeamNum != 255) ? ControllingTeamNum : 255;
+		return (TeamNum  == 255) ? 4 : TeamNum;
 	}
 
 	virtual void SetTeam(AUTTeamInfo* NewTeam);

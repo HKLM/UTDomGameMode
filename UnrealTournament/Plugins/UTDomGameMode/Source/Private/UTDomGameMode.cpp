@@ -49,10 +49,18 @@ void AUTDomGameMode::GameObjectiveInitialized(AUTGameObjective* Obj)
 
 void AUTDomGameMode::RegisterGameControlPoint(AControlPoint* DomObj)
 {
-	if (DomObj != NULL && CDomPoints.Num() <= MaxControlPoints && !DomObj->bHidden)
+	if (DomObj != NULL)
 	{
-		CDomPoints.AddUnique(DomObj);
-		DomGameState->RegisterControlPoint(DomObj, false);
+		if (CDomPoints.Num() <= MaxControlPoints && !DomObj->bHidden)
+		{
+			CDomPoints.AddUnique(DomObj);
+			DomGameState->RegisterControlPoint(DomObj, false);
+		}
+		else
+		{
+			DomObj->bHidden = true;
+			DomObj->DisablePoint();
+		}
 	}
 }
 
@@ -164,7 +172,7 @@ void AUTDomGameMode::ClearControl(AUTPlayerState* PS)
 			// Give random team mate control over leaving players control points
 			for (i = 0; i < CDomPoints.Num(); i++)
 			{
-				if (CDomPoints[i]->ControllingTeamNum != 255 && CDomPoints[i]->ControllingPawn == PS)
+				if (CDomPoints[i]->TeamNum != 255 && CDomPoints[i]->ControllingPawn == PS)
 				{
 					CDomPoints[i]->ControllingPawn = Pick[Num];
 					CDomPoints[i]->UpdateStatus();
@@ -192,7 +200,7 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 		// find control point owned by winning player
 		for (int n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 		{
-			if (DomGameState->GameControlPoints[n]->ControllingTeam != NULL && DomGameState->GameControlPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum() && DomGameState->GameControlPoints[n]->ActorIsNearMe(Winner))
+			if (DomGameState->GameControlPoints[n]->ControllingTeam != NULL && DomGameState->GameControlPoints[n]->TeamNum == Winner->GetTeamNum() && DomGameState->GameControlPoints[n]->ActorIsNearMe(Winner))
 			{
 				WinningBase = DomGameState->GameControlPoints[n];
 				break;
@@ -203,7 +211,7 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 			// find control point owned by winning player
 			for (int n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 			{
-				if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->GetControllingTeamNum() == Winner->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->TeamNum == Winner->GetTeamNum()))
 				{
 					WinningBase = DomGameState->GameControlPoints[n];
 					break;
@@ -215,7 +223,7 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 		{
 			for (int i = 0; i < DomGameState->GameControlPoints.Num(); i++)
 			{
-				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->GetControllingTeamNum() == Winner->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->TeamNum == Winner->GetTeamNum()))
 				{
 					WinningBase = DomGameState->GameControlPoints[i];
 					break;

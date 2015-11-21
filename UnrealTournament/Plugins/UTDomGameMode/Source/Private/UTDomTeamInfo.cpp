@@ -22,7 +22,12 @@ void AUTDomTeamInfo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutL
 void AUTDomTeamInfo::SetFloatScore(float ScorePoints)
 {
 	FloatScore += ScorePoints;
-	Score = FloatScore;
+	//conver to int and test if Score has changed. If not, dont waste network bandwidth for nothing.
+	int32 i = FloatScore;
+	if (Score != i)
+	{
+		Score = FloatScore;
+	}
 #if NDEBUG || UE_BUILD_DEBUG
 	GEngine->AddOnScreenDebugMessage(-1, 1.f, TeamColor, FString::Printf(TEXT("FloatScore:  %f"), FloatScore));
 	GEngine->AddOnScreenDebugMessage(-1, 1.f, TeamColor, FString::Printf(TEXT("Score:  %d"), Score));
