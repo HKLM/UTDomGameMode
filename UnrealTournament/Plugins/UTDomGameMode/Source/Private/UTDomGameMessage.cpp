@@ -1,15 +1,19 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
 #include "UTLocalMessage.h"
-#include "UTDomGameMessage.h"
 #include "ControlPoint.h"
+#include "UTGameMessage.h"
+#include "UTDomGameMessage.h"
 
 UUTDomGameMessage::UUTDomGameMessage(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	MessageArea = FName(TEXT("GameMessages"));
-	ControlledByTeam = NSLOCTEXT("DOMGameMessage", "ControlledByTeam", "Control Point [{OptionalControlPoint}] now controlled by {OptionalTeam} Team!");
+	ControlledByTeam = NSLOCTEXT("UTDomGameMessage", "ControlledByTeam", "Control Point [{OptionalControlPoint}] now controlled by {OptionalTeam} Team!");
+	YouAreOnGreen = NSLOCTEXT("UTDomGameMessage", "YouAreOnGreen", "You are on GREEN.");
+	YouAreOnGold = NSLOCTEXT("UTDomGameMessage", "YouAreOnGold", "You are on GOLD.");
 
+	Lifetime = 1.2;
 	bIsStatusAnnouncement = true;
 	bIsPartiallyUnique = true;
 }
@@ -18,10 +22,14 @@ FLinearColor UUTDomGameMessage::GetMessageColor_Implementation(int32 MessageInde
 {
 	switch (MessageIndex)
 	{
-		case 0: return FLinearColor(3.0f, 0.0f, 0.05f, 0.8f); break;
-		case 1: return FLinearColor(0.0f, 0.0f, 2.0f, 0.8f); break;
-		case 2: return FLinearColor(0.0f, 1.0f, 0.0f, 0.8f); break;
-		case 3: return FLinearColor(0.9f, 0.98f, 0.0f, 0.8f); break;
+		case 0: return FLinearColor(0.8f, 0.0f, 0.05f, 1.0f); break;
+		case 1: return FLinearColor(0.1f, 0.1f, 0.8f, 1.0f); break;
+		case 2: return FLinearColor(0.0f, 0.9f, 0.0f, 1.0f); break;
+		case 3: return FLinearColor(0.85f, 0.85f, 0.0f, 1.0f); break;
+		case 9: return FLinearColor(0.8f, 0.0f, 0.05f, 1.0f); break;
+		case 10: return FLinearColor(0.1f, 0.1f, 0.8f, 1.0f); break;
+		case 11: return FLinearColor(0.0f, 0.9f, 0.0f, 1.0f); break;
+		case 12: return FLinearColor(0.85f, 0.85f, 0.0f, 1.0f); break;
 		default:
 			break;
 	}
@@ -36,6 +44,13 @@ FText UUTDomGameMessage::GetText(int32 Switch, bool bTargetsPlayerState1, APlaye
 		case 1: return ControlledByTeam; break;
 		case 2: return ControlledByTeam; break;
 		case 3: return ControlledByTeam; break;
+		case 9: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnRed; break;
+		case 10: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnBlue; break;
+		case 11: return YouAreOnGreen; break;
+		case 12: return YouAreOnGold; break;
+
+		default:
+			break;
 	}
 
 	return FText::GetEmpty();
@@ -67,7 +82,9 @@ void UUTDomGameMessage::GetArgs(FFormatNamedArguments& Args, int32 Switch, bool 
 	{
 		AControlPoint* CP = Cast<AControlPoint>(OptionalObject);
 		Args.Add(TEXT("OptionalControlPoint"), CP ? FText::FromString(CP->PointName) : FText::GetEmpty());
-		Args.Add(TEXT("OptionalTeam"), CP->ControllingTeam ? CP->ControllingTeam->TeamName : FText::GetEmpty());
+		AUTDomTeamInfo* DTI = Cast<AUTDomTeamInfo>(CP->ControllingTeam);
+		if (DTI != NULL)
+		Args.Add(TEXT("OptionalTeam"), DTI ? DTI->TeamName : FText::GetEmpty());
 	}
 	else
 	{
@@ -97,4 +114,33 @@ bool UUTDomGameMessage::InterruptAnnouncement_Implementation(int32 Switch, const
 		}
 	}
 	return false;
+}
+
+FName UUTDomGameMessage::GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject) const
+{
+	switch (Switch)
+	{
+		case 9: return TEXT("YouAreOnRedTeam"); break;
+		case 10: return TEXT("YouAreOnBlueTeam"); break;
+	}
+	return NAME_None;
+}
+
+float UUTDomGameMessage::GetScaleInTime_Implementation(int32 MessageIndex) const
+{
+	return 0.15f;
+}
+
+float UUTDomGameMessage::GetScaleInSize_Implementation(int32 MessageIndex) const
+{
+	return 0.6f;
+}
+
+bool UUTDomGameMessage::UseLargeFont(int32 MessageIndex) const
+{
+	if ((MessageIndex == 0) || (MessageIndex == 1) || (MessageIndex == 2) || (MessageIndex == 3))
+	{
+		return false;
+	}
+	return (MessageIndex == 11) || (MessageIndex == 12) || (MessageIndex == 7) || (MessageIndex == 9) || (MessageIndex == 10);
 }

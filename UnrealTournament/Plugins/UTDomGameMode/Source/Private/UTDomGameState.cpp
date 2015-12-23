@@ -3,20 +3,26 @@
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
 #include "Net/UnrealNetwork.h"
+#include "UTGameState.h"
+#include "UTDomStat.h"
 #include "UTDomGameState.h"
-
-DEFINE_LOG_CATEGORY(UTDomGameState);
+#include "UTArmor.h"
 
 AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	GameScoreStats.Add(NAME_RegularKillPoints);
+	GameScoreStats.Add(NAME_ControlPointCaps);
+	GameScoreStats.Add(NAME_ControlPointHeldTime);
+	GameScoreStats.Add(NAME_ControlPointHeldPoints);
+
+	TeamStats.Add(NAME_TeamControlPointHeldTime);
 }
 
 void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//TODO - Change to only replicate TeamNum not entire point
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, KingOfTheHill, COND_InitialOnly);
 }
@@ -25,14 +31,7 @@ void AUTDomGameState::RegisterControlPoint(AControlPoint* DomObj, bool bIsDisabl
 {
 	if (DomObj != NULL)
 	{
-		if (!bIsDisabled)
-		{
-			GameControlPoints.AddUnique(DomObj);
-		}
-		else
-		{
-			DomObj->DisablePoint();
-		}
+		!bIsDisabled ? GameControlPoints.AddUnique(DomObj) : DomObj->DisablePoint();
 	}
 }
 
@@ -101,4 +100,29 @@ AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(int32 TeamNumToTest)
 		}
 	}
 	return Best;
+}
+
+void AUTDomGameState::DefaultTimer()
+{
+	Super::DefaultTimer();
+	// use team skins only for 3/4 team play
+	if (NumTeams > 2)
+	{
+		for (int32 i = 0; i < PlayerArray.Num(); i++)
+		{
+			AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
+			if (PS != NULL && PS->Team != NULL && PS->GetUTCharacter() != NULL && !PS->GetUTCharacter()->IsDead())
+			{
+				AUTDomTeamInfo* DTI = Cast<AUTDomTeamInfo>(PS->Team);
+				if (DTI != NULL && PS->GetUTCharacter()->GetCharOverlayMI() != NULL)
+				{
+					UMaterialInstanceDynamic* m = PS->GetUTCharacter()->GetCharOverlayMI();
+					if (m != DTI->TeamSkinOverlay)
+					{
+						PS->GetUTCharacter()->SetCharacterOverlayEffect(FOverlayEffect(DTI->TeamSkinOverlay), true);
+					}
+				}
+			}
+		}
+	}
 }

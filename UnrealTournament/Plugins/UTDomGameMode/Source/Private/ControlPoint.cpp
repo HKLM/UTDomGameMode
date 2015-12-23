@@ -1,11 +1,12 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
-#include "UTDomGameState.h"
-#include "UTDomGameMode.h"
-#include "UTDomGameMessage.h"
-#include "UTDomTeamInfo.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
+#include "UTDomGameMode.h"
+#include "UTDomGameState.h"
+#include "UTDomTeamInfo.h"
+#include "UTDomStat.h"
+#include "UTDomGameMessage.h"
 #include "ControlPoint.h"
 
 FCollisionResponseParams WorldResponseParams = []()
@@ -78,13 +79,14 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	static ConstructorHelpers::FObjectFinder<USoundBase> CaptureSound(TEXT("SoundCue'/Game/RestrictedAssets/UTDomGameContent/Sounds/ControlSound_Cue.ControlSound_Cue'"));
 	ControlPointCaptureSound = CaptureSound.Object;
 
-	ScoreTime = 2.0f;
+	ScoreTime = 0.1f;
 	MessageClass = UUTDomGameMessage::StaticClass();
 	TeamNum = 255;
 	SetReplicates(true);
 	bReplicateMovement = true;
 	bAlwaysRelevant = true;
 	NetPriority = 3.0;
+	bScoreReady = true;
 }
 
 void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -101,6 +103,21 @@ void AControlPoint::BeginPlay()
 {
 	Super::BeginPlay();
 	SetActorLocation(GetActorLocation() + FVector(0.0f, 0.0f, 25.0f));
+
+	FTimerHandle TempHandle;
+	GetWorldTimerManager().SetTimer(TempHandle, this, &AControlPoint::TeamHeldTimer, 1.0f, true);
+}
+
+void AControlPoint::TeamHeldTimer()
+{
+	if (!bHidden && ControllingPawn != NULL && ControllingTeam != NULL)
+	{
+		ControllingPawn->ModifyStatsValue(NAME_ControlPointHeldTime, 1.0f);
+		if (ControllingTeam)
+		{
+			ControllingTeam->ModifyStatsValue(NAME_TeamControlPointHeldTime, 1.0f);
+		}
+	}
 }
 
 FString AControlPoint::GetPointName()
@@ -128,14 +145,19 @@ void AControlPoint::OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* Othe
 
 void AControlPoint::ProcessTouch_Implementation(APawn* TouchedBy)
 {
-	if (Role == ROLE_Authority && TouchedBy->Controller != NULL && !((AUTCharacter*)TouchedBy)->IsRagdoll() && TouchedBy->PlayerState != NULL)
+	if (Role == ROLE_Authority
+		&& bScoreReady
+		&& TouchedBy->Controller != NULL 
+		&& !((AUTCharacter*)TouchedBy)->IsRagdoll() 
+		&& TouchedBy->PlayerState != NULL)
 	{
 		AUTPlayerState* PS = Cast<AUTPlayerState>(TouchedBy->PlayerState);
 		if (PS != NULL)
 		{
-			if (ControllingPawn == NULL ||
-				(PS != ControllingPawn) || (PS != ControllingPawn && PS->GetTeamNum() != TeamNum)
-				|| (PS == ControllingPawn && PS->GetTeamNum() != TeamNum))
+			if (ControllingPawn == NULL
+				|| (PS != ControllingPawn) 
+				|| (PS != ControllingPawn && PS->Team->GetTeamNum() != TeamNum)
+				|| (PS == ControllingPawn && PS->Team->GetTeamNum() != TeamNum))
 			{
 				ControllingPawn = PS;
 				UpdateStatus();
@@ -146,14 +168,16 @@ void AControlPoint::ProcessTouch_Implementation(APawn* TouchedBy)
 
 void AControlPoint::OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (Role == ROLE_Authority && OtherActor != ControllingPawn)
+	if (Role == ROLE_Authority && bScoreReady && OtherActor != ControllingPawn)
 	{
 		TArray<AActor*> Touching;
 		GetOverlappingActors(Touching, APawn::StaticClass());
 		for (AActor* TouchingActor : Touching)
 		{
 			APawn* P = Cast<APawn>(TouchingActor);
-			if (P != NULL && !((AUTCharacter*)P)->IsRagdoll() && P->PlayerState != NULL)
+			if (P != NULL 
+				&& !((AUTCharacter*)P)->IsRagdoll()
+				&& P->PlayerState != NULL)
 			{
 				AUTPlayerState* PS = Cast<AUTPlayerState>(P->PlayerState);
 				if (PS != NULL)
@@ -170,13 +194,14 @@ void AControlPoint::OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveCo
 void AControlPoint::UpdateStatus()
 {
 	int32 newTeam = 255;
-	if (ControllingPawn == NULL)
+	if (ControllingPawn == NULL
+		|| (ControllingPawn	&& ControllingPawn->Team == NULL))
 	{
 		newTeam = 255;
 	}
 	else
 	{
-		newTeam = ControllingPawn->GetTeamNum();
+		newTeam = ControllingPawn->Team->GetTeamNum();
 	}
 
 	if (newTeam == 255 || newTeam == TeamNum)
@@ -185,47 +210,38 @@ void AControlPoint::UpdateStatus()
 	}
 
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+	if (GS == NULL) return;
 	TeamNum = newTeam;
 	ControllingTeam = Cast<AUTDomTeamInfo>(ControllingPawn->Team);
 	ControlledTime = GetWorld()->GetTimeSeconds();
 	if (ControllingTeam == NULL || TeamNum == 4)
 	{
-		bScoreReady = false;
-		if (GS)
-		{
-			GS->UpdateControlPointFX(this, 4);
-		}
+		GS->UpdateControlPointFX(this, 4);
 	}
 	else
 	{
-		SetTeam(ControllingTeam);
-		if (GS)
-		{
-			GS->UpdateControlPointFX(this, TeamNum);
-		}
+		//SetTeam(ControllingTeam);
+		GS->UpdateControlPointFX(this, TeamNum);
 		CarriedObjectHolder = ControllingPawn;
 		if (ControlPointCaptureSound)
 		{
 			UUTGameplayStatics::UTPlaySound(GetWorld(), ControlPointCaptureSound, this);
 		}
-		if (Role == ROLE_Authority && !GetWorldTimerManager().IsTimerActive(ScoreTimeNotifyHandle))
+		AUTDomGameMode* GM = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
+		if (GM)
 		{
-			bScoreReady = false;
-			GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::ScoreTimeNotify, ScoreTime, false);
+			GM->BroadcastLocalized(this, MessageClass, ControllingPawn->GetTeamNum(), NULL, NULL, this);
+			ControllingPawn->ModifyStatsValue(NAME_ControlPointCaps, 1);
 		}
-	}
-	ControllingPawn->MakeNoise(2.0);
-	AUTDomGameMode* GM = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
-	if (GM)
-	{
-		GM->BroadcastLocalized(this, MessageClass, TeamNum, NULL, NULL, this);
-	}
-
-	if (Role == ROLE_Authority && GS != NULL)
-	{
-		for (AUTTeamInfo* Team : GS->Teams)
+		ControllingPawn->MakeNoise(2.0);
+		bScoreReady = false;
+		if (Role == ROLE_Authority)			
 		{
-			Team->NotifyObjectiveEvent(this, ControllingPawn->GetInstigatorController(), FName(TEXT("FlagStatusChange")));
+			GetWorldTimerManager().SetTimer(ScoreTimeNotifyHandle, this, &AControlPoint::ScoreTimeNotify, ScoreTime, false);
+			for (AUTTeamInfo* Team : GS->Teams)
+			{
+				Team->NotifyObjectiveEvent(this, ControllingPawn->GetInstigatorController(), FName(TEXT("FlagStatusChange")));
+			}
 		}
 	}
 }
@@ -315,4 +331,12 @@ AUTPlayerState* AControlPoint::GetCarriedObjectHolder()
 void AControlPoint::ScoreTimeNotify()
 {
 	bScoreReady = true;
+}
+
+void AControlPoint::UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAmmount)
+{
+	if (thePlayer != NULL && thePlayer == ControllingPawn)
+	{
+		thePlayer->ModifyStatsValue(NAME_ControlPointHeldPoints, ScoreAmmount);
+	}
 }

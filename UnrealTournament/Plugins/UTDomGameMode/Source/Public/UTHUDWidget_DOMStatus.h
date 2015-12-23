@@ -3,6 +3,7 @@
 
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
+#include "UTDomGameState.h"
 #include "UTHUDWidget_DOMStatus.generated.h"
 
 USTRUCT()
@@ -10,10 +11,10 @@ struct FPointInfo
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "DOM.HUD")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "DOM.HUD")
 		FVector2D StatusIcon;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
 		AControlPoint* thePoint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
@@ -26,15 +27,19 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	GENERATED_UCLASS_BODY()
 
 	/** colors assigned to the teams */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
 		TArray<FLinearColor> TeamColors;
+	
+	/** colors assigned to the Directional Arrow */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
+		TArray<FLinearColor> ArrowDirColor;
 
 	/* The control points */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
 		TArray<FPointInfo> CtrlPoints;  
 
 	/** Temp value of location on screen to draw the current ControlPoint icon */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
 		FVector2D DomPosition;
 
 	/* array of dom team icon HUD texture */
@@ -45,14 +50,14 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
 		bool bDrawDirectionArrow;   
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
 		UTexture2D* ArrowDirTexture;
 
 	UPROPERTY(Transient)
 		bool bControlPointInitialized;
 
 	/** Base size of HUD icon for each control point **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
+	UPROPERTY()
 		float IcoMulti;
 
 	UPROPERTY()

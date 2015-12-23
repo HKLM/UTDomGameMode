@@ -9,7 +9,7 @@ namespace UnrealBuildTool.Rules
 		public UTDomGameMode(TargetInfo Target)
 		{
 			PrivateIncludePaths.Add("UTDomGameMode/Private");
-            PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "Navmesh", "UnrealTournament", "InputCore", "SlateCore" });
+            PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "Navmesh", "UnrealTournament", "InputCore", "Slate", "SlateCore" });
 		}
 	}
 }

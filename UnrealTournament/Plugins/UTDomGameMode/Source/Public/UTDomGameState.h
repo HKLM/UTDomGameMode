@@ -5,8 +5,6 @@
 #include "ControlPoint.h"
 #include "UTDomGameState.generated.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(UTDomGameState, Log, All);
-
 UCLASS()
 class AUTDomGameState : public AUTGameState
 {
@@ -48,8 +46,9 @@ class AUTDomGameState : public AUTGameState
 	 * Gets array of control points.
 	 * @return	array of control points.
 	 */
-	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
+	UFUNCTION()
 		const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
 
 	virtual void SetWinner(AUTPlayerState* NewWinner) override;
+	virtual void DefaultTimer() override;
 };

@@ -9,9 +9,15 @@ class AUTDomTeamInfo : public AUTTeamInfo
 {
 	GENERATED_UCLASS_BODY()
 
+protected:
 	/** team score as a float value */
-	UPROPERTY(BlueprintReadWrite, Replicated, Category = DomTeam)
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = DomTeam)
 		float FloatScore;
+
+public:
+	/** Team Skin */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects)
+		UMaterialInterface* TeamSkinOverlay;
 
 	/** Adds ScorePoints value to the FloatScore and Score properties */
 	UFUNCTION()
@@ -19,6 +25,4 @@ class AUTDomTeamInfo : public AUTTeamInfo
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const;
 	virtual void AssignDefaultSquadFor(AController* C) override;
-	virtual void NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName) override;
-
 };

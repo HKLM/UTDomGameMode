@@ -7,9 +7,11 @@
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
 #include "ControlPoint.h"
+#include "UTDomTeamInfo.h"
+#include "UTDomGameMessage.h"
 #include "UTDomGameMode.generated.h"
 
-UCLASS(Abstract, Config = UTDomGameMode)
+UCLASS(Blueprintable, Abstract, Meta = (ChildCanTick), Config = UTDomGameMode)
 class AUTDomGameMode : public AUTTeamGameMode
 {
 	GENERATED_UCLASS_BODY()
@@ -29,6 +31,13 @@ class AUTDomGameMode : public AUTTeamGameMode
 	UPROPERTY(Config)
 		int32 MaxControlPoints;
 
+	UPROPERTY()
+		int32 MaxNumTeams;
+
+	/** character overlay applied for team skins */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects)
+		TArray<UMaterialInterface*> TeamOverlayEffect;
+
 	/**
 	* Adds the ADominationObjective->MyControlPoint to the CDomPoints array
 	* @param	DomObj	AControlPoint
@@ -38,9 +47,11 @@ class AUTDomGameMode : public AUTTeamGameMode
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
+	virtual void AnnounceMatchStart() override;
 	virtual bool CheckScore_Implementation(AUTPlayerState* Scorer) override;
 	virtual void SetEndGameFocus(AUTPlayerState* Winner) override;
 	virtual void Logout(AController* Exiting) override;
+	virtual void RestartPlayer(AController* aPlayer) override;
 
 	/**
 	* Called when a player leaves the match
@@ -49,4 +60,10 @@ class AUTDomGameMode : public AUTTeamGameMode
 	virtual void ClearControl(AUTPlayerState* ControllingPawn);
 
 	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
+	virtual void CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBase>>& MenuProps) override;
+
+#if !UE_SERVER
+	virtual void CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSpace, bool bCreateReadOnly, TArray< TSharedPtr<TAttributePropertyBase> >& ConfigProps) override;
+#endif
+
 };

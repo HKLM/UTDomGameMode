@@ -2,7 +2,7 @@
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTLocalMessage.h"
+#include "UTDomGameMessage.h"
 #include "UTDomTeamInfo.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
@@ -10,7 +10,7 @@
 
 extern FCollisionResponseParams WorldResponseParams;
 
-UCLASS(HideCategories = GameObject)
+UCLASS(HideCategories = GameObject, ShowCategories = ControlPoint)
 class AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
@@ -26,6 +26,9 @@ class AControlPoint : public AUTGameObjective
 	/** The controlling team.  replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
 		AUTDomTeamInfo* ControllingTeam;
+
+	UPROPERTY(BlueprintReadOnly, Category = ControlPoint)
+	class AUTDomGameState* DomGameState;
 
 	USceneComponent* SceneRoot;
 
@@ -62,15 +65,24 @@ class AControlPoint : public AUTGameObjective
 	UPROPERTY()
 		bool bScoreReady;
 
-	/** The time after one team touches a control point, til the next team can capture it */
+	/** The ammount of time other teams must wait after, the current team has touched the control point, 
+	* before it will allow the next team to be able to touch it */
 	UPROPERTY(Replicated)
 		float ScoreTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TSubclassOf<UUTLocalMessage> MessageClass;
 
+	/** timer for stats- how long this has been controlled by a team */
+	virtual void TeamHeldTimer();
+
+	/** Updates players stats of how many times this has been captured by a player */
+	UFUNCTION()
+		virtual void UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAmmount);
+
 	/** Timer that counts down the ScoreTime and then calls SendHomeWithNotify() */
 	FTimerHandle ScoreTimeNotifyHandle;
+	UFUNCTION()
 	virtual void ScoreTimeNotify();
 
 	/**
@@ -92,7 +104,7 @@ class AControlPoint : public AUTGameObjective
 	virtual void SetTeamForSideSwap_Implementation(uint8 NewTeamNum) override
 	{}
 
-	/**
+	/*!
 	* Returns a valid TeamNum for DOM
 	* @return	int8	Number( >= 0 && <= 4 )
 	* @note	0=Red Team
@@ -118,6 +130,7 @@ class AControlPoint : public AUTGameObjective
 		virtual FString GetPointName();
 
 	/** Updates the status */
+	UFUNCTION()
 		virtual void UpdateStatus();
 
 	/**

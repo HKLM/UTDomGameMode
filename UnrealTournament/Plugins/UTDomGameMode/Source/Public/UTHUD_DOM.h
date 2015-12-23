@@ -11,4 +11,5 @@ class AUTHUD_DOM : public AUTHUD
 	GENERATED_UCLASS_BODY()
 
 	virtual FLinearColor GetBaseHUDColor() override;
+	FLinearColor GetWidgetTeamColor();
 };
