@@ -15,13 +15,9 @@ protected:
 		float FloatScore;
 
 public:
-	/** Team Skin */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects)
-		UMaterialInterface* TeamSkinOverlay;
-
 	/** Adds ScorePoints value to the FloatScore and Score properties */
 	UFUNCTION()
-		virtual void SetFloatScore(float ScorePoints);
+	virtual void SetFloatScore(float ScorePoints);
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const;
 	virtual void AssignDefaultSquadFor(AController* C) override;

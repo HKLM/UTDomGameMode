@@ -6,67 +6,63 @@
 #include "UTDomGameState.h"
 #include "UTHUDWidget_DOMStatus.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FPointInfo
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "DOM.HUD")
-		FVector2D StatusIcon;
+	/* The current position on HUD to draw this at */
+	FVector2D StatusIcon;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
-		AControlPoint* thePoint;
+	/* The current ControlPoint associated with this */
+	AControlPoint* thePoint;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
-		FHUDRenderObject_Texture DomArrowDir;
+	/* Directional arrow pointing in the direction of this ControlPoint from the players current location */
+	FHUDRenderObject_Texture DomArrowDir;
 };
 
-UCLASS(Config = UTDomGameMode)
+UCLASS()
 class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 {
 	GENERATED_UCLASS_BODY()
 
-	/** colors assigned to the teams */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
-		TArray<FLinearColor> TeamColors;
-	
-	/** colors assigned to the Directional Arrow */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
-		TArray<FLinearColor> ArrowDirColor;
+	/* colors assigned to the teams */
+	TArray<FLinearColor> TeamColors;
+
+	/**
+	* colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
+	* (e.g. A red arrow on a red team logo would not be visible.
+	*/
+	TArray<FLinearColor> ArrowDirColor;
 
 	/* The control points */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
-		TArray<FPointInfo> CtrlPoints;  
+	TArray<FPointInfo> CtrlPoints;
 
-	/** Temp value of location on screen to draw the current ControlPoint icon */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DOM.HUD")
-		FVector2D DomPosition;
+	/* Temp value of location on screen to draw the current ControlPoint icon */
+	FVector2D DomPosition;
 
 	/* array of dom team icon HUD texture */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
-		TArray<UTexture2D*> DomTeamIconTexture; 
+	TArray<UTexture2D*> DomTeamIconTexture;
 
-	/** draw direction arrow (ArrowDirTexture) for each control point on HUD */
-	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "DOM.HUD")
-		bool bDrawDirectionArrow;   
+	/* draw direction arrow (ArrowDirTexture) for each control point on HUD */
+	bool bDrawDirectionArrow;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DOM.HUD")
-		UTexture2D* ArrowDirTexture;
+	/* Our HUDAtlas texture that has a white arrow so we can color it dynamicly */
+	UTexture2D* ArrowDirTexture;
 
 	UPROPERTY(Transient)
 		bool bControlPointInitialized;
 
-	/** Base size of HUD icon for each control point **/
+	/* Base size of HUD icon for each control point */
 	UPROPERTY()
 		float IcoMulti;
 
 	UPROPERTY()
 		float IconSize;
 
-	// used as a quick way not to have to recalculate the icons. 
-	// Copy of RenderScale to compair this time against. If differant then we will have to resetup the icons
-	UPROPERTY()
-		float LastRenderScale;
+	/* used as a quick way not to have to recalculate the icons.
+	* Copy of RenderScale to compair this time against. If differant then we will have to resetup the icons */
+	float LastRenderScale;
 
 	virtual void Draw_Implementation(float DeltaTime);
 	virtual void InitializeWidget(AUTHUD* Hud);
@@ -76,8 +72,10 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 		return !bShowScores;
 	}
 
-	virtual void FindControlPoints();
+	/* Cache the ControlPoints */
+	void FindControlPoints();
 
-	UFUNCTION(BlueprintCallable, Category = "DOM.HUD")
-		virtual UTexture2D* GetDomTeamIcon(uint8 TeamIndex);
+	/* Gets the texture of the givin Team number
+	* @param TeamIndex The TeamIndex of team to look up */
+	UTexture2D* GetDomTeamIcon(uint8 TeamIndex);
 };

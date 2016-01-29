@@ -3,14 +3,13 @@
 #include "UnrealTournament.h"
 #include "UTTeamInfo.h"
 #include "Net/UnrealNetwork.h"
-#include "UTDomSquadAI.h"
-#include "ControlPoint.h"
 #include "UTDomTeamInfo.h"
 
 AUTDomTeamInfo::AUTDomTeamInfo(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	DefaultOrders.Add(FName(TEXT("Roam")));
+	DefaultOrders.Add(FName(TEXT("Backup")));
 }
 
 void AUTDomTeamInfo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
@@ -21,16 +20,16 @@ void AUTDomTeamInfo::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutL
 
 void AUTDomTeamInfo::SetFloatScore(float ScorePoints)
 {
-	FloatScore += ScorePoints;
-	//conver to int and test if Score has changed. If not, dont waste network bandwidth for nothing.
-	int32 i = FloatScore;
-	if (Score != i)
+	if (Role == ROLE_Authority)
 	{
-		Score = FloatScore;
+		FloatScore += ScorePoints;
+		//conver to int and test if Score has changed. If not, dont waste network bandwidth for nothing.
+		int32 i = FloatScore;
+		if (Score != i)
+		{
+			Score = FloatScore;
+		}
 	}
-//#if NDEBUG || UE_BUILD_DEBUG
-//	GEngine->AddOnScreenDebugMessage(-1, 1.f, TeamColor, FString::Printf(TEXT("Score:  %f, %d"), FloatScore, Score));
-//#endif
 }
 
 void AUTDomTeamInfo::AssignDefaultSquadFor(AController* C)

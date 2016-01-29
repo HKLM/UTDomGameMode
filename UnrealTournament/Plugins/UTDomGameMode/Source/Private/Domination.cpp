@@ -8,38 +8,10 @@
 ADomination::ADomination(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	bKingOfTheHill = false;
 	DisplayName = NSLOCTEXT("UTDomGameMode", "DOM", "Domination");
 	GoalScore = 100;
 	MinPlayersToStart = 1;
 	MaxControlPoints = 8;
-}
-
-void ADomination::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
-{
-	Super::InitGame(MapName, Options, ErrorMessage);
-	bKingOfTheHill = EvalBoolOptions(ParseOption(Options, TEXT("KingOfTheHill")), bKingOfTheHill);
-}
-
-void ADomination::RegisterGameControlPoint(AControlPoint* DomObj)
-{
-	if (DomObj != NULL)
-	{
-		// Use only 1 control point for bKingOfTheHill
-		if (bKingOfTheHill && CDomPoints.Num() == 1 && CDomPoints[0] != DomObj  && !DomObj->bHidden)
-		{
-			DomObj->UpdateStatus();
-			DomGameState->RegisterControlPoint(DomObj, true);
-			return;
-		}
-		Super::RegisterGameControlPoint(DomObj);
-	}
-}
-
-void ADomination::InitGameState()
-{
-	Super::InitGameState();
-	DomGameState->KingOfTheHill = bKingOfTheHill;
 }
 
 void ADomination::DefaultTimer()
@@ -73,7 +45,7 @@ void ADomination::ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount)
 {
 	if ((CDomPoints[ControlPointIndex] != NULL && CDomPoints[ControlPointIndex]->ControllingTeam != NULL) && CDomPoints[ControlPointIndex]->bScoreReady)
 	{
-		for (int i = 0; i < NumTeams; i++)
+		for (uint8 i = 0; i < NumTeams; i++)
 		{
 			if (CDomPoints[ControlPointIndex]->ControllingTeam->GetTeamNum() == i)
 			{

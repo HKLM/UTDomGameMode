@@ -6,7 +6,6 @@
 #include "UTGameState.h"
 #include "UTDomStat.h"
 #include "UTDomGameState.h"
-#include "UTArmor.h"
 
 AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -24,18 +23,17 @@ void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
-	DOREPLIFETIME_CONDITION(AUTDomGameState, KingOfTheHill, COND_InitialOnly);
 }
 
 void AUTDomGameState::RegisterControlPoint(AControlPoint* DomObj, bool bIsDisabled)
 {
-	if (DomObj != NULL)
+	if (DomObj)
 	{
 		!bIsDisabled ? GameControlPoints.AddUnique(DomObj) : DomObj->DisablePoint();
 	}
 }
 
-void AUTDomGameState::UpdateControlPointFX(AControlPoint* ThePoint, int32 NewTeamIndex)
+void AUTDomGameState::UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTeamIndex)
 {
 	if (NewTeamIndex == 255)
 	{
@@ -60,7 +58,7 @@ AUTTeamInfo* AUTDomGameState::FindLeadingTeam()
 	{
 		WinningTeam = Teams[0];
 		bTied = false;
-		for (int i = 1; i < Teams.Num(); i++)
+		for (uint8 i = 1; i < Teams.Num(); i++)
 		{
 			if (Teams[i]->Score == WinningTeam->Score)
 			{
@@ -88,10 +86,10 @@ void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
 	ForceNetUpdate();
 }
 
-AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(int32 TeamNumToTest)
+AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
 {
 	AUTPlayerState* Best = NULL;
-	for (int32 i = 0; i < PlayerArray.Num(); i++)
+	for (uint8 i = 0; i < PlayerArray.Num(); i++)
 	{
 		AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
 		if (PS != NULL && PS->GetTeamNum() == TeamNumToTest && (Best == NULL || Best->Score < PS->Score))
@@ -102,27 +100,19 @@ AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(int32 TeamNumToTest)
 	return Best;
 }
 
-void AUTDomGameState::DefaultTimer()
+int32 AUTDomGameState::GetOtherTeamScore(uint8 WinningTeamIndex) const
 {
-	Super::DefaultTimer();
-	// use team skins only for 3/4 team play
-	if (NumTeams > 2)
+	if (WinningTeamIndex == NULL) WinningTeamIndex = 0;
+
+	int32 outputScore = 0;
+	for (uint8 i = 0; i < Teams.Num(); i++)
 	{
-		for (int32 i = 0; i < PlayerArray.Num(); i++)
+		// Not 4 team compatible
+		if (Teams[i]->TeamIndex != WinningTeamIndex)
 		{
-			AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
-			if (PS != NULL && PS->Team != NULL && PS->GetUTCharacter() != NULL && !PS->GetUTCharacter()->IsDead())
-			{
-				AUTDomTeamInfo* DTI = Cast<AUTDomTeamInfo>(PS->Team);
-				if (DTI != NULL && PS->GetUTCharacter()->GetCharOverlayMI() != NULL)
-				{
-					UMaterialInstanceDynamic* m = PS->GetUTCharacter()->GetCharOverlayMI();
-					if (m != DTI->TeamSkinOverlay)
-					{
-						PS->GetUTCharacter()->SetCharacterOverlayEffect(FOverlayEffect(DTI->TeamSkinOverlay), true);
-					}
-				}
-			}
+			outputScore = Teams[i]->Score;
+			break;
 		}
 	}
+	return outputScore;
 }

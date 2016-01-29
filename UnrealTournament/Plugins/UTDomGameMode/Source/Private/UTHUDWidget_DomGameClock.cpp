@@ -100,28 +100,6 @@ UUTHUDWidget_DomGameClock::UUTHUDWidget_DomGameClock(const FObjectInitializer& O
 	BlueTeamBanner.Size.Y = 75.0;
 	BlueTeamBanner.RenderColor = FLinearColor::White;
 
-	GreenTeamBanner.Atlas = HUDDomAtlas;
-	GreenTeamBanner.UVs.U = 11.0;
-	GreenTeamBanner.UVs.V = 610.0;
-	GreenTeamBanner.UVs.UL = 19.0;
-	GreenTeamBanner.UVs.VL = 70.0;
-	GreenTeamBanner.RenderPriority = 1.0;
-	GreenTeamBanner.bHidden = true;
-	GreenTeamBanner.Position.X = -408.0;
-	GreenTeamBanner.Size.Y = 75.0;
-	GreenTeamBanner.RenderColor = FLinearColor::White;
-
-	GoldTeamBanner.Atlas = HUDDomAtlas;
-	GoldTeamBanner.UVs.U = 35.0;
-	GoldTeamBanner.UVs.V = 485.0;
-	GoldTeamBanner.UVs.UL = 19.0;
-	GoldTeamBanner.UVs.VL = 70.0;
-	GoldTeamBanner.RenderPriority = 1.0;
-	GoldTeamBanner.bHidden = true;
-	GoldTeamBanner.Position.X = -816.0;
-	GoldTeamBanner.Size.Y = 75.0;
-	GoldTeamBanner.RenderColor = FLinearColor::White;
-
 	RedScoreText.HorzPosition = ETextHorzPos::Center;
 	RedScoreText.VertPosition = ETextVertPos::Center;
 	RedScoreText.Position.X = 80.0;
@@ -134,31 +112,12 @@ UUTHUDWidget_DomGameClock::UUTHUDWidget_DomGameClock(const FObjectInitializer& O
 	BlueScoreText.Position.Y = 30.0;
 	BlueScoreText.RenderColor = FLinearColor(0.1f, 0.1f, 0.6f, 1.0f);
 
-	GreenScoreText.HorzPosition = ETextHorzPos::Center;
-	GreenScoreText.VertPosition = ETextVertPos::Center;
-	GreenScoreText.RenderPriority = 1.0;
-	GreenScoreText.Position.X = -50.0;
-	GreenScoreText.Position.Y = 30.0;
-	GreenScoreText.RenderColor = FLinearColor(0.0f, 0.30f, 0.0f, 1.0f);
-	GreenScoreText.bHidden = true;
-
-	GoldScoreText.HorzPosition = ETextHorzPos::Center;
-	GoldScoreText.VertPosition = ETextVertPos::Center;
-	GoldScoreText.RenderPriority = 1.0;
-	GoldScoreText.Position.X = 470.0;
-	GoldScoreText.Position.Y = 30.0;
-	GoldScoreText.RenderColor = FLinearColor(0.38f, 0.38f, 0.0f, 1.0f);
-	GoldScoreText.bHidden = true;
-
 	AltClockScale = 0.5;
 }
 
 void UUTHUDWidget_DomGameClock::InitializeWidget(AUTHUD* Hud)
 {
 	Super::InitializeWidget(Hud);
-
-	GreenScoreText.GetTextDelegate.BindUObject(this, &UUTHUDWidget_DomGameClock::GetGreenScoreText_Implementation);
-	GoldScoreText.GetTextDelegate.BindUObject(this, &UUTHUDWidget_DomGameClock::GetGoldScoreText_Implementation);
 }
 
 void UUTHUDWidget_DomGameClock::Draw_Implementation(float DeltaTime)
@@ -171,55 +130,8 @@ void UUTHUDWidget_DomGameClock::Draw_Implementation(float DeltaTime)
 			ClockText.Font = UTHUDOwner->NumberFont;
 			RedScoreText.Font = UTHUDOwner->HugeFont;
 			BlueScoreText.Font = UTHUDOwner->HugeFont;
-			GreenScoreText.Font = UTHUDOwner->HugeFont;
-			GoldScoreText.Font = UTHUDOwner->HugeFont;
 			UTHUDOwner->HUDAtlas = HUDDomAtlas;
 		}
 	}
 	Super::Draw_Implementation(DeltaTime);
-	AUTDomGameState* GS = Cast<AUTDomGameState>(UTGameState);
-	if (GS != NULL)
-	{
-		if (GS->Teams.Num() ==2)
-		{
-			GreenScoreText.bHidden = true;
-			GoldScoreText.bHidden = true;
-		}
-		else if (GS->Teams.Num() == 3)
-		{
-			GreenScoreText.bHidden = false;
-			GoldScoreText.bHidden = true;
-		}
-		else if (GS->Teams.Num() == 4)
-		{
-			GreenScoreText.bHidden = false;
-			GoldScoreText.bHidden = false;
-		}
-	}
-}
-
-FText UUTHUDWidget_DomGameClock::GetGreenScoreText_Implementation()
-{
-	if (UTGameState && UTGameState->bTeamGame && UTGameState->Teams.Num() > 2)
-	{
-		if (UTGameState->Teams[2] != NULL)
-		{
-			GreenScoreText.bHidden = false;
-			return FText::AsNumber(UTGameState->Teams[2]->Score);
-		}
-	}
-	return FText::AsNumber(0);
-}
-
-FText UUTHUDWidget_DomGameClock::GetGoldScoreText_Implementation()
-{
-	if (UTGameState && UTGameState->bTeamGame && UTGameState->Teams.Num() > 3)
-	{
-		if (UTGameState->Teams[3] != NULL)
-		{
-			GoldScoreText.bHidden = false;
-			return FText::AsNumber(UTGameState->Teams[3]->Score);
-		}
-	}
-	return FText::AsNumber(0);
 }

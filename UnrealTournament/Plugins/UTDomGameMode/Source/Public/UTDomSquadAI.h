@@ -10,10 +10,8 @@ struct FDomAITargets
 {
 	GENERATED_USTRUCT_BODY()
 
-		UPROPERTY()
-		AUTGameObjective* Target;
-	UPROPERTY()
-		float Distance;
+	AUTGameObjective* Target;
+	float Distance;
 };
 
 UCLASS(NotPlaceable)
@@ -22,8 +20,7 @@ class AUTDomSquadAI : public AUTSquadAI
 	GENERATED_UCLASS_BODY()
 
 	/** Array of DominationObjectives */
-	UPROPERTY(BlueprintReadOnly, Category = DomSquad)
-		TArray<AUTGameObjective*> GameControlPoints;
+	TArray<AUTGameObjective*> GameControlPoints;
 
 	/** Internal flag */
 	UPROPERTY(Transient)
@@ -42,4 +39,6 @@ class AUTDomSquadAI : public AUTSquadAI
 	/** Search for UTGameObjective in the map  */
 	virtual void FindControlPoints();
 	virtual void NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName) override;
+
+	FString GetControlPointName(AUTGameObjective* ObjectiveToCheck) const;
 };

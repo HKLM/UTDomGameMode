@@ -19,11 +19,11 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	new(TeamColors)FLinearColor(0.9f, 0.98f, 0.0f, 1.0f);
 	new(TeamColors)FLinearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
-	new(ArrowDirColor)FLinearColor(0.1f, 0.1f, 1.0f, 1.0f);
+	new(ArrowDirColor)FLinearColor(0.0f, 0.0f, 1.9f, 1.0f);
+	new(ArrowDirColor)FLinearColor(1.9f, 0.05f, 0.05f, 1.0f);
 	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
 	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
-	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
-	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
+	new(ArrowDirColor)FLinearColor(1.9f, 0.0f, 0.0f, 1.0f);
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex0(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/RedTeamSymbol.RedTeamSymbol'"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex1(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/BlueTeamSymbol.BlueTeamSymbol'"));
@@ -39,7 +39,7 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDArrowtex(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
 	ArrowDirTexture = HUDArrowtex.Object;
 
-	IcoMulti = 52.0f;
+	IcoMulti = 50.0f;
 }
 
 void UUTHUDWidget_DOMStatus::InitializeWidget(AUTHUD* Hud)
@@ -56,7 +56,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	{
 		bControlPointInitialized = false;
 	}
-	IconSize = FMath::Clamp(IcoMulti * RenderScale, 45.0f, 55.0f);
+	IconSize = FMath::Clamp(IcoMulti * RenderScale, 35.0f, 45.0f);
 
 	AUTDomGameState* GS = Cast<AUTDomGameState>(UTGameState);
 	if (GS == NULL) {
@@ -64,6 +64,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	}
 	if (!bControlPointInitialized)
 	{
+		// Replace HUDAtlas with our version of it
 		if (UTHUDOwner->HUDAtlas != ArrowDirTexture)
 		{
 			UTHUDOwner->HUDAtlas = ArrowDirTexture;
@@ -73,7 +74,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		DomPosition.Y = 0.0f;
 		bool bDoNext = false;
 		// Create icon for each control point
-		for (int i = 0; i < CtrlPoints.Num(); i++)
+		for (uint8 i = 0; i < CtrlPoints.Num(); i++)
 		{
 			// offset from last icon
 			if (bDoNext)
@@ -104,10 +105,12 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		}
 		bControlPointInitialized = true;
 	}
-	int nTeam = 0;
+	// The TeamIndex of current ControllingTeam
+	uint8 nTeam = 0;
+	// Temp offset
 	FVector2D POS;
 
-	for (int i = 0; i < CtrlPoints.Num(); i++)
+	for (uint8 i = 0; i < CtrlPoints.Num(); i++)
 	{
 		// Set the team icon to display
 		if (CtrlPoints[i].thePoint != NULL
@@ -126,7 +129,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		{
 			nTeam = 4;
 		}
-
+		// Draw Team Logo
 		POS.X = CtrlPoints[i].StatusIcon.X * RenderScale;
 		POS.Y = CtrlPoints[i].StatusIcon.Y;
 		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(1.45f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), TeamColors[nTeam]);
@@ -138,12 +141,11 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		{
 			// Draw the points name
 			work = CtrlPoints[i].thePoint->PointName;
-			DrawText(FText::FromString(work), px + (IconSize / 2), py + (IconSize / 2), UTHUDOwner->TinyFont, FLinearColor::Black, 0.75f * RenderScale, FMath::Clamp(1.82f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Center, ETextVertPos::Bottom);
-			// Draw direction arrow
-			if (bDrawDirectionArrow 
-				&& UTCharacterOwner != NULL 
-				&& UTPlayerOwner->GetPawn())
-			{				 
+			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2), UTHUDOwner->TinyFont, FLinearColor::Black, 0.4f * RenderScale, FMath::Clamp(1.82f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
+			if (bDrawDirectionArrow
+				&& UTCharacterOwner != NULL
+				&& UTPlayerOwner->GetPawnOrSpectator())
+			{
 				APawn* P = UTPlayerOwner->GetPawn();
 				FRotator Dir = (CtrlPoints[i].thePoint->GetActorLocation() - UTCharacterOwner->GetActorLocation()).Rotation();
 				float Yaw = (Dir.Yaw - P->GetViewRotation().Yaw);
@@ -197,5 +199,5 @@ void UUTHUDWidget_DOMStatus::FindControlPoints()
  */
 UTexture2D* UUTHUDWidget_DOMStatus::GetDomTeamIcon(uint8 TeamIndex)
 {
-	return (DomTeamIconTexture.IsValidIndex(TeamIndex) ?  DomTeamIconTexture[TeamIndex] : DomTeamIconTexture[4]);
+	return (DomTeamIconTexture.IsValidIndex(TeamIndex) ? DomTeamIconTexture[TeamIndex] : DomTeamIconTexture[4]);
 }

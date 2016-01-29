@@ -17,23 +17,4 @@ class UUTHUDWidget_DomGameClock : public UUTHUDWidget_TeamGameClock
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
 		UTexture2D* HUDDomAtlas;
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture GreenTeamBanner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture GoldTeamBanner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text GreenScoreText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text GoldScoreText;
-
-	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetGreenScoreText();
-
-	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetGoldScoreText();
 };

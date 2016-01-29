@@ -46,7 +46,7 @@ FLinearColor AUTHUD_DOM::GetWidgetTeamColor()
 		{
 			switch (PS->GetTeamNum())
 			{
-				case 0:  
+				case 0:
 					return FLinearColor(0.15, 0.0, 0.0, 1.0);
 					break;
 				case 1:

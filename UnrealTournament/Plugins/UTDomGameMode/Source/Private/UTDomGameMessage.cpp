@@ -10,8 +10,6 @@ UUTDomGameMessage::UUTDomGameMessage(const FObjectInitializer& ObjectInitializer
 {
 	MessageArea = FName(TEXT("GameMessages"));
 	ControlledByTeam = NSLOCTEXT("UTDomGameMessage", "ControlledByTeam", "Control Point [{OptionalControlPoint}] now controlled by {OptionalTeam} Team!");
-	YouAreOnGreen = NSLOCTEXT("UTDomGameMessage", "YouAreOnGreen", "You are on GREEN.");
-	YouAreOnGold = NSLOCTEXT("UTDomGameMessage", "YouAreOnGold", "You are on GOLD.");
 
 	Lifetime = 1.2;
 	bIsStatusAnnouncement = true;
@@ -46,8 +44,8 @@ FText UUTDomGameMessage::GetText(int32 Switch, bool bTargetsPlayerState1, APlaye
 		case 3: return ControlledByTeam; break;
 		case 9: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnRed; break;
 		case 10: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnBlue; break;
-		case 11: return YouAreOnGreen; break;
-		case 12: return YouAreOnGold; break;
+		//case 11: return YouAreOnGreen; break;
+		//case 12: return YouAreOnGold; break;
 
 		default:
 			break;
@@ -133,7 +131,7 @@ float UUTDomGameMessage::GetScaleInTime_Implementation(int32 MessageIndex) const
 
 float UUTDomGameMessage::GetScaleInSize_Implementation(int32 MessageIndex) const
 {
-	return 0.6f;
+	return 0.55f;
 }
 
 bool UUTDomGameMessage::UseLargeFont(int32 MessageIndex) const

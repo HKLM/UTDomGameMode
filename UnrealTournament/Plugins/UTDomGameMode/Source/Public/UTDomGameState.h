@@ -14,9 +14,6 @@ class AUTDomGameState : public AUTGameState
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = GameStateDOM)
 		TArray<AControlPoint*> GameControlPoints;
 
-	UPROPERTY(Replicated)
-		bool KingOfTheHill;
-
 	/**
 	 * Registers the control point described by DomObj.
 	 * @param	DomObj	the AControlPoint.
@@ -30,25 +27,37 @@ class AUTDomGameState : public AUTGameState
 	 * @param	NewTeamIndex		Zero-based index of the new team.
 	 */
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-		virtual void UpdateControlPointFX(AControlPoint* ThePoint, int32 NewTeamIndex);
+	virtual void UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTeamIndex);
 
 	/**
 	* Finds the current winning team, or NULL if tied.
 	* @return	AUTTeamInfo	The Current winning team
 	*/
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-		virtual AUTTeamInfo* FindLeadingTeam();
+	virtual AUTTeamInfo* FindLeadingTeam();
 
+	/**
+	* Gets the team that is not the WinningTeamIndex and returns the other teams score
+	* @return	Team Score
+	* @note		This is not 4 team compatible, returns the 1st, teamIndex != WinningTeamIndex
+	*/
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-		virtual AUTPlayerState* FindBestPlayerOnTeam(int32 TeamNumToTest);
+	virtual int32 GetOtherTeamScore(uint8 WinningTeamIndex) const;
+
+	/**
+	* Finds the player with the highest score from the team specified in TeamNumToTest
+	* @param	TeamNumToTest	TeamIndex of the team to check.
+	* @return	AUTPlayerState	The player with highest score
+	*/
+	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
+	virtual AUTPlayerState* FindBestPlayerOnTeam(uint8 TeamNumToTest);
 
 	/**
 	 * Gets array of control points.
 	 * @return	array of control points.
 	 */
-	UFUNCTION()
-		const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
+	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
+	const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
 
 	virtual void SetWinner(AUTPlayerState* NewWinner) override;
-	virtual void DefaultTimer() override;
 };
