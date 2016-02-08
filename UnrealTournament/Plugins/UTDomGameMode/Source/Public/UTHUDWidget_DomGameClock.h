@@ -15,6 +15,5 @@ class UUTHUDWidget_DomGameClock : public UUTHUDWidget_TeamGameClock
 	virtual void InitializeWidget(AUTHUD* Hud);
 	virtual void Draw_Implementation(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		UTexture2D* HUDDomAtlas;
+	UTexture2D* HUDDomAtlas;
 };

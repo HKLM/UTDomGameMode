@@ -21,9 +21,6 @@ FCollisionResponseParams WorldResponseParams = []()
 AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	SceneRoot = ObjectInitializer.CreateDefaultSubobject<USceneComponent, USceneComponent>(this, TEXT("DummyRoot"), false);
-	RootComponent = SceneRoot;
-
 	// Collision
 	DomCollision = ObjectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("Collision"));
 	DomCollision->InitCapsuleSize(90.0f, 140.0f);
@@ -34,12 +31,12 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd_Implementation);
 
 	// Load StaticMesh assets
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomR.DomR'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint1Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomB.DomB'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint2Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomGN.DomGN'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint3Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomGold.DomGold'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint4Mesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomX.DomX'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPointNullMesh(TEXT("StaticMesh'/Game/RestrictedAssets/UTDomGameContent/Meshes/DomNULL.DomNULL'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomR.DomR'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint1Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomB.DomB'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint2Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomGN.DomGN'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint3Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomGold.DomGold'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint4Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomX.DomX'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPointNullMesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomNULL.DomNULL'"));
 
 	TeamMesh.Insert(ControlPoint0Mesh.Object, 0);
 	TeamMesh.Insert(ControlPoint1Mesh.Object, 1);
@@ -64,7 +61,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomMesh->bAffectDynamicIndirectLighting = true;
 	DomMesh->bReceivesDecals = false;
 	DomMesh->AttachParent = RootComponent;
-	DomMesh->RelativeLocation.Z = 5;
+	DomMesh->RelativeLocation.Z = 40;
 
 	// Spinner
 	MeshSpinner = ObjectInitializer.CreateDefaultSubobject<URotatingMovementComponent>(this, FName(TEXT("MeshSpinner")));
@@ -81,7 +78,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomLight->SetIntensity(10.0f);
 	DomLight->SetLightColor(DomLightColor[4]);
 
-	static ConstructorHelpers::FObjectFinder<USoundBase> CaptureSound(TEXT("SoundCue'/Game/RestrictedAssets/UTDomGameContent/Sounds/ControlSound_Cue.ControlSound_Cue'"));
+	static ConstructorHelpers::FObjectFinder<USoundBase> CaptureSound(TEXT("SoundCue'/UTDomGameMode/UTDomGameContent/Sounds/ControlSound_Cue.ControlSound_Cue'"));
 	ControlPointCaptureSound = CaptureSound.Object;
 
 	ScoreTime = 0.1f;
@@ -113,7 +110,7 @@ void AControlPoint::BeginPlay()
 
 void AControlPoint::CreateCarriedObject()
 {
-	// Optimize game resources. Dont need green and gold team meshes if playing 2 team mode.
+	 //Optimize game resources. Dont need green and gold team meshes if playing 2 team mode.
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
 	if (GS != NULL)
 	{

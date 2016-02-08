@@ -25,21 +25,21 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
 	new(ArrowDirColor)FLinearColor(1.9f, 0.0f, 0.0f, 1.0f);
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex0(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/RedTeamSymbol.RedTeamSymbol'"));
-	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex1(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/BlueTeamSymbol.BlueTeamSymbol'"));
-	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex2(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/GreenTeamSymbol.GreenTeamSymbol'"));
-	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex3(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/GoldTeamSymbol.GoldTeamSymbol'"));
-	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex4(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/NeutralSymbol.NeutralSymbol'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex0(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/RedTeamSymbol.RedTeamSymbol'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex1(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/BlueTeamSymbol.BlueTeamSymbol'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex2(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/GreenTeamSymbol.GreenTeamSymbol'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex3(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/GoldTeamSymbol.GoldTeamSymbol'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Tex4(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/NeutralSymbol.NeutralSymbol'"));
 	DomTeamIconTexture.Insert(Tex0.Object, 0);
 	DomTeamIconTexture.Insert(Tex1.Object, 1);
 	DomTeamIconTexture.Insert(Tex2.Object, 2);
 	DomTeamIconTexture.Insert(Tex3.Object, 3);
 	DomTeamIconTexture.Insert(Tex4.Object, 4);
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDArrowtex(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDArrowtex(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
 	ArrowDirTexture = HUDArrowtex.Object;
 
-	IcoMulti = 50.0f;
+	IcoMulti = 58.0f;
 }
 
 void UUTHUDWidget_DOMStatus::InitializeWidget(AUTHUD* Hud)
@@ -56,7 +56,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	{
 		bControlPointInitialized = false;
 	}
-	IconSize = FMath::Clamp(IcoMulti * RenderScale, 35.0f, 45.0f);
+	IconSize = FMath::Clamp(IcoMulti * RenderScale, 50.0f, 65.0f);
 
 	AUTDomGameState* GS = Cast<AUTDomGameState>(UTGameState);
 	if (GS == NULL) {
@@ -141,7 +141,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		{
 			// Draw the points name
 			work = CtrlPoints[i].thePoint->PointName;
-			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2), UTHUDOwner->TinyFont, FLinearColor::Black, 0.4f * RenderScale, FMath::Clamp(1.82f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
+			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2)  + 0.01f, UTHUDOwner->TinyFont, FLinearColor::Black, 0.7 * RenderScale, FMath::Clamp(1.82f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
 			if (bDrawDirectionArrow
 				&& UTCharacterOwner != NULL
 				&& UTPlayerOwner->GetPawnOrSpectator())
@@ -197,7 +197,7 @@ void UUTHUDWidget_DOMStatus::FindControlPoints()
  * @param	TeamIndex	Zero-based index of the team.
  * @return	UTexture2D	the dom team icon.
  */
-UTexture2D* UUTHUDWidget_DOMStatus::GetDomTeamIcon(uint8 TeamIndex)
+UTexture2D* UUTHUDWidget_DOMStatus::GetDomTeamIcon(uint8 TeamIndex) const
 {
 	return (DomTeamIconTexture.IsValidIndex(TeamIndex) ? DomTeamIconTexture[TeamIndex] : DomTeamIconTexture[4]);
 }

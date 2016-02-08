@@ -10,7 +10,7 @@
 #include "UTDomTeamInfo.h"
 #include "UTDomGameMode.generated.h"
 
-UCLASS(Blueprintable, Abstract, Meta = (ChildCanTick), Config = UTDomGameMode)
+UCLASS(Abstract, Config = UTDomGameMode)
 class AUTDomGameMode : public AUTTeamGameMode
 {
 	GENERATED_UCLASS_BODY()
@@ -26,7 +26,7 @@ class AUTDomGameMode : public AUTTeamGameMode
 	UPROPERTY(Config)
 		uint32 bAllowTranslocator : 1;
 
-	/** Max allowed number of Control Points allowed */
+	/** Max number of Control Points allowed to be in play. If there are more than this number, they will be disabled and removed from play */
 	UPROPERTY(Config)
 		int32 MaxControlPoints;
 

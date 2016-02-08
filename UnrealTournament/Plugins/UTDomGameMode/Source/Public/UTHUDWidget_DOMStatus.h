@@ -6,7 +6,7 @@
 #include "UTDomGameState.h"
 #include "UTHUDWidget_DOMStatus.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FPointInfo
 {
 	GENERATED_USTRUCT_BODY()
@@ -29,12 +29,6 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	/* colors assigned to the teams */
 	TArray<FLinearColor> TeamColors;
 
-	/**
-	* colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
-	* (e.g. A red arrow on a red team logo would not be visible.
-	*/
-	TArray<FLinearColor> ArrowDirColor;
-
 	/* The control points */
 	TArray<FPointInfo> CtrlPoints;
 
@@ -49,16 +43,18 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 
 	/* Our HUDAtlas texture that has a white arrow so we can color it dynamicly */
 	UTexture2D* ArrowDirTexture;
+	/**
+	* colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
+	* (e.g. A red arrow on a red team logo would not be visible.
+	*/
+	TArray<FLinearColor> ArrowDirColor;
 
 	UPROPERTY(Transient)
 		bool bControlPointInitialized;
 
 	/* Base size of HUD icon for each control point */
-	UPROPERTY()
-		float IcoMulti;
-
-	UPROPERTY()
-		float IconSize;
+	float IcoMulti;
+	float IconSize;
 
 	/* used as a quick way not to have to recalculate the icons.
 	* Copy of RenderScale to compair this time against. If differant then we will have to resetup the icons */
@@ -77,5 +73,5 @@ class UUTHUDWidget_DOMStatus : public UUTHUDWidget
 
 	/* Gets the texture of the givin Team number
 	* @param TeamIndex The TeamIndex of team to look up */
-	UTexture2D* GetDomTeamIcon(uint8 TeamIndex);
+	UTexture2D* GetDomTeamIcon(uint8 TeamIndex) const;
 };

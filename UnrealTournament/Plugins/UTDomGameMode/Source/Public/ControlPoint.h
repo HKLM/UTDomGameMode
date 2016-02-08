@@ -14,12 +14,13 @@
 
 extern FCollisionResponseParams WorldResponseParams;
 
-UCLASS(BlueprintType, Blueprintable, HideCategories = GameObject, autoexpandcategories = ControlPoint, meta = (ShortTooltip = "Control Point is the objective for Domination game mode."))
+/** Control Point is the objective actor for Domination game mode. */
+UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint)
 class AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
 
-	/** This points name to display on HUD */
+	/** The name to display on HUD of this point */
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
 		FString PointName;
 
@@ -31,41 +32,29 @@ class AControlPoint : public AUTGameObjective
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
 		AUTDomTeamInfo* ControllingTeam;
 
-	UPROPERTY()
-		float ControlledTime;
-
+	float ControlledTime;
 	/** will be 'true' if and when the domination point can be captured */
-	UPROPERTY()
-		bool bScoreReady;
+	bool bScoreReady;
 
 	/**
 	* The ammount of time other teams must wait after, the current team has touched the control point,
 	* before it will allow the next team to be able to touch it.
 	*/
-	UPROPERTY()
-		float ScoreTime;
+	float ScoreTime;
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 		USoundBase* ControlPointCaptureSound;
 
-	UPROPERTY()
-		TSubclassOf<UUTLocalMessage> MessageClass;
+	TSubclassOf<UUTLocalMessage> MessageClass;
 
 	//=========================================================================
 	// Components 
 
-	UPROPERTY()
-		USceneComponent* SceneRoot;
-
-	UPROPERTY()
-		UCapsuleComponent* DomCollision;
-
-	/** The mesh that makes up this base. */
-	UPROPERTY()
+	USceneComponent* SceneRoot;
+	UCapsuleComponent* DomCollision;
+	/** The mesh that is displayed, that makes up this base. */
 	class UStaticMeshComponent* DomMesh;
-
-	UPROPERTY()
 	class URotatingMovementComponent* MeshSpinner;
 
 	/** The point light that displays the controlling teams color */
@@ -77,15 +66,13 @@ class AControlPoint : public AUTGameObjective
 		TArray<FLinearColor> DomLightColor;
 
 	/** Array of staticmeshes to display on DomMesh. Index = TeamNum */
-	UPROPERTY()
-		TArray<UStaticMesh*> TeamMesh;
+	TArray<UStaticMesh*> TeamMesh;
 
 	/** 
 	* Extremly simple StaticMesh (StaticMesh & Material = 6.4KB resource size) to load in place
 	* of green and gold team meshes, when those meshes are not needed. (e.g. in 2 team mode)
 	*/
-	UPROPERTY()
-		UStaticMesh* TeamNullMesh;
+	UStaticMesh* TeamNullMesh;
 
 
 	//=========================================================================

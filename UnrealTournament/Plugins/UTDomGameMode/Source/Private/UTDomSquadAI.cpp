@@ -1,6 +1,7 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
+#include "UTDomGameMode.h"
 #include "UTSquadAI.h"
 #include "UTDomSquadAI.h"
 #include "UTDefensePoint.h"
@@ -32,22 +33,30 @@ void AUTDomSquadAI::Initialize(AUTTeamInfo* InTeam, FName InOrders)
 
 	if (Orders == NAME_Attack)
 	{
-		SetObjective(GameControlPoints[0]);
+		i = 0;
 	}
 	else if (Orders == NAME_Defend)
 	{
 		i = GameControlPoints.IsValidIndex(1) ? 1 : 0;
-
-		SetObjective(GameControlPoints[i]);
 	}
 	else if (Orders == NAME_Roam)
 	{
 		i = GameControlPoints.IsValidIndex(2) ? 2 : 0;
-		SetObjective(GameControlPoints[i]);
 	}
 	else
-	{		
-		i = FMath::RandRange(0, GameControlPoints.Num());
+	{
+		if (GameControlPoints.IsValidIndex(GameControlPoints.Num() - 1))
+		{
+			i = GameControlPoints.Num() - 1;
+		}
+		else if (GameControlPoints.IsValidIndex(0))
+		{
+			i = 0;
+		}
+	}
+	// Extra validation to ensure game does not crash
+	if (GameControlPoints.IsValidIndex(i))
+	{
 		SetObjective(GameControlPoints[i]);
 	}
 }
@@ -79,7 +88,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 	int8 Lottery = FMath::RandRange(0, 10);
 	bool bLottery = Lottery > 5 ? true : false;
 	int8 i = 0;
-	if (B->NeedsWeapon() 
+	if (B->NeedsWeapon()
 		&& B->FindInventoryGoal(0.0f))
 	{
 		B->GoalString = FString::Printf(TEXT("Get inventory %s"), *GetNameSafe(B->RouteCache.Last().Actor.Get()));
@@ -87,7 +96,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		B->StartWaitForMove();
 		return true;
 	}
-	else if (GameObjective->GetTeamNum() != B->GetTeamNum() 
+	else if (GameObjective->GetTeamNum() != B->GetTeamNum()
 			 && B->LineOfSightTo(GameObjective))
 	{
 		BotOrderString = FString::Printf(TEXT("Goto ControlPoint lineofsight: %s"), *GetControlPointName(GameObjective));
@@ -156,7 +165,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			return Super::CheckSquadObjectives(B);
 		}
 	}
-	else if (CurrentOrders == NAME_Roam )
+	else if (CurrentOrders == NAME_Roam)
 	{
 		i = GameControlPoints.IsValidIndex(2) ? 2 : 0;
 		if (GameControlPoints[i]->GetTeamNum() != B->GetTeamNum())
@@ -185,17 +194,22 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 	}
 	else if (CurrentOrders == NAME_Backup)
 	{
-		i = FMath::RandRange(0, GameControlPoints.Num());
-		if (GameControlPoints[i]->GetTeamNum() != B->GetTeamNum())
+		if (GameObjective->GetTeamNum() != B->GetTeamNum()
+				 && B->LineOfSightTo(GameObjective))
 		{
-			BotOrderString = FString::Printf(TEXT("BACKUP-Goto objective : %s"), *GetControlPointName(GameControlPoints[i]));
-			return B->TryPathToward(GameControlPoints[i], false, BotOrderString);
+			BotOrderString = FString::Printf(TEXT("BACKUP-ControlPoint lineofsight: %s"), *GetControlPointName(GameObjective));
+			return B->TryPathToward(GameObjective, false, BotOrderString);
+		}
+		else if (GameObjective->GetTeamNum() != B->GetTeamNum())
+		{
+			BotOrderString = FString::Printf(TEXT("BACKUP-Goto objective : %s"), *GetControlPointName(GameObjective));
+			return B->TryPathToward(GameObjective, false, BotOrderString);
 		}
 		else if (CheckSuperPickups(B, 5000))
 		{
 			return true;
 		}
-		else if (GameControlPoints[i]->GetTeamNum() == B->GetTeamNum() && B->GetDefensePoint() != NULL)
+		else if (GameObjective->GetTeamNum() == B->GetTeamNum() && B->GetDefensePoint() != NULL)
 		{
 			BotOrderString = FString::Printf(TEXT("BACKUP-Goto defense point : %s"), *B->GetDefensePoint()->GetName());
 			return B->TryPathToward(B->GetDefensePoint(), true, BotOrderString);
@@ -242,9 +256,9 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 			for (uint8 i = 0; i < GameControlPoints.Num(); i++)
 			{
 				// Find a near by control point that our team does not control
-				if ((TheOldObjective != GameControlPoints[i] 
-					&& GameControlPoints[i]->GetTeamNum() != B->GetTeamNum() 
-					&& B->LineOfSightTo(GameControlPoints[i])) 
+				if ((TheOldObjective != GameControlPoints[i]
+					&& GameControlPoints[i]->GetTeamNum() != B->GetTeamNum()
+					&& B->LineOfSightTo(GameControlPoints[i]))
 					|| ((GameControlPoints[i]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 3000.0f))
 				{
 					BestObjective = GameControlPoints[i];
@@ -256,7 +270,7 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 				// Find just a control point that our team does not control
 				for (uint8 j = 0; j < GameControlPoints.Num(); j++)
 				{
-					if (TheOldObjective != GameControlPoints[j] 
+					if (TheOldObjective != GameControlPoints[j]
 						&& GameControlPoints[j]->GetTeamNum() != B->GetTeamNum())
 					{
 						BestObjective = GameControlPoints[j];
@@ -282,8 +296,8 @@ void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* Insti
 			for (uint8 p = 0; p < GameControlPoints.Num(); p++)
 			{
 				// Find a near by control point that our team does not control
-				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum() 
-					&& (B->LineOfSightTo(GameControlPoints[p]) 
+				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum()
+					&& (B->LineOfSightTo(GameControlPoints[p])
 					|| (GameControlPoints[p]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f))
 				{
 					BestObjective = GameControlPoints[p];
@@ -333,9 +347,9 @@ AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* Ins
 			for (uint8 i = 0; i < GameControlPoints.Num(); i++)
 			{
 				// Find a near by control point that our team does not control
-				if ((TheOldObjective != GameControlPoints[i] 
-					&& GameControlPoints[i]->GetTeamNum() != B->GetTeamNum() 
-					&& B->LineOfSightTo(GameControlPoints[i])) 
+				if ((TheOldObjective != GameControlPoints[i]
+					&& GameControlPoints[i]->GetTeamNum() != B->GetTeamNum()
+					&& B->LineOfSightTo(GameControlPoints[i]))
 					|| ((GameControlPoints[i]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 3000.0f))
 				{
 					BestObjective = GameControlPoints[i];
@@ -347,7 +361,7 @@ AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* Ins
 				// Find just a control point that our team does not control
 				for (uint8 j = 0; j < GameControlPoints.Num(); j++)
 				{
-					if (TheOldObjective != GameControlPoints[j] 
+					if (TheOldObjective != GameControlPoints[j]
 						&& GameControlPoints[j]->GetTeamNum() != B->GetTeamNum())
 					{
 						BestObjective = GameControlPoints[j];
@@ -373,8 +387,8 @@ AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* Ins
 			for (uint8 p = 0; p < GameControlPoints.Num(); p++)
 			{
 				// Find a near by control point that our team does not control
-				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum() 
-					&& (B->LineOfSightTo(GameControlPoints[p]) 
+				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum()
+					&& (B->LineOfSightTo(GameControlPoints[p])
 					|| (GameControlPoints[p]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f))
 				{
 					BestObjective = GameControlPoints[p];
@@ -397,22 +411,22 @@ AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* Ins
 
 void AUTDomSquadAI::FindControlPoints()
 {
-	//GameControlPoints.Empty();
+	GameControlPoints.Empty();
 	for (TActorIterator<AUTGameObjective> It(GetWorld()); It; ++It)
 	{
 		if (!It->bHidden)
 		{
 			GameControlPoints.AddUnique(*It);
 		}
+		bGotObjectives = true;
 	}
-	bGotObjectives = true;
 }
 
 void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName)
 {
 	AUTGameObjective* InGameObjective = Cast<AUTGameObjective>(InObjective);
-	if (InstigatedBy != NULL && InGameObjective != NULL 
-		&& InGameObjective->GetCarriedObjectHolder() == InstigatedBy->PlayerState 
+	if (InstigatedBy != NULL && InGameObjective != NULL
+		&& InGameObjective->GetCarriedObjectHolder() == InstigatedBy->PlayerState
 		&& Members.Contains(InstigatedBy))
 	{
 		// re-enable alternate paths for flag carrier so it can consider them for planning its escape

@@ -21,7 +21,6 @@ AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
 void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
 }
 

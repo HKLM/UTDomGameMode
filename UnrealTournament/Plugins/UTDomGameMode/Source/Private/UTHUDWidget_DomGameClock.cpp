@@ -12,7 +12,7 @@ UUTHUDWidget_DomGameClock::UUTHUDWidget_DomGameClock(const FObjectInitializer& O
 	Origin = FVector2D(0.5f, 0.0f);
 	DesignedResolution = 1080.0;
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDTex(TEXT("Texture2D'/Game/RestrictedAssets/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDTex(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
 	HUDDomAtlas = HUDTex.Object;
 
 	BackgroundSlate.Atlas = HUDDomAtlas;

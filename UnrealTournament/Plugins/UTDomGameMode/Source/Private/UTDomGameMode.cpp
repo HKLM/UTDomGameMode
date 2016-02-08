@@ -22,7 +22,7 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	bUseTeamStarts = false;
 	//bAllowURLTeamCountOverride = true;
 	NumTeams = 2;
-	MaxSquadSize = 1;
+	MaxSquadSize = 2;
 	bAllowTranslocator = true;
 	bHideInUI = false;
 	//Add the translocator
@@ -39,8 +39,8 @@ void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FS
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
 
-	MaxControlPoints = FMath::Max(1, GetIntOption(Options, TEXT("MaxControlPoints"), MaxControlPoints));
-	bAllowTranslocator = EvalBoolOptions(ParseOption(Options, TEXT("AllowTrans")), bAllowTranslocator);
+	MaxControlPoints = FMath::Max(1, UGameplayStatics::GetIntOption(Options, TEXT("MaxControlPoints"), MaxControlPoints));
+	bAllowTranslocator = EvalBoolOptions(UGameplayStatics::ParseOption(Options, TEXT("AllowTrans")), bAllowTranslocator);
 }
 
 void AUTDomGameMode::GameObjectiveInitialized(AUTGameObjective* Obj)
@@ -119,7 +119,7 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 	{
 		for (uint8 i = 0; i < NumTeams; i++)
 		{
-			if (Teams[i]->Score >= GoalScore)
+			if (Teams.IsValidIndex(i) && Teams[i]->Score >= GoalScore)
 			{
 				if (Scorer->Team != Teams[i])
 				{
