@@ -24,7 +24,7 @@ class AUTDomGameMode : public AUTTeamGameMode
 
 	/** Allow the use of the translocator */
 	UPROPERTY(Config)
-		uint32 bAllowTranslocator : 1;
+		bool bAllowTranslocator;
 
 	/** Max number of Control Points allowed to be in play. If there are more than this number, they will be disabled and removed from play */
 	UPROPERTY(Config)
@@ -42,8 +42,12 @@ class AUTDomGameMode : public AUTTeamGameMode
 	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
 	virtual void AnnounceMatchStart() override;
 	virtual bool CheckScore_Implementation(AUTPlayerState* Scorer) override;
+	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
+	virtual void EndGame(AUTPlayerState* Winner, FName Reason) override;
 	virtual void SetEndGameFocus(AUTPlayerState* Winner) override;
 	virtual void Logout(AController* Exiting) override;
+	virtual void CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBase>>& MenuProps) override;
+	void BuildServerResponseRules(FString& OutRules);
 
 	/**
 	* Called when a player leaves the match
@@ -51,5 +55,9 @@ class AUTDomGameMode : public AUTTeamGameMode
 	**/
 	virtual void ClearControl(AUTPlayerState* ControllingPawn);
 
-	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
+#if !UE_SERVER
+	virtual void CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSpace, bool bCreateReadOnly, TArray< TSharedPtr<TAttributePropertyBase> >& ConfigProps) override;
+	virtual void BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<class SUTTabWidget> TabWidget, TArray<TSharedPtr<struct TAttributeStat> >& StatList) override;
+#endif
+
 };

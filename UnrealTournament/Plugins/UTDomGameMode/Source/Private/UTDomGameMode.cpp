@@ -7,6 +7,12 @@
 #include "UTHUD_DOM.h"
 #include "UTDomGameMessage.h"
 #include "UTWeap_Translocator.h"
+#include "StatNames.h"
+#include "UTDomStat.h"
+#include "UTFirstBloodMessage.h"
+#include "UTMutator.h"
+#include "Private/Slate/Widgets/SUTTabWidget.h"
+#include "Private/Slate/Dialogs/SUTPlayerInfoDialog.h"
 #include "UTDomGameMode.h"
 
 AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
@@ -217,6 +223,15 @@ void AUTDomGameMode::ClearControl(AUTPlayerState* PS)
 	}
 }
 
+void AUTDomGameMode::EndGame(AUTPlayerState* Winner, FName Reason)
+{
+	for (int8 i = 0; i < CDomPoints.Num(); i++)
+	{
+		CDomPoints[i]->bStopControlledTimer = true;
+	}
+	Super::EndGame(Winner, Reason);
+}
+
 void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 {
 	AControlPoint* WinningBase = NULL;
@@ -281,5 +296,203 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 
 void AUTDomGameMode::ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType)
 {
-	Super::AUTGameMode::ScoreKill_Implementation(Killer, Other, KilledPawn, DamageType);
+	AUTPlayerState* OtherPlayerState = Other ? Cast<AUTPlayerState>(Other->PlayerState) : NULL;
+	if ((Killer == Other) || (Killer == NULL))
+	{
+		// If it's a suicide, subtract a kill from the player...
+		if (OtherPlayerState)
+		{
+			OtherPlayerState->AdjustScore(-1);
+		}
+	}
+	else
+	{
+		AUTPlayerState * KillerPlayerState = Cast<AUTPlayerState>(Killer->PlayerState);
+		if (KillerPlayerState != NULL)
+		{
+			KillerPlayerState->AdjustScore(+1);
+			KillerPlayerState->IncrementKills(DamageType, true, OtherPlayerState);
+			KillerPlayerState->ModifyStatsValue(NAME_RegularKillPoints, 1);
+
+			CheckScore(KillerPlayerState);
+		}
+
+		if (!bFirstBloodOccurred)
+		{
+			BroadcastLocalized(this, UUTFirstBloodMessage::StaticClass(), 0, KillerPlayerState, NULL, NULL);
+			bFirstBloodOccurred = true;
+		}
+	}
+
+	AddKillEventToReplay(Killer, Other, DamageType);
+
+	if (BaseMutator != NULL)
+	{
+		BaseMutator->ScoreKill(Killer, Other, DamageType);
+	}
+	FindAndMarkHighScorer();
 }
+
+void AUTDomGameMode::BuildServerResponseRules(FString& OutRules)
+{
+	OutRules += FString::Printf(TEXT("Goal Score\t%i\t"), GoalScore);
+	OutRules += FString::Printf(TEXT("Time Limit\t%i\t"), int32(TimeLimit/60.0));
+	OutRules += FString::Printf(TEXT("Translocator\t%s\t"), bAllowTranslocator ? TEXT("True") : TEXT("False"));
+
+	AUTMutator* Mut = BaseMutator;
+	while (Mut)
+	{
+		OutRules += FString::Printf(TEXT("Mutator\t%s\t"), *Mut->DisplayName.ToString());
+		Mut = Mut->NextMutator;
+	}
+}
+
+void AUTDomGameMode::CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBase>>& MenuProps)
+{
+	Super::CreateGameURLOptions(MenuProps);
+	MenuProps.Add(MakeShareable(new TAttributePropertyBool(this, &bAllowTranslocator, TEXT("AllowTrans"))));
+}
+
+#if !UE_SERVER
+void AUTDomGameMode::CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSpace, bool bCreateReadOnly, TArray< TSharedPtr<TAttributePropertyBase> >& ConfigProps)
+{
+	Super::CreateConfigWidgets(MenuSpace, bCreateReadOnly, ConfigProps);
+
+	TSharedPtr< TAttributePropertyBool > AllowTransAttr = StaticCastSharedPtr<TAttributePropertyBool>(FindGameURLOption(ConfigProps, TEXT("AllowTrans")));
+
+	if (AllowTransAttr.IsValid())
+	{
+		MenuSpace->AddSlot()
+			.Padding(0.0f, 0.0f, 0.0f, 5.0f)
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+				[
+					SNew(SBox)
+					.WidthOverride(350)
+					[
+						SNew(STextBlock)
+						.TextStyle(SUWindowsStyle::Get(), "UT.Common.NormalText")
+						.Text(NSLOCTEXT("UTDomGameMode", "AllowTranslocator", "Translocator"))
+					]
+				]
+				+ SHorizontalBox::Slot()
+					.Padding(20.0f, 0.0f, 0.0f, 0.0f)
+					.AutoWidth()
+					[
+						SNew(SBox)
+						.WidthOverride(300)
+						[
+							bCreateReadOnly ?
+							StaticCastSharedRef<SWidget>(
+							SNew(SCheckBox)
+							.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
+							.Type(ESlateCheckBoxType::CheckBox)
+							.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
+							) :
+							StaticCastSharedRef<SWidget>(
+							SNew(SCheckBox)
+							.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
+							.OnCheckStateChanged(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::SetFromCheckBox)
+							.Type(ESlateCheckBoxType::CheckBox)
+							.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
+							)
+						]
+					]
+			];
+	}
+}
+
+void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<class SUTTabWidget> TabWidget, TArray<TSharedPtr<TAttributeStat> >& StatList)
+{
+	TAttributeStat::StatValueTextFunc TwoDecimal = [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> FText
+	{
+		return FText::FromString(FString::Printf(TEXT("%8.2f"), Stat->GetValue()));
+	};
+
+	TSharedPtr<SVerticalBox> LeftPane;
+	TSharedPtr<SVerticalBox> RightPane;
+	TSharedPtr<SHorizontalBox> HBox;
+	BuildPaneHelper(HBox, LeftPane, RightPane);
+
+	TabWidget->AddTab(NSLOCTEXT("AUTGameMode", "Score", "Score"), HBox);
+
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "Score", "Player Score"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->Score;	})), StatList);
+
+	LeftPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
+	LeftPane->AddSlot().AutoHeight()[SNew(SBox)
+		.HeightOverride(50.0f)
+		[
+			SNew(STextBlock)
+			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
+			.Text(NSLOCTEXT("ADomination", "Scoring", " SCORING "))
+		]
+	];
+
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "RegularKillPoints", "Score from Frags"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->GetStatsValue(NAME_RegularKillPoints);	})), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Kills", "Kills"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->Kills;	})), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Deaths", "Deaths"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float {	return PS->Deaths; })), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Suicides", "Suicides"), MakeShareable(new TAttributeStat(PlayerState, NAME_Suicides)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "ScorePM", "Score Per Minute"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float
+	{
+		return (PS->StartTime <  PS->GetWorld()->GameState->ElapsedTime) ? PS->Score * 60.f / (PS->GetWorld()->GameState->ElapsedTime - PS->StartTime) : 0.f;
+	}, TwoDecimal)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "KDRatio", "K/D Ratio"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float
+	{
+		return (PS->Deaths > 0) ? float(PS->Kills) / PS->Deaths : 0.f;
+	}, TwoDecimal)), StatList);
+
+	LeftPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
+	LeftPane->AddSlot().AutoHeight()[SNew(SBox)
+		.HeightOverride(50.0f)
+		[
+			SNew(STextBlock)
+			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
+			.Text(NSLOCTEXT("ADomination", "ControlPointStats", " CONTROL POINTS STATS "))
+		]
+	];
+
+	TAttributeStat::StatValueTextFunc ToTime = [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> FText
+	{
+		int32 Seconds = (int32)Stat->GetValue();
+		int32 Mins = Seconds / 60;
+		Seconds -= Mins * 60;
+		return FText::FromString(FString::Printf(TEXT("%d:%02d"), Mins, Seconds));
+	};
+
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldPoints", "Points from Capture"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldPoints)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointCaps", "Captures"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointCaps)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldTime", "Total Held Time"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldTime, nullptr, ToTime)), StatList);
+
+	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
+	RightPane->AddSlot().AutoHeight()[SNew(SBox)
+		.HeightOverride(50.0f)		
+		[
+			SNew(STextBlock)
+			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
+			.Text(NSLOCTEXT("ADomination", "PickupStats", " PICKUP STATS "))
+		]
+	];
+
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BeltPickups", "Shield Belt Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ShieldBeltCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "VestPickups", "Armor Vest Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ArmorVestCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "PadPickups", "Thigh Pad Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ArmorPadsCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "HelmetPickups", "Helmet Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_HelmetCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "JumpBootJumps", "JumpBoot Jumps"), MakeShareable(new TAttributeStat(PlayerState, NAME_BootJumps)), StatList);
+
+	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "UDamagePickups", "UDamage Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_UDamageCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BerserkPickups", "Berserk Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_BerserkCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "InvisibilityPickups", "Invisibility Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_InvisibilityCount)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "KegPickups", "Keg Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_KegCount)), StatList);
+
+	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "UDamageControl", "UDamage Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_UDamageTime, nullptr, ToTime)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BerserkControl", "Berserk Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_BerserkTime, nullptr, ToTime)), StatList);
+	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "InvisibilityControl", "Invisibility Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_InvisibilityTime, nullptr, ToTime)), StatList);
+}
+
+#endif

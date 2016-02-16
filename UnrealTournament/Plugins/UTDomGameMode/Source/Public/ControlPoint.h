@@ -33,6 +33,10 @@ class AControlPoint : public AUTGameObjective
 		AUTDomTeamInfo* ControllingTeam;
 
 	float ControlledTime;
+
+	UPROPERTY(Transient)
+		bool bStopControlledTimer;
+
 	/** will be 'true' if and when the domination point can be captured */
 	bool bScoreReady;
 
@@ -53,8 +57,11 @@ class AControlPoint : public AUTGameObjective
 
 	USceneComponent* SceneRoot;
 	UCapsuleComponent* DomCollision;
+
 	/** The mesh that is displayed, that makes up this base. */
+	UPROPERTY(Replicated)
 	class UStaticMeshComponent* DomMesh;
+
 	class URotatingMovementComponent* MeshSpinner;
 
 	/** The point light that displays the controlling teams color */

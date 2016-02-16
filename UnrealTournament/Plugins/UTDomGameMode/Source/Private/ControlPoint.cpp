@@ -30,7 +30,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomCollision->OnComponentBeginOverlap.AddDynamic(this, &AControlPoint::OnOverlapBegin);
 	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd_Implementation);
 
-	// Load StaticMesh assets
+	// StaticMesh assets
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomR.DomR'"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint1Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomB.DomB'"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint2Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomGN.DomGN'"));
@@ -44,12 +44,6 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	TeamMesh.Insert(ControlPoint3Mesh.Object, 3);
 	TeamMesh.Insert(ControlPoint4Mesh.Object, 4);
 	TeamNullMesh = ControlPointNullMesh.Object;
-
-	DomLightColor.Insert(FLinearColor::Red, 0);
-	DomLightColor.Insert(FLinearColor::Blue, 1);
-	DomLightColor.Insert(FLinearColor::Green, 2);
-	DomLightColor.Insert(FLinearColor::Yellow, 3);
-	DomLightColor.Insert(FLinearColor::Gray, 4);
 
 	// StaticMesh
 	DomMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, FName(TEXT("Mesh")));
@@ -69,6 +63,11 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	MeshSpinner->RotationRate.Yaw = 80.0f;
 
 	// Light
+	DomLightColor.Insert(FLinearColor::Red, 0);
+	DomLightColor.Insert(FLinearColor::Blue, 1);
+	DomLightColor.Insert(FLinearColor::Green, 2);
+	DomLightColor.Insert(FLinearColor::Yellow, 3);
+	DomLightColor.Insert(FLinearColor::Gray, 4);
 	DomLight = ObjectInitializer.CreateDefaultSubobject<UPointLightComponent>(this, FName(TEXT("Light")));
 	DomLight->AttachParent = RootComponent;
 	DomLight->RelativeLocation.Z = 90.0f;
@@ -89,6 +88,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	bAlwaysRelevant = true;
 	NetPriority = 3.0;
 	bScoreReady = true;
+	bStopControlledTimer = false;
 }
 
 void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -104,8 +104,11 @@ void AControlPoint::BeginPlay()
 	Super::BeginPlay();
 	SetActorLocation(GetActorLocation() + FVector(0.0f, 0.0f, 15.0f));
 
-	FTimerHandle TempHandle;
-	GetWorldTimerManager().SetTimer(TempHandle, this, &AControlPoint::TeamHeldTimer, 1.0f, true);
+	if (Role == ROLE_Authority)
+	{
+		FTimerHandle TempHandle;
+		GetWorldTimerManager().SetTimer(TempHandle, this, &AControlPoint::TeamHeldTimer, 1.0f, true);
+	}
 }
 
 void AControlPoint::CreateCarriedObject()
@@ -133,6 +136,8 @@ void AControlPoint::CreateCarriedObject()
 
 void AControlPoint::TeamHeldTimer()
 {
+	if (bStopControlledTimer) return;
+
 	if (!bHidden && ControllingPawn != NULL)
 	{
 		ControllingPawn->ModifyStatsValue(NAME_ControlPointHeldTime, 1.0f);
