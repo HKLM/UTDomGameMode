@@ -58,6 +58,14 @@ void AUTDomSquadAI::Initialize(AUTTeamInfo* InTeam, FName InOrders)
 	if (GameControlPoints.IsValidIndex(i))
 	{
 		SetObjective(GameControlPoints[i]);
+		for (AController* C : Members)
+		{
+			AUTBot* B = Cast<AUTBot>(C);
+			if (B != NULL)
+			{
+				B->WhatToDoNext();
+			}
+		}
 	}
 }
 
@@ -85,143 +93,97 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		FindControlPoints();
 	}
 
+	AUTGameObjective* tmpObjective = NULL;
+
 	int8 Lottery = FMath::RandRange(0, 10);
 	bool bLottery = Lottery > 5 ? true : false;
-	int8 i = 0;
-	if (B->NeedsWeapon()
-		&& B->FindInventoryGoal(0.0f))
+	//int8 i = 0;
+	if (B->NeedsWeapon() && B->FindInventoryGoal(0.0f))
 	{
 		B->GoalString = FString::Printf(TEXT("Get inventory %s"), *GetNameSafe(B->RouteCache.Last().Actor.Get()));
 		B->SetMoveTarget(B->RouteCache[0]);
 		B->StartWaitForMove();
 		return true;
 	}
-	else if (GameObjective->GetTeamNum() != B->GetTeamNum()
-			 && B->LineOfSightTo(GameObjective))
+	else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum()
+			 && B->LineOfSightTo(GameObjective)
+			 && ((GameObjective->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 700.0f))
 	{
-		BotOrderString = FString::Printf(TEXT("Goto ControlPoint lineofsight: %s"), *GetControlPointName(GameObjective));
+		BotOrderString = FString::Printf(TEXT("%s-Goto ControlPoint lineofsight: %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
 		return B->TryPathToward(GameObjective, bLottery, BotOrderString);
 	}
-	else if (CurrentOrders == NAME_Attack)
+	else if (CurrentOrders == NAME_Attack || CurrentOrders == NAME_Roam)
 	{
-		if (GameControlPoints[0]->GetTeamNum() != B->GetTeamNum())
+		if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
-			BotOrderString = FString::Printf(TEXT("ATTACK-Goto objective0 : %s"), *GetControlPointName(GameControlPoints[0]));
-			return B->TryPathToward(GameControlPoints[0], false, BotOrderString);
+			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
+			return B->TryPathToward(GameObjective, false, BotOrderString);
+		}
+		else if (CurrentOrders == NAME_Roam && (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy())))
+		{
+			B->GoalString = "Roam-Fight";
+			return false;
 		}
 		else if (CheckSuperPickups(B, 5000))
 		{
 			return true;
 		}
-		// Goto another ControlPoint if it is not ours and my ControlPoint is already our teams
-		else if (GameControlPoints.IsValidIndex(2) && GameControlPoints[0]->GetTeamNum() == B->GetTeamNum()
-				 && ((GameControlPoints[2]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f)
-				 && GameControlPoints[2]->GetTeamNum() != B->GetTeamNum())
+		else if (GameObjective != NULL && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 10.0f > LastObjectiveChange)
 		{
-			BotOrderString = FString::Printf(TEXT("ATTACK-Go help objective2 : %s"), *GetControlPointName(GameControlPoints[2]));
-			return B->TryPathToward(GameControlPoints[2], false, BotOrderString);
-		}
-		else if (GameControlPoints.IsValidIndex(1) && GameControlPoints[0]->GetTeamNum() == B->GetTeamNum()
-				 && ((GameControlPoints[1]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f)
-				 && GameControlPoints[1]->GetTeamNum() != B->GetTeamNum())
-		{
-			BotOrderString = FString::Printf(TEXT("ATTACK-Go help objective1 : %s"), *GetControlPointName(GameControlPoints[1]));
-			return B->TryPathToward(GameControlPoints[1], false, BotOrderString);
+			tmpObjective = GetNewObjective(GameObjective, B);
+			if (tmpObjective != NULL)
+			{
+				SetObjective(tmpObjective);
+				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
+				return B->TryPathToward(tmpObjective, false, BotOrderString);
+			}
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
 		{
 			B->GoalString = "ATTACK-Fight";
 			return false;
 		}
-		else
-		{
-			return Super::CheckSquadObjectives(B);
-		}
 	}
-	else if (CurrentOrders == NAME_Defend)
+	else if (CurrentOrders == NAME_Defend || CurrentOrders == NAME_Backup)
 	{
-		i = GameControlPoints.IsValidIndex(1) ? 1 : 0;
-		if (GameControlPoints[i]->GetTeamNum() != B->GetTeamNum())
+		if (CurrentOrders == NAME_Defend  && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 120.0f > LastObjectiveChange)
 		{
-			BotOrderString = FString::Printf(TEXT("DEFEND-Goto objective1 : %s"), *GetControlPointName(GameControlPoints[i]));
-			return B->TryPathToward(GameControlPoints[i], false, BotOrderString);
+			tmpObjective = GetNewObjective(GameObjective, B);
+			if (tmpObjective != NULL)
+			{
+				SetObjective(tmpObjective);
+				BotOrderString = FString::Printf(TEXT("%s-Got New Objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
+				return B->TryPathToward(tmpObjective, false, BotOrderString);
+			}
 		}
-		else if (B->GetDefensePoint() != NULL)
+		else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
-			BotOrderString = FString::Printf(TEXT("DEFEND-Goto defense point : %s"), *B->GetDefensePoint()->GetName());
-			return B->TryPathToward(B->GetDefensePoint(), true, BotOrderString);
-		}
-		else if (CheckSuperPickups(B, 5000))
-		{
-			return true;
+			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
+			return B->TryPathToward(GameObjective, false, BotOrderString);
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
 		{
 			B->GoalString = "DEFEND-Fight";
 			return false;
 		}
-		else
+		else if (CurrentOrders == NAME_Backup && GameObjective != NULL && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 30.0f > LastObjectiveChange)
 		{
-			return Super::CheckSquadObjectives(B);
-		}
-	}
-	else if (CurrentOrders == NAME_Roam)
-	{
-		i = GameControlPoints.IsValidIndex(2) ? 2 : 0;
-		if (GameControlPoints[i]->GetTeamNum() != B->GetTeamNum())
-		{
-			BotOrderString = FString::Printf(TEXT("ROAM-Goto objective2 : %s"), *GetControlPointName(GameControlPoints[i]));
-			return B->TryPathToward(GameControlPoints[i], false, BotOrderString);
+			tmpObjective = GetNewObjective(GameObjective, B);
+			if (tmpObjective != NULL)
+			{
+				SetObjective(tmpObjective);
+				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
+				return B->TryPathToward(tmpObjective, false, BotOrderString);
+			}
 		}
 		else if (CheckSuperPickups(B, 5000))
 		{
 			return true;
 		}
-		else if (GameControlPoints[i]->GetTeamNum() == B->GetTeamNum() && B->GetDefensePoint() != NULL)
+		else if (B->GetDefensePoint() != NULL)
 		{
-			BotOrderString = FString::Printf(TEXT("ROAM-Goto defense point : %s"), *B->GetDefensePoint()->GetName());
+			BotOrderString = FString::Printf(TEXT("%s-Goto defense point : %s"), *CurrentOrders.ToString(), *B->GetDefensePoint()->GetName());
 			return B->TryPathToward(B->GetDefensePoint(), true, BotOrderString);
-		}
-		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
-		{
-			B->GoalString = "ROAM-Fight";
-			return false;
-		}
-		else
-		{
-			return Super::CheckSquadObjectives(B);
-		}
-	}
-	else if (CurrentOrders == NAME_Backup)
-	{
-		if (GameObjective->GetTeamNum() != B->GetTeamNum()
-				 && B->LineOfSightTo(GameObjective))
-		{
-			BotOrderString = FString::Printf(TEXT("BACKUP-ControlPoint lineofsight: %s"), *GetControlPointName(GameObjective));
-			return B->TryPathToward(GameObjective, false, BotOrderString);
-		}
-		else if (GameObjective->GetTeamNum() != B->GetTeamNum())
-		{
-			BotOrderString = FString::Printf(TEXT("BACKUP-Goto objective : %s"), *GetControlPointName(GameObjective));
-			return B->TryPathToward(GameObjective, false, BotOrderString);
-		}
-		else if (CheckSuperPickups(B, 5000))
-		{
-			return true;
-		}
-		else if (GameObjective->GetTeamNum() == B->GetTeamNum() && B->GetDefensePoint() != NULL)
-		{
-			BotOrderString = FString::Printf(TEXT("BACKUP-Goto defense point : %s"), *B->GetDefensePoint()->GetName());
-			return B->TryPathToward(B->GetDefensePoint(), true, BotOrderString);
-		}
-		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
-		{
-			B->GoalString = "BACKUP-Fight";
-			return false;
-		}
-		else
-		{
-			return Super::CheckSquadObjectives(B);
 		}
 	}
 
@@ -240,91 +202,9 @@ bool AUTDomSquadAI::IsNearEnemyBase(const FVector& TestLoc)
 	return false;
 }
 
-void AUTDomSquadAI::PickNewObjective(AActor* OldObjective, AUTPlayerState* InstigatedBy)
+AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B)
 {
-	AUTGameObjective* BestObjective = NULL;
-	AUTGameObjective* TheOldObjective = Cast<AUTGameObjective>(OldObjective);
-	if (GameControlPoints.Num() < 2)
-	{
-		FindControlPoints();
-	}
-	AUTBot* B = Cast<AUTBot>(InstigatedBy->GetOwner());
-	if (B != NULL)
-	{
-		if (TheOldObjective != NULL)
-		{
-			for (uint8 i = 0; i < GameControlPoints.Num(); i++)
-			{
-				// Find a near by control point that our team does not control
-				if ((TheOldObjective != GameControlPoints[i]
-					&& GameControlPoints[i]->GetTeamNum() != B->GetTeamNum()
-					&& B->LineOfSightTo(GameControlPoints[i]))
-					|| ((GameControlPoints[i]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 3000.0f))
-				{
-					BestObjective = GameControlPoints[i];
-					break;
-				}
-			}
-			if (BestObjective == NULL)
-			{
-				// Find just a control point that our team does not control
-				for (uint8 j = 0; j < GameControlPoints.Num(); j++)
-				{
-					if (TheOldObjective != GameControlPoints[j]
-						&& GameControlPoints[j]->GetTeamNum() != B->GetTeamNum())
-					{
-						BestObjective = GameControlPoints[j];
-						break;
-					}
-				}
-				// Find a control point that is a differant then the original one
-				if (BestObjective == NULL)
-				{
-					for (uint8 l = 0; l < GameControlPoints.Num(); l++)
-					{
-						if (TheOldObjective != GameControlPoints[l])
-						{
-							BestObjective = GameControlPoints[l];
-							break;
-						}
-					}
-				}
-			}
-		}
-		if (BestObjective == NULL)
-		{
-			for (uint8 p = 0; p < GameControlPoints.Num(); p++)
-			{
-				// Find a near by control point that our team does not control
-				if (GameControlPoints[p]->GetTeamNum() != B->GetTeamNum()
-					&& (B->LineOfSightTo(GameControlPoints[p])
-					|| (GameControlPoints[p]->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 4000.0f))
-				{
-					BestObjective = GameControlPoints[p];
-					break;
-				}
-			}
-		}
-		// Last resort, pick anything
-		if (BestObjective == NULL)
-		{
-			for (uint8 k = 0; k < GameControlPoints.Num(); k++)
-			{
-				BestObjective = GameControlPoints[k];
-				break;
-			}
-		}
-		if (BestObjective != NULL)
-		{
-			bGotObjectives = true;
-			B->GoalString = "Retasked Objectives";
-			SetObjective(BestObjective);
-		}
-	}
-}
-
-AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* InstigatedBy)
-{
+	LastObjectiveChange = GetWorld()->GetTimeSeconds();
 	AUTGameObjective* BestObjective = NULL;
 	AUTGameObjective* TheOldObjective = Cast<AUTGameObjective>(OldObjective);
 	if (GameControlPoints.Num() < 2)
@@ -334,12 +214,11 @@ AActor* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTPlayerState* Ins
 	// randomly pick random objective
 	int8 randomObjective = FMath::RandRange(0, GameControlPoints.Num() - 1);
 	int8 LotteryNumber = FMath::RandRange(0, GameControlPoints.Num() - 1);
-	if (randomObjective == LotteryNumber)
+	if (randomObjective == LotteryNumber && TheOldObjective != GameControlPoints[LotteryNumber])
 	{
 		return GameControlPoints[LotteryNumber];
 	}
 
-	AUTBot* B = Cast<AUTBot>(InstigatedBy->GetOwner());
 	if (B != NULL)
 	{
 		if (TheOldObjective != NULL)
@@ -418,8 +297,8 @@ void AUTDomSquadAI::FindControlPoints()
 		{
 			GameControlPoints.AddUnique(*It);
 		}
-		bGotObjectives = true;
 	}
+	bGotObjectives = true;
 }
 
 void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName)
@@ -490,17 +369,17 @@ AUTGameObjective* AUTDomSquadAI::GetNearestObjective(AUTBot* InstigatedBy, bool 
 	return BestObjective;
 }
 
-FString AUTDomSquadAI::GetControlPointName(AUTGameObjective* ObjectiveToCheck) const
-{
-	AControlPoint* CP = Cast<AControlPoint>(ObjectiveToCheck);
-	FString rtnString = "";
-	if (CP != nullptr)
-	{
-		rtnString = CP->GetPointName();
-	}
-	else
-	{
-		rtnString = ObjectiveToCheck->GetHumanReadableName();
-	}
-	return rtnString;
-}
+//FString AUTDomSquadAI::GetControlPointName(AUTGameObjective* ObjectiveToCheck) const
+//{
+//	AControlPoint* CP = Cast<AControlPoint>(ObjectiveToCheck);
+//	FString rtnString = "";
+//	if (CP != nullptr)
+//	{
+//		rtnString = *CP->GetPointName();
+//	}
+//	else
+//	{
+//		rtnString = *ObjectiveToCheck->GetHumanReadableName();
+//	}
+//	return rtnString;
+//}

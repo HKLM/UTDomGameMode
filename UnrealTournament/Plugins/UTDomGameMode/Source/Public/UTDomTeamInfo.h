@@ -20,5 +20,8 @@ public:
 	virtual void SetFloatScore(float ScorePoints);
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const;
+	virtual bool AssignToSquad(AController* C, FName Orders, AController* Leader = NULL) override;
 	virtual void AssignDefaultSquadFor(AController* C) override;
+
+	virtual int32 GetNextOrderIndex();
 };

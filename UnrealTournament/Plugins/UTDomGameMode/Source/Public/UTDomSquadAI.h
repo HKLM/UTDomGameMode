@@ -30,9 +30,30 @@ class AUTDomSquadAI : public AUTSquadAI
 	virtual void BeginPlay() override;
 	virtual bool CheckSquadObjectives(AUTBot* B) override;
 	virtual bool IsNearEnemyBase(const FVector& TestLoc);
-	virtual void PickNewObjective(AActor* OldObjective, AUTPlayerState* InstigatedBy);
 
-	virtual AActor* GetNewObjective(AActor* OldObjective, AUTPlayerState* InstigatedBy);
+	virtual void SetObjective(AActor* InObjective) override
+	{
+		if (InObjective != Objective)
+		{
+			Objective = InObjective;
+			GameObjective = Cast<AUTGameObjective>(InObjective);
+			SquadRoutes.Empty();
+			CurrentSquadRouteIndex = INDEX_NONE;
+			for (AController* C : Members)
+			{
+				AUTBot* B = Cast<AUTBot>(C);
+				if (B != NULL)
+				{
+					B->UsingSquadRouteIndex = INDEX_NONE;
+					B->bDisableSquadRoutes = false;
+					B->SquadRouteGoal.Clear();
+					//B->WhatToDoNext();
+				}
+			}
+		}
+	}
+
+	virtual AUTGameObjective* GetNewObjective(AActor* OldObjective, AUTBot* B);
 
 	virtual AUTGameObjective* GetNearestObjective(AUTBot* InstigatedBy, bool bOnlyNotControlled);
 
@@ -40,5 +61,14 @@ class AUTDomSquadAI : public AUTSquadAI
 	virtual void FindControlPoints();
 	virtual void NotifyObjectiveEvent(AActor* InObjective, AController* InstigatedBy, FName EventName) override;
 
-	FString GetControlPointName(AUTGameObjective* ObjectiveToCheck) const;
+	virtual FString GetControlPointName(AUTGameObjective* ObjectiveToCheck) const
+	{
+		AControlPoint* CP = Cast<AControlPoint>(ObjectiveToCheck);
+		return (CP != nullptr ? *CP->GetPointName() : *ObjectiveToCheck->GetHumanReadableName());
+	}
+
+protected:
+	/** Internal counter to prevent excessive Objectie changes */
+	float LastObjectiveChange;
+
 };

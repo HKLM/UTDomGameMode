@@ -84,6 +84,12 @@ class AControlPoint : public AUTGameObjective
 
 	//=========================================================================
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		UBillboardComponent* EditorSprite;
+#endif
+
+
 	/**
 	* Gets point name.
 	* @return	The point name.

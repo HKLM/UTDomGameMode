@@ -80,6 +80,24 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	static ConstructorHelpers::FObjectFinder<USoundBase> CaptureSound(TEXT("SoundCue'/UTDomGameMode/UTDomGameContent/Sounds/ControlSound_Cue.ControlSound_Cue'"));
 	ControlPointCaptureSound = CaptureSound.Object;
 
+#if WITH_EDITORONLY_DATA
+	EditorSprite = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(FName(TEXT("EditorSprite")));
+	if (EditorSprite != NULL)
+	{
+		EditorSprite->AttachParent = RootComponent;
+		if (!IsRunningCommandlet())
+		{
+			ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteObj(TEXT("/Game/RestrictedAssets/EditorAssets/Icons/generic_objective.generic_objective"));
+			EditorSprite->Sprite = SpriteObj.Get();
+			if (EditorSprite->Sprite != NULL)
+			{
+				EditorSprite->UL = EditorSprite->Sprite->GetSurfaceWidth();
+				EditorSprite->VL = EditorSprite->Sprite->GetSurfaceHeight();
+			}
+		}
+	}
+#endif
+	
 	ScoreTime = 0.1f;
 	MessageClass = UUTDomGameMessage::StaticClass();
 	TeamNum = 255;

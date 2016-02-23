@@ -32,22 +32,69 @@ void AUTDomTeamInfo::SetFloatScore(float ScorePoints)
 	}
 }
 
+bool AUTDomTeamInfo::AssignToSquad(AController* C, FName Orders, AController* Leader)
+{
+	AUTSquadAI* NewSquad = NULL;
+	for (int32 i = 0; i < Squads.Num(); i++)
+	{
+		if (Squads[i] == NULL || Squads[i]->IsPendingKillPending())
+		{
+			Squads.RemoveAt(i--);
+		}
+		else if (Squads[i]->Orders == Orders && (Leader == NULL || Squads[i]->GetLeader() == Leader) && (Leader != NULL || Squads[i]->GetSize() < GetWorld()->GetAuthGameMode<AUTGameMode>()->MaxSquadSize))
+		{
+			NewSquad = Squads[i];
+			break;
+		}
+	}
+	if (NewSquad == NULL && (Leader == NULL || Leader == C))
+	{
+		NewSquad = GetWorld()->SpawnActor<AUTSquadAI>(GetWorld()->GetAuthGameMode<AUTGameMode>()->SquadType);
+		NewSquad->Initialize(this, Orders);
+		Squads.Add(NewSquad);
+	}
+	if (NewSquad == NULL)
+	{
+		return false;
+	}
+	else
+	{
+		// assign squad
+		AUTBot* B = Cast<AUTBot>(C);
+		if (B != NULL)
+		{
+			B->SetSquad(NewSquad);
+		}
+		else
+		{
+			// TODO: playercontroller
+		}
+		return true;
+	}
+}
+
 void AUTDomTeamInfo::AssignDefaultSquadFor(AController* C)
 {
 	if (Cast<AUTBot>(C) != NULL)
 	{
 		if (DefaultOrders.Num() > 0)
 		{
-			DefaultOrderIndex = (DefaultOrderIndex + 1) % DefaultOrders.Num();
-			AssignToSquad(C, DefaultOrders[DefaultOrderIndex]);
+			AssignToSquad(C, DefaultOrders[GetNextOrderIndex()]);
 		}
 		else
 		{
-			AssignToSquad(C, NAME_None);
+			AssignToSquad(C, FName(TEXT("Attack")));
 		}
 	}
-	else
+}
+
+int32 AUTDomTeamInfo::GetNextOrderIndex()
+{
+	DefaultOrderIndex++;
+	if (DefaultOrderIndex >= DefaultOrders.Num())
 	{
-		// TODO: playercontroller
+		DefaultOrderIndex = 0;
 	}
+
+	return DefaultOrderIndex;
 }
