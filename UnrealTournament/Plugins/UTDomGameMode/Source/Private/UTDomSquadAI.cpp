@@ -97,7 +97,6 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 
 	int8 Lottery = FMath::RandRange(0, 10);
 	bool bLottery = Lottery > 5 ? true : false;
-	//int8 i = 0;
 	if (B->NeedsWeapon() && B->FindInventoryGoal(0.0f))
 	{
 		B->GoalString = FString::Printf(TEXT("Get inventory %s"), *GetNameSafe(B->RouteCache.Last().Actor.Get()));
@@ -135,7 +134,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
-				return B->TryPathToward(tmpObjective, false, BotOrderString);
+				return B->TryPathToward(tmpObjective, bLottery, BotOrderString);
 			}
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
@@ -159,7 +158,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
-			return B->TryPathToward(GameObjective, false, BotOrderString);
+			return B->TryPathToward(GameObjective, bLottery, BotOrderString);
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
 		{

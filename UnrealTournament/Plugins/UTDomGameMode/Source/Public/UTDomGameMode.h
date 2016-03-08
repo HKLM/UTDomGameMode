@@ -30,6 +30,8 @@ class AUTDomGameMode : public AUTTeamGameMode
 	UPROPERTY(Config)
 		int32 MaxControlPoints;
 
+	TAssetSubclassOf<AUTWeapon> TranslocatorObject;
+
 	/**
 	* Adds the DomObj to the CDomPoints array
 	* @param	DomObj	the AControlPoint to register
@@ -41,6 +43,7 @@ class AUTDomGameMode : public AUTTeamGameMode
 	virtual void BeginPlay() override;
 	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
 	virtual void AnnounceMatchStart() override;
+	virtual void GiveDefaultInventory(APawn* PlayerPawn) override;
 	virtual bool CheckScore_Implementation(AUTPlayerState* Scorer) override;
 	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
 	virtual void EndGame(AUTPlayerState* Winner, FName Reason) override;

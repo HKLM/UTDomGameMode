@@ -35,6 +35,8 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	static ConstructorHelpers::FObjectFinder<UClass> WeapTranslocator(TEXT("BlueprintGeneratedClass'/Game/RestrictedAssets/Weapons/Translocator/BP_Translocator.BP_Translocator_C'"));
 	DefaultInventory.Add(WeapTranslocator.Object);
 
+	TranslocatorObject = FStringAssetReference(TEXT("/Game/RestrictedAssets/Weapons/Translocator/BP_Translocator.BP_Translocator_C"));
+
 	TeamColors[0] = FLinearColor(1.15f, 0.0f, 0.0f, 0.72f);
 	TeamColors[1] = FLinearColor(0.0f, 0.0f, 1.2f, 0.72f);
 	TeamColors[2] = FLinearColor(0.0f, 1.20f, 0.0f, 0.72f);
@@ -113,6 +115,46 @@ void AUTDomGameMode::AnnounceMatchStart()
 	else
 	{
 		BroadcastLocalized(this, UUTGameMessage::StaticClass(), 0, NULL, NULL, NULL);
+	}
+}
+
+void AUTDomGameMode::GiveDefaultInventory(APawn* PlayerPawn)
+{
+	AUTCharacter* UTCharacter = Cast<AUTCharacter>(PlayerPawn);
+	if (UTCharacter != NULL)
+	{
+		if (bClearPlayerInventory)
+		{
+			UTCharacter->DefaultCharacterInventory.Empty();
+		}
+		bool bFoundTranslocator = false;
+		int32 foundAtIndex = -1;
+		{
+			// see if player has the translocator
+			for (int32 i = DefaultInventory.Num() - 1; i >= 0; i--)
+			{
+				if (DefaultInventory[i]->IsChildOf(AUTWeap_Translocator::StaticClass()))
+				{
+					bFoundTranslocator = true;
+					foundAtIndex = i;
+				}
+			}
+			// if translocator is enabled, and not found, add it back
+			if (bAllowTranslocator && !bFoundTranslocator)
+			{
+				if (!TranslocatorObject.IsNull())
+				{
+					TSubclassOf<AUTWeapon> WeaponClass = Cast<UClass>(StaticLoadObject(UClass::StaticClass(), NULL, *TranslocatorObject.ToStringReference().ToString(), NULL, LOAD_NoWarn));
+					DefaultInventory.Add(WeaponClass);
+				}
+			}
+			// if translocator is not enabled, and it is found, remove it
+			else if (!bAllowTranslocator && bFoundTranslocator)
+			{
+				DefaultInventory.RemoveAt(foundAtIndex);
+			}
+		}
+		UTCharacter->AddDefaultInventory(DefaultInventory);
 	}
 }
 
