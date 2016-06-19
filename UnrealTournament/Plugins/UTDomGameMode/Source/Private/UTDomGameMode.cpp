@@ -182,7 +182,7 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 		}
 	}
 	// check if team wins by time limit
-	if (TimeLimit > 0 && DomGameState->RemainingTime <= 0)
+	if (TimeLimit > 0 && DomGameState->GetRemainingTime() <= 0)
 	{
 		AUTTeamInfo* LeadingTeam = DomGameState->FindLeadingTeam();
 		if (LeadingTeam != NULL)
@@ -378,7 +378,7 @@ void AUTDomGameMode::ScoreKill_Implementation(AController* Killer, AController* 
 void AUTDomGameMode::BuildServerResponseRules(FString& OutRules)
 {
 	OutRules += FString::Printf(TEXT("Goal Score\t%i\t"), GoalScore);
-	OutRules += FString::Printf(TEXT("Time Limit\t%i\t"), int32(TimeLimit/60.0));
+	OutRules += FString::Printf(TEXT("Time Limit\t%i\t"), int32(TimeLimit / 60.0));
 	OutRules += FString::Printf(TEXT("Translocator\t%s\t"), bAllowTranslocator ? TEXT("True") : TEXT("False"));
 
 	AUTMutator* Mut = BaseMutator;
@@ -410,40 +410,40 @@ void AUTDomGameMode::CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSpac
 			[
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				.VAlign(VAlign_Center)
-				[
-					SNew(SBox)
-					.WidthOverride(350)
-					[
-						SNew(STextBlock)
-						.TextStyle(SUWindowsStyle::Get(), "UT.Common.NormalText")
-						.Text(NSLOCTEXT("UTDomGameMode", "AllowTranslocator", "Translocator"))
-					]
-				]
-				+ SHorizontalBox::Slot()
-					.Padding(20.0f, 0.0f, 0.0f, 0.0f)
-					.AutoWidth()
-					[
-						SNew(SBox)
-						.WidthOverride(300)
-						[
-							bCreateReadOnly ?
-							StaticCastSharedRef<SWidget>(
-							SNew(SCheckBox)
-							.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
-							.Type(ESlateCheckBoxType::CheckBox)
-							.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
-							) :
-							StaticCastSharedRef<SWidget>(
-							SNew(SCheckBox)
-							.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
-							.OnCheckStateChanged(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::SetFromCheckBox)
-							.Type(ESlateCheckBoxType::CheckBox)
-							.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
-							)
-						]
-					]
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			[
+				SNew(SBox)
+				.WidthOverride(350)
+			[
+				SNew(STextBlock)
+				.TextStyle(SUWindowsStyle::Get(), "UT.Common.NormalText")
+			.Text(NSLOCTEXT("UTDomGameMode", "AllowTranslocator", "Translocator"))
+			]
+			]
+		+ SHorizontalBox::Slot()
+			.Padding(20.0f, 0.0f, 0.0f, 0.0f)
+			.AutoWidth()
+			[
+				SNew(SBox)
+				.WidthOverride(300)
+			[
+				bCreateReadOnly ?
+				StaticCastSharedRef<SWidget>(
+					SNew(SCheckBox)
+					.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
+					.Type(ESlateCheckBoxType::CheckBox)
+					.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
+					) :
+			StaticCastSharedRef<SWidget>(
+				SNew(SCheckBox)
+				.IsChecked(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::GetAsCheckBox)
+				.OnCheckStateChanged(AllowTransAttr.ToSharedRef(), &TAttributePropertyBool::SetFromCheckBox)
+				.Type(ESlateCheckBoxType::CheckBox)
+				.Style(SUWindowsStyle::Get(), "UT.Common.CheckBox")
+				)
+			]
+			]
 			];
 	}
 }
@@ -470,7 +470,7 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 		[
 			SNew(STextBlock)
 			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-			.Text(NSLOCTEXT("ADomination", "Scoring", " SCORING "))
+		.Text(NSLOCTEXT("ADomination", "Scoring", " SCORING "))
 		]
 	];
 
@@ -480,7 +480,7 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Suicides", "Suicides"), MakeShareable(new TAttributeStat(PlayerState, NAME_Suicides)), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "ScorePM", "Score Per Minute"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float
 	{
-		return (PS->StartTime <  PS->GetWorld()->GameState->ElapsedTime) ? PS->Score * 60.f / (PS->GetWorld()->GameState->ElapsedTime - PS->StartTime) : 0.f;
+		return (PS->StartTime < PS->GetWorld()->GameState->ElapsedTime) ? PS->Score * 60.f / (PS->GetWorld()->GameState->ElapsedTime - PS->StartTime) : 0.f;
 	}, TwoDecimal)), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "KDRatio", "K/D Ratio"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float
 	{
@@ -493,7 +493,7 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 		[
 			SNew(STextBlock)
 			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-			.Text(NSLOCTEXT("ADomination", "ControlPointStats", " CONTROL POINTS STATS "))
+		.Text(NSLOCTEXT("ADomination", "ControlPointStats", " CONTROL POINTS STATS "))
 		]
 	];
 
@@ -511,11 +511,11 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 
 	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
 	RightPane->AddSlot().AutoHeight()[SNew(SBox)
-		.HeightOverride(50.0f)		
+		.HeightOverride(50.0f)
 		[
 			SNew(STextBlock)
 			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-			.Text(NSLOCTEXT("ADomination", "PickupStats", " PICKUP STATS "))
+		.Text(NSLOCTEXT("ADomination", "PickupStats", " PICKUP STATS "))
 		]
 	];
 
