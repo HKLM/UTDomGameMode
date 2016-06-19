@@ -115,3 +115,13 @@ int32 AUTDomGameState::GetOtherTeamScore(uint8 WinningTeamIndex) const
 	}
 	return outputScore;
 }
+
+FText AUTDomGameState::GetGameStatusText(bool bForScoreboard)
+{
+	if (bForScoreboard)
+	{
+		return (GoalScore == 0) ? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit)) : FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
+	}
+
+	return Super::GetGameStatusText(bForScoreboard);
+}

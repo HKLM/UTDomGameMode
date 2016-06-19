@@ -3,10 +3,10 @@
 #include "UTDomGameMode.h"
 #include "Core.h"
 #include "Engine.h"
-#include "ModuleManager.h"
 #include "ModuleInterface.h"
+#include "ModuleManager.h"
 
-class FUTDomGameModePlugin: public IModuleInterface
+class FUTDomGameModePlugin : public IModuleInterface
 {
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;

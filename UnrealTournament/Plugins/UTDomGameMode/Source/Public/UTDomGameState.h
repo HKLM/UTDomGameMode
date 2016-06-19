@@ -60,4 +60,5 @@ class AUTDomGameState : public AUTGameState
 	const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
 
 	virtual void SetWinner(AUTPlayerState* NewWinner) override;
+	virtual FText GetGameStatusText(bool bForScoreboard = false) override;
 };

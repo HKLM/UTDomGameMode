@@ -97,7 +97,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 		}
 	}
 #endif
-	
+
 	ScoreTime = 0.1f;
 	MessageClass = UUTDomGameMessage::StaticClass();
 	TeamNum = 255;
@@ -131,7 +131,7 @@ void AControlPoint::BeginPlay()
 
 void AControlPoint::CreateCarriedObject()
 {
-	 //Optimize game resources. Dont need green and gold team meshes if playing 2 team mode.
+	//Optimize game resources. Dont need green and gold team meshes if playing 2 team mode.
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
 	if (GS != NULL)
 	{
@@ -375,7 +375,7 @@ uint8 AControlPoint::GetTeamNum() const
 	}
 	else
 	{
-		return (TeamNum  >= 6) ? 4 : TeamNum;
+		return (TeamNum >= 6) ? 4 : TeamNum;
 	}
 }
 
@@ -396,17 +396,11 @@ TEnumAsByte<EControllingTeam::Type> AControlPoint::NotifyTeamChanged() const
 {
 	switch (this->GetTeamNum())
 	{
-		case 0:
-			return EControllingTeam::TE_Red; break;
-		case 1:
-			return EControllingTeam::TE_Blue; break;
-		case 2:
-			return EControllingTeam::TE_Green; break;
-		case 3:
-			return EControllingTeam::TE_Gold; break;
-		case 5:
-			return EControllingTeam::TE_Disabled; break;
-		default:
-			return EControllingTeam::TE_Neutral; break;
+	case 0: return EControllingTeam::TE_Red; break;
+	case 1: return EControllingTeam::TE_Blue; break;
+	case 2: return EControllingTeam::TE_Green; break;
+	case 3: return EControllingTeam::TE_Gold; break;
+	case 5: return EControllingTeam::TE_Disabled; break;
+	default: return EControllingTeam::TE_Neutral; break;
 	}
 }

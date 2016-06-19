@@ -19,6 +19,6 @@ class UUTDomGameMessage : public UUTGameMessage
 	virtual FLinearColor GetMessageColor_Implementation(int32 MessageIndex) const override;
 	virtual float GetScaleInTime_Implementation(int32 MessageIndex) const override;
 	virtual float GetScaleInSize_Implementation(int32 MessageIndex) const override;
-	virtual FName GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject) const override;
-	virtual bool UseLargeFont(int32 MessageIndex) const override;
+	virtual FName GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject, const class APlayerState* RelatedPlayerState_1, const class APlayerState* RelatedPlayerState_2) const override;
+	virtual int32 GetFontSizeIndex(int32 MessageIndex) const override;
 };

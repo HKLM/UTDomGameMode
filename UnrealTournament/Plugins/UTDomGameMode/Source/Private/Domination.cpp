@@ -23,9 +23,9 @@ void ADomination::DefaultTimer()
 		if (TimeLimit > 0)
 		{
 			// Award more points toward the end of the match
-			if (DomGameState->RemainingTime < 0.25 * TimeLimit)
+			if (DomGameState->GetRemainingTime() < 0.25 * TimeLimit)
 			{
-				if (DomGameState->RemainingTime < 0.1 * TimeLimit){
+				if (DomGameState->GetRemainingTime() < 0.1 * TimeLimit){
 					c = 0.8;
 				}
 				else{
@@ -51,9 +51,11 @@ void ADomination::ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount)
 			{
 				if (CDomPoints[ControlPointIndex]->ControllingPawn != NULL)
 				{
+					// award points to player
 					CDomPoints[ControlPointIndex]->ControllingPawn->Score += TeamScoreAmount;
 					CDomPoints[ControlPointIndex]->UpdateHeldPointStat(CDomPoints[ControlPointIndex]->ControllingPawn, TeamScoreAmount);
 				}
+				// award points to players team
 				CDomPoints[ControlPointIndex]->ControllingTeam->SetFloatScore(TeamScoreAmount);
 				CDomPoints[ControlPointIndex]->ControllingTeam->ForceNetUpdate();
 				CheckScore(CDomPoints[ControlPointIndex]->ControllingPawn);

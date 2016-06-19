@@ -99,7 +99,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 			CtrlPoints[i].DomArrowDir.RenderOffset.X = 0.0f;
 			CtrlPoints[i].DomArrowDir.RenderOffset.Y = 0.0f;
 			CtrlPoints[i].DomArrowDir.RenderColor = ArrowDirColor[4];
-			CtrlPoints[i].DomArrowDir.RenderOpacity = UTHUDOwner->HUDWidgetBorderOpacity;
+			CtrlPoints[i].DomArrowDir.RenderOpacity = UTHUDOwner->GetHUDWidgetBorderOpacity();
 			CtrlPoints[i].DomArrowDir.Size.X = IconSize;
 			CtrlPoints[i].DomArrowDir.Size.Y = IconSize;
 		}
@@ -132,7 +132,8 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		// Draw Team Logo
 		POS.X = CtrlPoints[i].StatusIcon.X * RenderScale;
 		POS.Y = CtrlPoints[i].StatusIcon.Y;
-		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(1.45f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), TeamColors[nTeam]);
+		float WSO = 1.45f * UTHUDOwner->GetHUDWidgetSlateOpacity();
+		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), TeamColors[nTeam]);
 
 		FString work;
 		float px = POS.X;
@@ -141,7 +142,8 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		{
 			// Draw the points name
 			work = CtrlPoints[i].thePoint->PointName;
-			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2)  + 0.01f, UTHUDOwner->TinyFont, FLinearColor::Black, 0.7 * RenderScale, FMath::Clamp(1.82f * UTHUDOwner->HUDWidgetSlateOpacity, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
+			float HSO = 1.82f * UTHUDOwner->GetHUDWidgetSlateOpacity();
+			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2)  + 0.01f, UTHUDOwner->TinyFont, FLinearColor::Black, 0.7 * RenderScale, FMath::Clamp(HSO, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
 			if (bDrawDirectionArrow
 				&& UTCharacterOwner != NULL
 				&& UTPlayerOwner->GetPawnOrSpectator())
@@ -151,6 +153,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 				float Yaw = (Dir.Yaw - P->GetViewRotation().Yaw);
 				CtrlPoints[i].DomArrowDir.RotPivot = FVector2D(0.5, 0.5);
 				CtrlPoints[i].DomArrowDir.Rotation = Yaw;
+				float HBO = 1.2f * UTHUDOwner->GetHUDWidgetBorderOpacity();
 				DrawTexture(CtrlPoints[i].DomArrowDir.Atlas
 							, POS.X
 							, POS.Y
@@ -160,7 +163,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 							, CtrlPoints[i].DomArrowDir.UVs.V
 							, CtrlPoints[i].DomArrowDir.UVs.UL
 							, CtrlPoints[i].DomArrowDir.UVs.VL
-							, FMath::Clamp(1.2f * UTHUDOwner->HUDWidgetBorderOpacity, 0.0f, 1.0f)
+							, FMath::Clamp(HBO, 0.0f, 1.0f)
 							, ArrowDirColor[nTeam]
 							, CtrlPoints[i].DomArrowDir.RenderOffset
 							, CtrlPoints[i].DomArrowDir.Rotation

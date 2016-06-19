@@ -367,18 +367,3 @@ AUTGameObjective* AUTDomSquadAI::GetNearestObjective(AUTBot* InstigatedBy, bool 
 	}
 	return BestObjective;
 }
-
-//FString AUTDomSquadAI::GetControlPointName(AUTGameObjective* ObjectiveToCheck) const
-//{
-//	AControlPoint* CP = Cast<AControlPoint>(ObjectiveToCheck);
-//	FString rtnString = "";
-//	if (CP != nullptr)
-//	{
-//		rtnString = *CP->GetPointName();
-//	}
-//	else
-//	{
-//		rtnString = *ObjectiveToCheck->GetHumanReadableName();
-//	}
-//	return rtnString;
-//}

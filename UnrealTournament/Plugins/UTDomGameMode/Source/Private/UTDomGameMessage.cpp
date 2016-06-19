@@ -8,7 +8,8 @@
 UUTDomGameMessage::UUTDomGameMessage(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	MessageArea = FName(TEXT("GameMessages"));
+	MessageArea = FName(TEXT("Announcements"));
+	MessageSlot = FName(TEXT("GameMessages"));
 	ControlledByTeam = NSLOCTEXT("UTDomGameMessage", "ControlledByTeam", "Control Point [{OptionalControlPoint}] now controlled by {OptionalTeam} Team!");
 
 	Lifetime = 1.2;
@@ -42,8 +43,8 @@ FText UUTDomGameMessage::GetText(int32 Switch, bool bTargetsPlayerState1, APlaye
 		case 1: return ControlledByTeam; break;
 		case 2: return ControlledByTeam; break;
 		case 3: return ControlledByTeam; break;
-		case 9: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnRed; break;
-		case 10: return GetDefault<UUTGameMessage>(GetClass())->YouAreOnBlue; break;
+		case 9: return BuildEmphasisText(Switch, RelatedPlayerState_1, RelatedPlayerState_2, OptionalObject);
+		case 10: return BuildEmphasisText(Switch, RelatedPlayerState_1, RelatedPlayerState_2, OptionalObject);
 		//case 11: return YouAreOnGreen; break;
 		//case 12: return YouAreOnGold; break;
 
@@ -99,23 +100,17 @@ bool UUTDomGameMessage::InterruptAnnouncement_Implementation(int32 Switch, const
 	}
 	if (GetClass() == OtherMessageClass)
 	{
-		//TODO 
-		//if ((OtherSwitch == 0) || (OtherSwitch == 1) || (OtherSwitch == 2) || (OtherSwitch == 3))
-		//{
-		//	// never interrupt scoring announcements
-		//	return false;
-		//}
 		if (OptionalObject == OtherOptionalObject)
 		{
-			// interrupt announcement about same object
 			return true;
 		}
 	}
 	return false;
 }
 
-FName UUTDomGameMessage::GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject) const
+FName UUTDomGameMessage::GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject, const class APlayerState* RelatedPlayerState_1, const class APlayerState* RelatedPlayerState_2) const
 {
+	//TODO is this really needed????
 	switch (Switch)
 	{
 		case 9: return TEXT("YouAreOnRedTeam"); break;
@@ -134,11 +129,15 @@ float UUTDomGameMessage::GetScaleInSize_Implementation(int32 MessageIndex) const
 	return 0.55f;
 }
 
-bool UUTDomGameMessage::UseLargeFont(int32 MessageIndex) const
+int32 UUTDomGameMessage::GetFontSizeIndex(int32 MessageIndex) const
 {
 	if ((MessageIndex == 0) || (MessageIndex == 1) || (MessageIndex == 2) || (MessageIndex == 3))
 	{
-		return false;
+		return 2;
 	}
-	return (MessageIndex == 11) || (MessageIndex == 12) || (MessageIndex == 7) || (MessageIndex == 9) || (MessageIndex == 10);
+	else
+	{
+	//if ((MessageIndex == 11) || (MessageIndex == 12) || (MessageIndex == 7) || (MessageIndex == 9) || (MessageIndex == 10))
+		return 1;
+	}
 }

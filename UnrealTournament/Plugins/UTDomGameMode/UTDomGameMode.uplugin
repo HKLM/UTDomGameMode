@@ -2,17 +2,17 @@
 	"FileVersion" : 3,
 	
 	"FriendlyName" : "Domination Game Mode",
-	"Version" : 1,
-	"VersionName" : "2.8",
+	"Version" : 2,
+	"VersionName" : "2.9",
 	"CreatedBy": "Brian 'Snake' Alexander",
-	"CreatedByURL" : "https://ut.rushbase.net/Snake/UTDomGameMode",
 	"EngineVersion" : "4.7.0",
 	"Description" : "Domination Game Mode - Capture and hold control points to win",
 	"Category" : "UnrealTournament.GameMode",
 	"EnabledByDefault" : true,
 	"CanContainContent" : true,
+	"Installed" : true,
 	
-	"Modules" :
+  "Modules" :
 	[
 		{
 			"Name" : "UTDomGameMode",
