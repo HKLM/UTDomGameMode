@@ -68,7 +68,7 @@
 /Engine/Source/ThirdParty/ICU/icu4c-53_1/source/test/**
 
 # Always exclude content folders
-**/Content/**
+# **/Content/**
 
 # Derived data cache is never checked in
 /*/DerivedDataCache/**
