@@ -10,9 +10,8 @@
 	"Category" : "UnrealTournament.GameMode",
 	"EnabledByDefault" : true,
 	"CanContainContent" : true,
-	"Installed" : true,
 	
-  "Modules" :
+	"Modules" :
 	[
 		{
 			"Name" : "UTDomGameMode",
