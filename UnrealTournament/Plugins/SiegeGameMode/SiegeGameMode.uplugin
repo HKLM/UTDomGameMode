@@ -1,0 +1,22 @@
+{
+  "FileVersion": 3,
+
+  "FriendlyName": "Siege Game Mode",
+  "Version": 1,
+  "VersionName": "0.1",
+  "CreatedBy": "Brian 'Snake' Alexander",
+  "EngineVersion": "4.7.0",
+  "Description": "Siege Game Mode - Control your opponents Siege Point while defending your own teams Point to win",
+  "Category": "UnrealTournament.GameMode",
+  "EnabledByDefault": true,
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+
+  "Modules": [
+    {
+      "Name": "SiegeGameMode",
+      "Type": "Runtime",
+      "WhitelistPlatforms": [ "Win32", "Win64", "Linux" ]
+    }
+  ]
+}

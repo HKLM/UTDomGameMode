@@ -1,25 +1,25 @@
-// Created by Brian 'Snake' Alexander, 2015
+// Created by Brian 'Snake' Alexander, (c) 2016
 #pragma once
 
 #include "UnrealTournament.h"
-#include "ControlPoint.h"
-#include "UTDomGameState.generated.h"
+#include "SiegePoint.h"
+#include "SiegeGameState.generated.h"
 
 UCLASS()
-class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
+class ASiegeGameState : public AUTGameState
 {
 	GENERATED_UCLASS_BODY()
 
 	/* Array of The control points */
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = GameStateDOM)
-		TArray<AControlPoint*> GameControlPoints;
+		TArray<ASiegePoint*> GameSiegePoints;
 
 	/**
 	 * Registers the control point described by DomObj.
-	 * @param	DomObj	the AControlPoint.
+	 * @param	DomObj	the ASiegePoint.
 	 * @param	bIsDisabled	True=Disabling the point in parameter DomObj.
 	 */
-	virtual void RegisterControlPoint(AControlPoint* DomObj, bool bIsDisabled);
+	virtual void RegisterSiegePoint(ASiegePoint* DomObj, bool bIsDisabled);
 
 	/**
 	 * Updates the control point effects on clients.
@@ -27,7 +27,7 @@ class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
 	 * @param	NewTeamIndex		Zero-based index of the new team.
 	 */
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-	virtual void UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTeamIndex);
+	virtual void UpdateSiegePointFX(ASiegePoint* ThePoint, uint8 NewTeamIndex);
 
 	/**
 	* Finds the current winning team, or NULL if tied.
@@ -57,7 +57,7 @@ class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
 	 * @return	array of control points.
 	 */
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-	const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
+	const TArray<ASiegePoint*>& GetSiegePoints() { return GameSiegePoints; };
 
 	virtual void SetWinner(AUTPlayerState* NewWinner) override;
 	virtual FText GetGameStatusText(bool bForScoreboard = false) override;

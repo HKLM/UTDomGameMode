@@ -1,46 +1,54 @@
 /**
-* Base class for Domination game modes
-* Created by Brian 'Snake' Alexander, 2015
+* Siege game mode
+* Created by Brian 'Snake' Alexander, (c) 2016
 **/
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTDomGameState.h"
-#include "ControlPoint.h"
-#include "UTDomTeamInfo.h"
-#include "UTDomGameMode.generated.h"
+#include "SiegeGameState.h"
+#include "SiegePoint.h"
+#include "SiegeGameMode.generated.h"
 
-UCLASS(Abstract, Config = UTDomGameMode)
-class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
+UCLASS(Config = SiegeGameMode)
+class ASiegeGameMode : public AUTTeamGameMode
 {
 	GENERATED_UCLASS_BODY()
 
-	/** Array of the ControlPoints for the map */
+	/** Array of the SiegePoints for the map */
 	UPROPERTY(BlueprintReadOnly, Category = DOM)
-		TArray<AControlPoint*> CDomPoints;
+		TArray<ASiegePoint*> CDomPoints;
 
 	UPROPERTY(BlueprintReadOnly, Category = DOM)
-		AUTDomGameState* DomGameState;
+		ASiegeGameState* DomGameState;
 
 	/** Allow the use of the translocator */
 	UPROPERTY(Config)
 		bool bAllowTranslocator;
 
 	/** Max number of Control Points allowed to be in play. If there are more than this number, they will be disabled and removed from play */
-	UPROPERTY(Config)
-		int32 MaxControlPoints;
+	int32 MaxSiegePoints;
 
 	TAssetSubclassOf<AUTWeapon> TranslocatorObject;
 
 	/**
 	* Adds the DomObj to the CDomPoints array
-	* @param	DomObj	the AControlPoint to register
+	* @param	DomObj	the ASiegePoint to register
 	*/
-	virtual void RegisterGameControlPoint(AControlPoint* DomObj);
+	virtual void RegisterGameSiegePoint(ASiegePoint* DomObj);
+	virtual void DefaultTimer();
+
+	/**
+	* Awards any controllingTeams TeamScoreAmount amount of points
+	* Called every tick of gameplay
+	* @param	ControlPointIndex	Index value of the ControlPoint in the CDomPoints array
+	* @param	TeamScoreAmount		Amount of points to award to each team
+	*/
+	virtual void ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount);
 
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
+	virtual void PreInitializeComponents() override;
 	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
 	virtual void AnnounceMatchStart() override;
 	virtual void GiveDefaultInventory(APawn* PlayerPawn) override;

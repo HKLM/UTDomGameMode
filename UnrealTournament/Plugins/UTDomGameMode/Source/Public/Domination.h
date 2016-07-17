@@ -10,7 +10,7 @@
 #include "Domination.generated.h"
 
 UCLASS()
-class ADomination : public AUTDomGameMode
+class UTDOMGAMEMODE_API ADomination : public AUTDomGameMode
 {
 	GENERATED_UCLASS_BODY()
 

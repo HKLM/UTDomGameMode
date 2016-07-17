@@ -1,36 +1,40 @@
 /**
-* Control Point Actor - Game Objective of Domination Game Mode
-* Created by Brian 'Snake' Alexander, 2015
+* Siege Point Actor - Game Objective of Siege Game Mode
+* Created by Brian 'Snake' Alexander, (c) 2016
 */
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTDomGameMessage.h"
+#include "SiegeGameMessage.h"
 #include "UTDomTeamInfo.h"
 #include "UTADomTypes.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
-#include "ControlPoint.generated.h"
+#include "SiegePoint.generated.h"
 
 extern FCollisionResponseParams WorldResponseParams;
 
-/** Control Point is the objective actor for Domination game mode. */
-UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint)
-class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
+/** Siege Point is the objective actor for the Siege game mode. */
+UCLASS(NotPlaceable)
+class ASiegePoint : public AUTCarriedObject
 {
 	GENERATED_UCLASS_BODY()
 
 	/** The name to display on HUD of this point */
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
+		UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = SiegePoint)
 		FString PointName;
 
 	/** The controlling pawn. Replicated */
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = SiegePoint)
 		AUTPlayerState* ControllingPawn;
 
 	/** The controlling team.  replicated */
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = SiegePoint)
 		AUTDomTeamInfo* ControllingTeam;
+
+	/** The team this actor belongs to. What team's base it is located in */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = SiegePoint)
+		EBaseTeam BaseTeam;
 
 	float ControlledTime;
 
@@ -48,53 +52,76 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
-		USoundBase* ControlPointCaptureSound;
+		USoundBase* SiegePointCaptureSound;
 
 	TSubclassOf<UUTLocalMessage> MessageClass;
 
 	//=========================================================================
 	// Components 
 
-	USceneComponent* SceneRoot;
-	UCapsuleComponent* DomCollision;
-
 	/** The mesh that is displayed, that makes up this base. */
 	UPROPERTY(Replicated)
-	class UStaticMeshComponent* DomMesh;
+		class UStaticMeshComponent* DomMesh;
 
 	class URotatingMovementComponent* MeshSpinner;
 
 	/** The point light that displays the controlling teams color */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
-	class UPointLightComponent* DomLight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SiegePoint)
+		class UPointLightComponent* DomLight;
 
-	/** Array of light colors for DomLight. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
+		/** Array of light colors for DomLight. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SiegePoint)
 		TArray<FLinearColor> DomLightColor;
 
 	/** Array of staticmeshes to display on DomMesh. Index = TeamNum */
+	UPROPERTY()
 	TArray<UStaticMesh*> TeamMesh;
-
-	/** 
-	* Extremly simple StaticMesh (StaticMesh & Material = 6.4KB resource size) to load in place
-	* of green and gold team meshes, when those meshes are not needed. (e.g. in 2 team mode)
-	*/
-	UStaticMesh* TeamNullMesh;
-
+	UPROPERTY()
+	TArray<UMaterialInstanceConstant*> TeamSkins;
 
 	//=========================================================================
 
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		UBillboardComponent* EditorSprite;
-#endif
+	virtual void Init(AUTGameObjective* NewBase) override;
+	virtual void SendHome() override {};
+	virtual void SendHomeWithNotify() override {};
+	virtual void SetTeam(AUTTeamInfo* NewTeam) {};
+	virtual void AttachTo(USkeletalMeshComponent* AttachToMesh) override {};
+	virtual void DetachFrom(USkeletalMeshComponent* AttachToMesh) override {};
+	virtual void ClientUpdateAttachment(bool bNowAttached) override {};
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void Destroyed() override {};
+	virtual void OnRep_AttachmentReplication() override {};
+	virtual void OnRep_ReplicatedMovement() override {};
+	virtual void GatherCurrentMovement() override {};
+
+	virtual float GetHeldTime(AUTPlayerState* TestHolder) override { return 0.0f; };
+	virtual void PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker) override
+	{
+		Super::AActor::PreReplication(ChangedPropertyTracker);
+	}
+	virtual void PostNetReceiveVelocity(const FVector& NewVelocity) override {};
+	virtual void CheckTouching() override {};
+protected:
+	virtual void OnObjectStateChanged() {};
+
+	virtual void OnHolderChanged() override {};
+
+	virtual void OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	virtual bool CanBePickedUpBy(AUTCharacter* Character) override { return false; };
+	virtual void NoLongerHeld(AController* InstigatedBy = NULL) override {};
+	virtual void MoveToHome() override {};
+	virtual void SendGameMessage(uint32 Switch, APlayerState* PS1, APlayerState* PS2, UObject* OptionalObject = NULL) override {};
+	virtual bool TeleportTo(const FVector& DestLocation, const FRotator& DestRotation, bool bIsATest = false, bool bNoCheck = false) override { return false; };
+
+public:
+	virtual FText GetHUDStatusMessage(AUTHUD* HUD) override { return FText::FromString(" "); };
 
 
 	/**
 	* Gets point name.
 	* @return	The point name.
 	*/
-	UFUNCTION(BlueprintPure, Category = ControlPoint)
+	UFUNCTION(BlueprintPure, Category = SiegePoint)
 	virtual FString GetPointName() const;
 
 	/** timer for stats- how long this has been controlled by a team */
@@ -113,20 +140,14 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	* Gets the current playerState of the control point holder.
 	* @return	AUTPlayerState	the control point holder otherwise returns NULL.
 	*/
-	UFUNCTION(BlueprintPure, Category = ControlPoint)
-	virtual AUTPlayerState* GetControlPointHolder() const;
+	UFUNCTION(BlueprintPure, Category = SiegePoint)
+	virtual AUTPlayerState* GetSiegePointHolder() const;
 
 	/*!
-	* Returns a valid TeamNum for DOM
-	* @return	int8	Number( >= 0 && <= 4 )
-	* @note	0=Red Team
-	*		1=Blue Team
-	*		2=Green Team
-	*		3=Gold Team
-	*		4=Neutral/No Team
-	*		5=Disabled (Reserved for DDOM)
+	* Returns the TeamNum of the team that currently CONTROLS this point.
+	* This is not the team that owns this point, use HomeBase->GetTeamNum() to get owning team
 	*/
-	UFUNCTION(BlueprintPure, Category = ControlPoint)
+	UFUNCTION(BlueprintPure, Category = SiegePoint)
 	virtual uint8 GetTeamNum() const;
 
 	/** Updates the status */
@@ -135,7 +156,7 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 
 	/**
 	* Updates effects and send out messages when the status of this point has changed.
-	* @note this should not be called directly. Use AUTDomGameState->UpdateControlPointFX()
+	* @note this should not be called directly. Use ASiegeGameState->UpdateSiegePointFX()
 	* 		for changes to be replicated to clients.
 	*		ControllingPawn should be set before calling this and child classes need to
 	*		set ControllingTeam before calling super.UpdateStatus()
@@ -147,42 +168,30 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	/**
 	* For use in BluePrints for Map Authors to trigger differant code depending on what team, without having to, do a lot of trying to figure out what team triggered it.
 	* @note		EASY SETUP: Drag out from the Return Value to place a new node and select "Utilities|Flow Control|Switch|Switch on EControllingTeam"
-	*			Now connect the Exec of the switch to OnActorBeginOverlap of the ControlPoint. Now you have a easy way to trigger team based stuff
+	*			Now connect the Exec of the switch to OnActorBeginOverlap of the SiegePoint. Now you have a easy way to trigger team based stuff
 	*
 	* @return	EControllingTeamEnum of the ControllingTeam
 	*/
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+	UFUNCTION(BlueprintCallable, Category = SiegePoint)
 		TEnumAsByte<EControllingTeam::Type> NotifyTeamChanged() const;
 
 	/**
 	* Reset or reset and disable this control point. Clear controlling team, pawn, etc
 	* @param	IsEnabled	True=Reset this control point, False=Disable this control point.
 	*/
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+	UFUNCTION(BlueprintCallable, Category = SiegePoint)
 	virtual void ResetPoint(bool IsEnabled);
 	virtual void Reset_Implementation();
 
 	/** Disables the point and removes it from play */
-	UFUNCTION(BlueprintCallable, Category = ControlPoint)
+	UFUNCTION(BlueprintCallable, Category = SiegePoint)
 	void DisablePoint();
 	virtual void Disable_Implementation();
 
 	/*** Override the following ***/
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual AUTPlayerState* GetCarriedObjectHolder() override;
-	// not applicable
-	virtual void ObjectStateWasChanged(FName NewObjectState) override {};
-	virtual void ObjectWasPickedUp(AUTCharacter* NewHolder, bool bWasHome) override {};
-	virtual void ObjectWasDropped(AUTCharacter* LastHolder) override {};
-	virtual void ObjectReturnedHome(AUTCharacter* Returner) override {};
-	virtual void SetTeamForSideSwap_Implementation(uint8 NewTeamNum) override {};
-
 protected:
-	virtual void CreateCarriedObject() override;
-
-	UFUNCTION()
-		virtual void OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult);
 
 	UFUNCTION()
 		virtual void OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);

@@ -5,13 +5,13 @@
 #include "UTDomTeamInfo.generated.h"
 
 UCLASS(NotPlaceable)
-class AUTDomTeamInfo : public AUTTeamInfo
+class UTDOMGAMEMODE_API AUTDomTeamInfo : public AUTTeamInfo
 {
 	GENERATED_UCLASS_BODY()
 
 protected:
 	/** team score as a float value */
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = DomTeam)
+	UPROPERTY(BlueprintReadOnly, VisibleInstanceOnly, Replicated, Category = DomTeam)
 		float FloatScore;
 
 public:

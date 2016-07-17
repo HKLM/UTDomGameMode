@@ -1,13 +1,13 @@
-// Created by Brian 'Snake' Alexander, 2015
+// Created by Brian 'Snake' Alexander, (c) 2016
 #pragma once
 
 #include "UnrealTournament.h"
 #include "UTSquadAI.h"
-#include "ControlPoint.h"
-#include "UTDomSquadAI.generated.h"
+#include "SiegePoint.h"
+#include "SiegeSquadAI.generated.h"
 
 USTRUCT()
-struct FDomAITargets
+struct FSiegeAITargets
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -16,7 +16,7 @@ struct FDomAITargets
 };
 
 UCLASS(NotPlaceable)
-class UTDOMGAMEMODE_API AUTDomSquadAI : public AUTSquadAI
+class ASiegeSquadAI : public AUTSquadAI
 {
 	GENERATED_UCLASS_BODY()
 
@@ -64,7 +64,7 @@ class UTDOMGAMEMODE_API AUTDomSquadAI : public AUTSquadAI
 
 	virtual FString GetControlPointName(AUTGameObjective* ObjectiveToCheck) const
 	{
-		AControlPoint* CP = Cast<AControlPoint>(ObjectiveToCheck);
+		ASiegePoint* CP = Cast<ASiegePoint>(ObjectiveToCheck->GetCarriedObject());
 		return (CP != nullptr ? *CP->GetPointName() : *ObjectiveToCheck->GetHumanReadableName());
 	}
 
