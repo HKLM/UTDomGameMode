@@ -35,7 +35,7 @@
 *.bz2
 *.psd
 *.gif
-*.zip
+# *.zip
 *.tga
 *.dylib
 *.gz

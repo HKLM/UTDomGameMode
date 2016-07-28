@@ -11,7 +11,7 @@
 	"EnabledByDefault" : true,
 	"CanContainContent" : true,
 	
-	"Modules" :
+  "Modules" :
 	[
 		{
 			"Name" : "UTDomGameMode",

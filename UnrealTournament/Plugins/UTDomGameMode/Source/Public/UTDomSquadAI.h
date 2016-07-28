@@ -3,6 +3,7 @@
 
 #include "UnrealTournament.h"
 #include "UTSquadAI.h"
+#include "ControlPoint.h"
 #include "UTDomSquadAI.generated.h"
 
 USTRUCT()
@@ -15,7 +16,7 @@ struct FDomAITargets
 };
 
 UCLASS(NotPlaceable)
-class AUTDomSquadAI : public AUTSquadAI
+class UTDOMGAMEMODE_API AUTDomSquadAI : public AUTSquadAI
 {
 	GENERATED_UCLASS_BODY()
 

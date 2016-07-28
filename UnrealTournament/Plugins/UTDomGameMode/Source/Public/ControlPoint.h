@@ -5,7 +5,6 @@
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTDomGameMessage.h"
 #include "UTDomTeamInfo.h"
 #include "UTADomTypes.h"
 #include "Net/UnrealNetwork.h"
@@ -16,7 +15,7 @@ extern FCollisionResponseParams WorldResponseParams;
 
 /** Control Point is the objective actor for Domination game mode. */
 UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint)
-class AControlPoint : public AUTGameObjective
+class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
 
@@ -56,23 +55,25 @@ class AControlPoint : public AUTGameObjective
 	// Components 
 
 	USceneComponent* SceneRoot;
+	UPROPERTY(EditInstanceOnly)
 	UCapsuleComponent* DomCollision;
 
 	/** The mesh that is displayed, that makes up this base. */
 	UPROPERTY(Replicated)
-	class UStaticMeshComponent* DomMesh;
-
-	class URotatingMovementComponent* MeshSpinner;
+		class UStaticMeshComponent* DomMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ControlPoint)
+		class URotatingMovementComponent* MeshSpinner;
 
 	/** The point light that displays the controlling teams color */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
-	class UPointLightComponent* DomLight;
+		class UPointLightComponent* DomLight;
 
 	/** Array of light colors for DomLight. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
 		TArray<FLinearColor> DomLightColor;
 
 	/** Array of staticmeshes to display on DomMesh. Index = TeamNum */
+	UPROPERTY()
 	TArray<UStaticMesh*> TeamMesh;
 
 	/** 

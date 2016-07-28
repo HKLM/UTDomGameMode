@@ -1,5 +1,4 @@
 #include "UnrealTournament.h"
-#include "UTDomGameState.h"
 #include "UTHUDWidget_TeamGameClock.h"
 #include "UTHUDWidget_DomGameClock.h"
 

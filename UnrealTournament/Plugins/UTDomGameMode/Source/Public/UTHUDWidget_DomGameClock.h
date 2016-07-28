@@ -1,9 +1,7 @@
-// Adds 4 team score display on HUD
-// Created by Brian 'Snake' Alexander, 2015
+// Created by Brian 'Snake' Alexander, (c) 2016
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTDomGameState.h"
 #include "UTHUDWidget_TeamGameClock.h"
 #include "UTHUDWidget_DomGameClock.generated.h"
 

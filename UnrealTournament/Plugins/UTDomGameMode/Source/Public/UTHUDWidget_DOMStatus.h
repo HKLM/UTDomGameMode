@@ -3,7 +3,6 @@
 
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
-#include "UTDomGameState.h"
 #include "UTHUDWidget_DOMStatus.generated.h"
 
 USTRUCT()

@@ -6,7 +6,7 @@
 #include "UTDomGameState.generated.h"
 
 UCLASS()
-class AUTDomGameState : public AUTGameState
+class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
 {
 	GENERATED_UCLASS_BODY()
 

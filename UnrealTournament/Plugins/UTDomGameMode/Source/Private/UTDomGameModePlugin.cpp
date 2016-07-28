@@ -6,7 +6,7 @@
 #include "ModuleInterface.h"
 #include "ModuleManager.h"
 
-class FUTDomGameModePlugin : public IModuleInterface
+class UTDOMGAMEMODE_API FUTDomGameModePlugin : public IModuleInterface
 {
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
