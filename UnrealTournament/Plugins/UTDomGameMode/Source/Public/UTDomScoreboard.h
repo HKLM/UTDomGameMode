@@ -6,12 +6,10 @@
 #include "UTDomScoreboard.generated.h"
 
 UCLASS()
-class UUTDomScoreboard : public UUTTeamScoreboard
+class UTDOMGAMEMODE_API UUTDomScoreboard : public UUTTeamScoreboard
 {
 	GENERATED_UCLASS_BODY()
 
 protected:
-	virtual void DrawPlayerStats(AUTPlayerState* PS, float DeltaTime, float& YPos, float XOffset, float ScoreWidth, float PageBottom, const FStatsFontInfo& StatsFontInfo) override;
-
 	virtual void DrawTeamStats(float DeltaTime, float& YPos, float XOffset, float ScoreWidth, float PageBottom, const FStatsFontInfo& StatsFontInfo) override;
 };

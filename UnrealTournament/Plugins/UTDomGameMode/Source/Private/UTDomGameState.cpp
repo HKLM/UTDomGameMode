@@ -28,7 +28,14 @@ void AUTDomGameState::RegisterControlPoint(AControlPoint* DomObj, bool bIsDisabl
 {
 	if (DomObj)
 	{
-		!bIsDisabled ? GameControlPoints.AddUnique(DomObj) : DomObj->DisablePoint();
+		if (!bIsDisabled)
+		{
+			GameControlPoints.AddUnique(DomObj);
+		}
+		else
+		{
+			DomObj->DisablePoint();
+		}
 	}
 }
 
@@ -101,8 +108,10 @@ AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
 
 int32 AUTDomGameState::GetOtherTeamScore(uint8 WinningTeamIndex) const
 {
-	if (WinningTeamIndex == NULL) WinningTeamIndex = 0;
-
+	if (!Teams.IsValidIndex(WinningTeamIndex))
+	{
+		WinningTeamIndex = 0;
+	}
 	int32 outputScore = 0;
 	for (uint8 i = 0; i < Teams.Num(); i++)
 	{

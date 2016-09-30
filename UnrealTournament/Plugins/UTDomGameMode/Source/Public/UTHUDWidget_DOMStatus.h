@@ -1,4 +1,5 @@
 // Created by Brian 'Snake' Alexander, 2015
+// Draws the HUD icons for each ControlPoint
 #pragma once
 
 #include "UnrealTournament.h"
@@ -21,7 +22,7 @@ struct FPointInfo
 };
 
 UCLASS()
-class UUTHUDWidget_DOMStatus : public UUTHUDWidget
+class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 {
 	GENERATED_UCLASS_BODY()
 

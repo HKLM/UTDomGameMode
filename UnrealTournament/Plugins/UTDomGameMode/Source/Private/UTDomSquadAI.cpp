@@ -331,7 +331,7 @@ AUTGameObjective* AUTDomSquadAI::GetNearestObjective(AUTBot* InstigatedBy, bool 
 
 	for (uint8 i = 0; i < GameControlPoints.Num(); i++)
 	{
-		if (bOnlyNotControlled && GameControlPoints[i]->GetTeamNum() != InstigatedBy->GetTeamNum()
+		if ((bOnlyNotControlled && (GameControlPoints[i]->GetTeamNum() != InstigatedBy->GetTeamNum()))
 			|| !bOnlyNotControlled)
 		{
 			f.Target = GameControlPoints[i];

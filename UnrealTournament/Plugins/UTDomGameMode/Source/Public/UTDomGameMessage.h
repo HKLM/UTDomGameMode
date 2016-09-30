@@ -6,7 +6,7 @@
 #include "UTDomGameMessage.generated.h"
 
 UCLASS(NotPlaceable)
-class UUTDomGameMessage : public UUTGameMessage 
+class UTDOMGAMEMODE_API UUTDomGameMessage : public UUTGameMessage 
 {
 	GENERATED_UCLASS_BODY()
 

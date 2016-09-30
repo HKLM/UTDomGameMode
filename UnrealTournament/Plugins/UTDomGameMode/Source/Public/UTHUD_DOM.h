@@ -6,7 +6,7 @@
 #include "UTHUD_DOM.generated.h"
 
 UCLASS()
-class AUTHUD_DOM : public AUTHUD
+class UTDOMGAMEMODE_API AUTHUD_DOM : public AUTHUD
 {
 	GENERATED_UCLASS_BODY()
 
