@@ -57,32 +57,32 @@ void AUTDomGameState::UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTea
 
 AUTTeamInfo* AUTDomGameState::FindLeadingTeam()
 {
-	AUTTeamInfo* WinningTeam = NULL;
+	AUTTeamInfo* TheWinningTeam = NULL;
 	bool bTied;
 
 	if (Teams.Num() > 0)
 	{
-		WinningTeam = Teams[0];
+		TheWinningTeam = Teams[0];
 		bTied = false;
 		for (uint8 i = 1; i < Teams.Num(); i++)
 		{
-			if (Teams[i]->Score == WinningTeam->Score)
+			if (Teams[i]->Score == TheWinningTeam->Score)
 			{
 				bTied = true;
 			}
-			else if (Teams[i]->Score > WinningTeam->Score)
+			else if (Teams[i]->Score > TheWinningTeam->Score)
 			{
-				WinningTeam = Teams[i];
+				TheWinningTeam = Teams[i];
 				bTied = false;
 			}
 		}
 
 		if (bTied)
 		{
-			WinningTeam = NULL;
+			TheWinningTeam = NULL;
 		}
 	}
-	return WinningTeam;
+	return TheWinningTeam;
 }
 
 void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)

@@ -3,13 +3,13 @@ Domination Game Modes C++ plug-in for Unreal Tournament 4
 
 Public access to the source code for the UTDomGameMode plug-in.
 
-Version: Beta 2.9
+Version: Beta 3.0
 Author: Brian 'Snake' Alexander  sw_snakepliskin@hotmail.com
-Date: 7/28/2016
+Date: 10/30/2016
 
 
 ### REQUIREMENTS:
-UT4 Version: `4.12.0-3045522+++depot+UE4-UT-Releases`
+UT4 Version: `Release date: 10/18/2016`
 
 
 ##### NOTES
@@ -60,20 +60,6 @@ Follow the instructions for Distributing a Plugin starting at step 6 https://doc
 2. Toolbar\-\>Share\-\>Share This Level
 
 
-## ALTERNATIVE METHOD TO COOK/SHARE DOMINATION MAP:
-If you are having problems "cooking" / "sharing" your DOM map preform the following steps in the editor.
-1. Edit the Project Settings (Toolbar\-\>Edit\-\>Project Settings)
-2. Select the Project - Packaging section
-3. Add a **new element** to the **Additional Asset Directories to Cook** list and manually type in the following path 
-	```
-	UTDomGameMode/UTDomGameContent
-	```
-4. Add a **new element** to the **Additional Non-Asset Directories to Package** list and manually type in the following path 
-	```
-	UTDomGameMode/UTDomGameContent
-	```
-5. Toolbar\-\>Share\-\>Share This Level
-
 
 ##### NOTE ON COOKING
 The cooker seems to want the map and all content assets used in the map, to be in or in a subfolder of the  
@@ -111,10 +97,18 @@ C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDo
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGameVersion.dll
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGame_README.txt
 
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\libUE4-UTDomGameMode-Linux-Shipping.so
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\libUE4Server-UTDomGameMode-Linux-Shipping.so
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\UE4-Linux-Shippingx86_64-unknown-linux-gnu.modules
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\UE4Server-Linux-Shippingx86_64-unknown-linux-gnu.modules
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win32\UE4-UTDomGameMode-Win32-Shipping.dll
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win32\UE4-Win32-Shipping.modules
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4-UTDomGameMode-Win64-Shipping.dll
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4-Win64-Shipping.modules
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor-UTDomGameMode.dll
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor.modules
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Server-UTDomGameMode-Win64-Shipping.dll
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Server-Win64-Shipping.modules
 
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Config\DefaultGame.ini
 

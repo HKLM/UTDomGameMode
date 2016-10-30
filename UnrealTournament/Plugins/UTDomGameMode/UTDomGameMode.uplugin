@@ -2,8 +2,8 @@
 	"FileVersion" : 3,
 	
 	"FriendlyName" : "Domination Game Mode",
-	"Version" : 2,
-	"VersionName" : "2.9",
+	"Version" : 3,
+	"VersionName" : "3.0",
 	"CreatedBy": "Brian 'Snake' Alexander",
 	"EngineVersion" : "4.7.0",
 	"Description" : "Domination Game Mode - Capture and hold control points to win",

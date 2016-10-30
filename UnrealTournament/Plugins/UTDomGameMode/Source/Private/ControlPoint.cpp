@@ -25,10 +25,10 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomCollision = ObjectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("Collision"));
 	DomCollision->InitCapsuleSize(90.0f, 140.0f);
 	DomCollision->SetCollisionProfileName(FName(TEXT("Pickup")));
-	DomCollision->AttachParent = RootComponent;
 	DomCollision->RelativeLocation.Z = 140.0f;
 	DomCollision->OnComponentBeginOverlap.AddDynamic(this, &AControlPoint::OnOverlapBegin);
-	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd_Implementation);
+	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd);
+	DomCollision->SetupAttachment(RootComponent);
 
 	// StaticMesh assets
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomR.DomR'"));
@@ -54,7 +54,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomMesh->bCastDynamicShadow = true;
 	DomMesh->bAffectDynamicIndirectLighting = true;
 	DomMesh->bReceivesDecals = false;
-	DomMesh->AttachParent = RootComponent;
+	DomMesh->SetupAttachment(RootComponent);
 	DomMesh->RelativeLocation.Z = 40;
 
 	// Spinner
@@ -69,7 +69,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomLightColor.Insert(FLinearColor::Yellow, 3);
 	DomLightColor.Insert(FLinearColor::Gray, 4);
 	DomLight = ObjectInitializer.CreateDefaultSubobject<UPointLightComponent>(this, FName(TEXT("Light")));
-	DomLight->AttachParent = RootComponent;
+	DomLight->SetupAttachment(RootComponent);
 	DomLight->RelativeLocation.Z = 90.0f;
 	DomLight->SetAttenuationRadius(900.0f);
 	DomLight->bUseInverseSquaredFalloff = false;
@@ -84,7 +84,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	EditorSprite = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(FName(TEXT("EditorSprite")));
 	if (EditorSprite != NULL)
 	{
-		EditorSprite->AttachParent = RootComponent;
+		EditorSprite->SetupAttachment(RootComponent);
 		if (!IsRunningCommandlet())
 		{
 			ConstructorHelpers::FObjectFinderOptional<UTexture2D> SpriteObj(TEXT("/Game/RestrictedAssets/EditorAssets/Icons/generic_objective.generic_objective"));
@@ -181,7 +181,7 @@ AUTPlayerState* AControlPoint::GetCarriedObjectHolder()
 	return ControllingPawn;
 }
 
-void AControlPoint::OnOverlapBegin(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AControlPoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AUTCharacter* Character = Cast<AUTCharacter>(OtherActor);
 	if (Character != NULL && !GetWorld()->LineTraceTestByChannel(OtherActor->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams))
@@ -217,7 +217,7 @@ void AControlPoint::ProcessTouch_Implementation(APawn* TouchedBy)
 	}
 }
 
-void AControlPoint::OnOverlapEnd_Implementation(AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AControlPoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (Role == ROLE_Authority && bScoreReady && OtherActor != ControllingPawn)
 	{
