@@ -109,14 +109,14 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			 && ((GameObjective->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 700.0f))
 	{
 		BotOrderString = FString::Printf(TEXT("%s-Goto ControlPoint lineofsight: %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
-		return B->TryPathToward(GameObjective, bLottery, BotOrderString);
+		return B->TryPathToward(GameObjective, bLottery, true, BotOrderString);
 	}
 	else if (CurrentOrders == NAME_Attack || CurrentOrders == NAME_Roam)
 	{
 		if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
-			return B->TryPathToward(GameObjective, false, BotOrderString);
+			return B->TryPathToward(GameObjective, false, true, BotOrderString);
 		}
 		else if (CurrentOrders == NAME_Roam && (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy())))
 		{
@@ -134,7 +134,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
-				return B->TryPathToward(tmpObjective, bLottery, BotOrderString);
+				return B->TryPathToward(tmpObjective, bLottery, true, BotOrderString);
 			}
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
@@ -152,13 +152,13 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New Objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
-				return B->TryPathToward(tmpObjective, false, BotOrderString);
+				return B->TryPathToward(tmpObjective, false, true, BotOrderString);
 			}
 		}
 		else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
-			return B->TryPathToward(GameObjective, bLottery, BotOrderString);
+			return B->TryPathToward(GameObjective, bLottery, true, BotOrderString);
 		}
 		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
 		{
@@ -172,7 +172,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
-				return B->TryPathToward(tmpObjective, false, BotOrderString);
+				return B->TryPathToward(tmpObjective, false, true, BotOrderString);
 			}
 		}
 		else if (CheckSuperPickups(B, 5000))
@@ -182,7 +182,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		else if (B->GetDefensePoint() != NULL)
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto defense point : %s"), *CurrentOrders.ToString(), *B->GetDefensePoint()->GetName());
-			return B->TryPathToward(B->GetDefensePoint(), true, BotOrderString);
+			return B->TryPathToward(B->GetDefensePoint(), true, true, BotOrderString);
 		}
 	}
 
