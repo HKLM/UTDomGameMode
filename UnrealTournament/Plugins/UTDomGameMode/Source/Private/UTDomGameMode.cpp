@@ -13,6 +13,12 @@
 #include "UTMutator.h"
 #include "Private/Slate/Widgets/SUTTabWidget.h"
 #include "Private/Slate/Dialogs/SUTPlayerInfoDialog.h"
+#include "SNumericEntryBox.h"
+#include "UTPickup.h"
+#include "UTPickupHealth.h"
+#include "UTRecastNavMesh.h"
+#include "UTPathBuilderInterface.h"
+
 #include "UTDomGameMode.h"
 
 AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
@@ -29,6 +35,7 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	//bAllowURLTeamCountOverride = true;
 	NumTeams = 2;
 	MaxSquadSize = 2;
+	MaxControlPoints = 3;
 	bAllowTranslocator = true;
 	bHideInUI = false;
 	//Add the translocator
@@ -393,6 +400,7 @@ void AUTDomGameMode::CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBa
 {
 	Super::CreateGameURLOptions(MenuProps);
 	MenuProps.Add(MakeShareable(new TAttributePropertyBool(this, &bAllowTranslocator, TEXT("AllowTrans"))));
+	MenuProps.Add(MakeShareable(new TAttributeProperty<int32>(this, &MaxControlPoints, TEXT("MaxControlPoints"))));
 }
 
 #if !UE_SERVER

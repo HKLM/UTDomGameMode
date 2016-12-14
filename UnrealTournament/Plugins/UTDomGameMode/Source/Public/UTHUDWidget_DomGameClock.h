@@ -11,8 +11,5 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DomGameClock : public UUTHUDWidget_TeamGame
 {
 	GENERATED_UCLASS_BODY()
 
-	virtual void InitializeWidget(AUTHUD* Hud);
-	virtual void Draw_Implementation(float DeltaTime) override;
-
-	UTexture2D* HUDDomAtlas;
+	virtual void InitializeWidget(AUTHUD* Hud) override;
 };

@@ -41,8 +41,6 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	/* draw direction arrow (ArrowDirTexture) for each control point on HUD */
 	bool bDrawDirectionArrow;
 
-	/* Our HUDAtlas texture that has a white arrow so we can color it dynamicly */
-	UTexture2D* ArrowDirTexture;
 	/**
 	* colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
 	* (e.g. A red arrow on a red team logo would not be visible.

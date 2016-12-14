@@ -36,9 +36,6 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	DomTeamIconTexture.Insert(Tex3.Object, 3);
 	DomTeamIconTexture.Insert(Tex4.Object, 4);
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDArrowtex(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DomHUDAtlas01.DomHUDAtlas01'"));
-	ArrowDirTexture = HUDArrowtex.Object;
-
 	IcoMulti = 58.0f;
 }
 
@@ -64,11 +61,6 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	}
 	if (!bControlPointInitialized)
 	{
-		// Replace HUDAtlas with our version of it
-		if (UTHUDOwner->HUDAtlas != ArrowDirTexture)
-		{
-			UTHUDOwner->HUDAtlas = ArrowDirTexture;
-		}
 		LastRenderScale = RenderScale;
 		FindControlPoints();
 		DomPosition.Y = 0.0f;
@@ -89,7 +81,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 			CtrlPoints[i].StatusIcon.Y = DomPosition.Y;
 			CtrlPoints[i].StatusIcon.X = DomPosition.X;
 
-			CtrlPoints[i].DomArrowDir.Atlas = ArrowDirTexture;
+			CtrlPoints[i].DomArrowDir.Atlas = UTHUDOwner->HUDAtlas;
 			CtrlPoints[i].DomArrowDir.UVs.U = 180.0f;
 			CtrlPoints[i].DomArrowDir.UVs.V = 940.0f;
 			CtrlPoints[i].DomArrowDir.UVs.UL = 72.0f;

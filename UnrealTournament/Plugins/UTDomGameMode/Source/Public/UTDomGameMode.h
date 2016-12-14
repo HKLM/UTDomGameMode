@@ -7,6 +7,7 @@
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
 #include "ControlPoint.h"
+#include "UTPathBuilderInterface.h"
 #include "UTDomGameMode.generated.h"
 
 UCLASS(Abstract, Config = UTDomGameMode)

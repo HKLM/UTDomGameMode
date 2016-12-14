@@ -43,6 +43,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	TeamMesh.Insert(ControlPoint2Mesh.Object, 2);
 	TeamMesh.Insert(ControlPoint3Mesh.Object, 3);
 	TeamMesh.Insert(ControlPoint4Mesh.Object, 4);
+	TeamMesh.Insert(ControlPointNullMesh.Object, 5);
 	TeamNullMesh = ControlPointNullMesh.Object;
 
 	// StaticMesh
@@ -68,6 +69,8 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomLightColor.Insert(FLinearColor::Green, 2);
 	DomLightColor.Insert(FLinearColor::Yellow, 3);
 	DomLightColor.Insert(FLinearColor::Gray, 4);
+	DomLightColor.Insert(FLinearColor::FLinearColor(0.f, 0.f, 0.f, 0.f), 5);
+
 	DomLight = ObjectInitializer.CreateDefaultSubobject<UPointLightComponent>(this, FName(TEXT("Light")));
 	DomLight->SetupAttachment(RootComponent);
 	DomLight->RelativeLocation.Z = 90.0f;

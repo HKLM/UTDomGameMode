@@ -11,7 +11,6 @@ ADomination::ADomination(const FObjectInitializer& ObjectInitializer)
 	DisplayName = NSLOCTEXT("UTDomGameMode", "DOM", "Domination");
 	GoalScore = 100;
 	MinPlayersToStart = 1;
-	MaxControlPoints = 8;
 }
 
 void ADomination::DefaultTimer()

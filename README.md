@@ -3,13 +3,13 @@ Domination Game Modes C++ plug-in for Unreal Tournament 4
 
 Public access to the source code for the UTDomGameMode plug-in.
 
-Version: Beta 3.0
+Version: Beta 3.2
 Author: Brian 'Snake' Alexander  sw_snakepliskin@hotmail.com
-Date: 10/30/2016
+Date: 12/13/2016
 
 
 ### REQUIREMENTS:
-UT4 Version: `Release date: 10/18/2016`
+UT4 Version: `Release date: 11/10/2016`
 
 
 ##### NOTES
@@ -125,6 +125,7 @@ C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDo
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BaseSkin_Mat.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Blank_Mat.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BlueTeamSymbol.uasset
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DOM_HUDAtlas01.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DomHUDAtlas01.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\goldskin2.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GoldTeamSymbol.uasset
