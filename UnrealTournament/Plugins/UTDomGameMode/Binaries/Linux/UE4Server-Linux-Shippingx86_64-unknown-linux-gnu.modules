@@ -1,8 +1,0 @@
-{
-	"Changelist" : 3164292,
-	"BuildId" : "99d65c05-885c-4461-9cd1-5708b9659b9f",
-	"Modules" : 
-	{
-		"UTDomGameMode" : "libUE4Server-UTDomGameMode-Linux-Shipping.so"
-	}
-}

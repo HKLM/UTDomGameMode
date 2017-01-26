@@ -118,7 +118,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
 			return B->TryPathToward(GameObjective, false, true, BotOrderString);
 		}
-		else if (CurrentOrders == NAME_Roam && (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy())))
+		else if (CurrentOrders == NAME_Roam && (!B->LostContact(2.0f) || MustKeepEnemy(B, B->GetEnemy())))
 		{
 			B->GoalString = "Roam-Fight";
 			return false;
@@ -137,7 +137,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 				return B->TryPathToward(tmpObjective, bLottery, true, BotOrderString);
 			}
 		}
-		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
+		else if (!B->LostContact(2.0f) || MustKeepEnemy(B, B->GetEnemy()))
 		{
 			B->GoalString = "ATTACK-Fight";
 			return false;
@@ -160,7 +160,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
 			return B->TryPathToward(GameObjective, bLottery, true, BotOrderString);
 		}
-		else if (!B->LostContact(2.0f) || MustKeepEnemy(B->GetEnemy()))
+		else if (!B->LostContact(2.0f) || MustKeepEnemy(B, B->GetEnemy()))
 		{
 			B->GoalString = "DEFEND-Fight";
 			return false;

@@ -13,12 +13,6 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	Origin = FVector2D(0.5f, 0.5f);
 	bDrawDirectionArrow = true;
 
-	new(TeamColors)FLinearColor(0.8f, 0.1f, 0.15f, 1.0f);
-	new(TeamColors)FLinearColor(0.1f, 0.1f, 0.8f, 1.0f);
-	new(TeamColors)FLinearColor(0.0f, 0.8f, 0.0f, 1.0f);
-	new(TeamColors)FLinearColor(0.9f, 0.98f, 0.0f, 1.0f);
-	new(TeamColors)FLinearColor(0.5f, 0.5f, 0.5f, 1.0f);
-
 	new(ArrowDirColor)FLinearColor(0.0f, 0.0f, 1.9f, 1.0f);
 	new(ArrowDirColor)FLinearColor(1.9f, 0.05f, 0.05f, 1.0f);
 	new(ArrowDirColor)FLinearColor(1.0f, 0.1f, 0.1f, 1.0f);
@@ -36,7 +30,7 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	DomTeamIconTexture.Insert(Tex3.Object, 3);
 	DomTeamIconTexture.Insert(Tex4.Object, 4);
 
-	IcoMulti = 58.0f;
+	IcoMulti = 56.0f;
 }
 
 void UUTHUDWidget_DOMStatus::InitializeWidget(AUTHUD* Hud)
@@ -55,9 +49,16 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	}
 	IconSize = FMath::Clamp(IcoMulti * RenderScale, 50.0f, 65.0f);
 
-	AUTDomGameState* GS = Cast<AUTDomGameState>(UTGameState);
-	if (GS == NULL) {
-		return;
+	if (DomGameState == nullptr) 
+	{
+		if (UTGameState)
+		{
+			DomGameState = Cast<AUTDomGameState>(UTGameState);
+		}
+		else
+		{
+			DomGameState = GetWorld()->GetGameState<AUTDomGameState>();
+		}		
 	}
 	if (!bControlPointInitialized)
 	{
@@ -125,7 +126,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		POS.X = CtrlPoints[i].StatusIcon.X * RenderScale;
 		POS.Y = CtrlPoints[i].StatusIcon.Y;
 		float WSO = 1.45f * UTHUDOwner->GetHUDWidgetSlateOpacity();
-		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), TeamColors[nTeam]);
+		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), GetDomTeamColor(nTeam));
 
 		FString work;
 		float px = POS.X;
@@ -135,7 +136,19 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 			// Draw the points name
 			work = CtrlPoints[i].thePoint->PointName;
 			float HSO = 1.82f * UTHUDOwner->GetHUDWidgetSlateOpacity();
-			DrawText(FText::FromString(work), px + (IconSize / 2) - (IconSize * 0.35f), py + (IconSize / 2)  + 0.01f, UTHUDOwner->TinyFont, FLinearColor::Black, 0.7 * RenderScale, FMath::Clamp(HSO, 0.0f, 1.0f), FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Bottom);
+			float txt_px = (CtrlPoints[i].StatusIcon.X + (IconSize / 2) - (IconSize * 0.35f)) * RenderScale;
+			float txt_py = py + (IconSize / 2) + 0.01f;
+			DrawText(FText::FromString(work)
+					 , txt_px
+					 , txt_py
+					 , UTHUDOwner->TinyFont
+					 , FLinearColor::Black
+					 , 1.0f
+					 , FMath::Clamp(HSO, 0.0f, 1.0f)
+					 , FLinearColor::White
+					 , ETextHorzPos::Left
+					 , ETextVertPos::Bottom);
+
 			if (bDrawDirectionArrow
 				&& UTCharacterOwner != NULL
 				&& UTPlayerOwner->GetPawnOrSpectator())
@@ -170,12 +183,11 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
  */
 void UUTHUDWidget_DOMStatus::FindControlPoints()
 {
-	AUTDomGameState* GS = GetWorld()->GetGameState<AUTDomGameState>();
-	if (GS != NULL)
+	if (DomGameState)
 	{
 		CtrlPoints.Empty();
 		FPointInfo f;
-		TArray<AControlPoint*> CP = GS->AUTDomGameState::GetControlPoints();
+		TArray<AControlPoint*> CP = DomGameState->GetControlPoints();
 		for (AControlPoint* C : CP)
 		{
 			if (C != NULL)
@@ -195,4 +207,9 @@ void UUTHUDWidget_DOMStatus::FindControlPoints()
 UTexture2D* UUTHUDWidget_DOMStatus::GetDomTeamIcon(uint8 TeamIndex) const
 {
 	return (DomTeamIconTexture.IsValidIndex(TeamIndex) ? DomTeamIconTexture[TeamIndex] : DomTeamIconTexture[4]);
+}
+
+FLinearColor UUTHUDWidget_DOMStatus::GetDomTeamColor(uint8 TeamIndex) const
+{
+	return ((DomGameState && DomGameState->Teams.IsValidIndex(TeamIndex)) ? DomGameState->Teams[TeamIndex]->TeamColor : FLinearColor(0.5f, 0.5f, 0.5f, 1.0f));
 }

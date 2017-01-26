@@ -17,7 +17,14 @@ protected:
 public:
 	/** Adds ScorePoints value to the FloatScore and Score properties */
 	UFUNCTION()
-	virtual void SetFloatScore(float ScorePoints);
+		virtual void SetFloatScore(float ScorePoints);
+
+	/** 
+	* Returns the teams FloatScore value 
+	* @return	The current value of FloatScore
+	*/
+	UFUNCTION(BlueprintCallable, Category = DomTeam)
+		virtual float GetFloatScore() { return FloatScore; }
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const;
 	virtual bool AssignToSquad(AController* C, FName Orders, AController* Leader = NULL) override;

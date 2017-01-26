@@ -20,5 +20,5 @@ class UTDOMGAMEMODE_API UUTDomGameMessage : public UUTGameMessage
 	virtual float GetScaleInTime_Implementation(int32 MessageIndex) const override;
 	virtual float GetScaleInSize_Implementation(int32 MessageIndex) const override;
 	virtual FName GetAnnouncementName_Implementation(int32 Switch, const UObject* OptionalObject, const class APlayerState* RelatedPlayerState_1, const class APlayerState* RelatedPlayerState_2) const override;
-	virtual int32 GetFontSizeIndex(int32 MessageIndex) const override;
+	virtual int32 GetFontSizeIndex(int32 MessageIndex, bool bTargetsLocalPlayer) const override;
 };

@@ -118,6 +118,7 @@ void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	DOREPLIFETIME(AControlPoint, DomMesh);
 	DOREPLIFETIME(AControlPoint, ControllingPawn);
 	DOREPLIFETIME(AControlPoint, ControllingTeam);
+	DOREPLIFETIME_CONDITION(AControlPoint, PointName, COND_InitialOnly);
 }
 
 void AControlPoint::BeginPlay()

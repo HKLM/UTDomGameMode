@@ -129,7 +129,7 @@ float UUTDomGameMessage::GetScaleInSize_Implementation(int32 MessageIndex) const
 	return 0.55f;
 }
 
-int32 UUTDomGameMessage::GetFontSizeIndex(int32 MessageIndex) const
+int32 UUTDomGameMessage::GetFontSizeIndex(int32 MessageIndex, bool bTargetsLocalPlayer) const
 {
 	if ((MessageIndex == 0) || (MessageIndex == 1) || (MessageIndex == 2) || (MessageIndex == 3))
 	{

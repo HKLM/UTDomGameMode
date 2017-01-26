@@ -20,7 +20,7 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	GENERATED_UCLASS_BODY()
 
 	/** The name to display on HUD of this point */
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
+	UPROPERTY(Replicated, EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
 		FString PointName;
 
 	/** The controlling pawn. Replicated */
@@ -37,13 +37,15 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 		bool bStopControlledTimer;
 
 	/** will be 'true' if and when the domination point can be captured */
-	bool bScoreReady;
+	UPROPERTY(Transient)
+		bool bScoreReady;
 
 	/**
 	* The ammount of time other teams must wait after, the current team has touched the control point,
 	* before it will allow the next team to be able to touch it.
 	*/
-	float ScoreTime;
+	UPROPERTY(Transient)
+		float ScoreTime;
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)

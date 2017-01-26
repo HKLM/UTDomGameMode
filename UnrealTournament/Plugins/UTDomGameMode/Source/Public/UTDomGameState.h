@@ -31,18 +31,10 @@ class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
 
 	/**
 	* Finds the current winning team, or NULL if tied.
-	* @return	AUTTeamInfo	The Current winning team
+	* @return	AUTDomTeamInfo	The Current winning team or NULL if tied at zero
 	*/
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-	virtual AUTTeamInfo* FindLeadingTeam();
-
-	/**
-	* Gets the team that is not the WinningTeamIndex and returns the other teams score
-	* @return	Team Score
-	* @note		This is not 4 team compatible, returns the 1st, teamIndex != WinningTeamIndex
-	*/
-	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
-	virtual int32 GetOtherTeamScore(uint8 WinningTeamIndex) const;
+	virtual AUTDomTeamInfo* FindLeadingTeam();
 
 	/**
 	* Finds the player with the highest score from the team specified in TeamNumToTest

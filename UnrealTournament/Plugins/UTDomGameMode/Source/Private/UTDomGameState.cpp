@@ -1,9 +1,10 @@
-// Copyright 2007-2015 Brian 'Snake' Alexander, All Rights Reserved.
+// Created by Brian 'Snake' Alexander, 2015
 
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
 #include "Net/UnrealNetwork.h"
 #include "UTGameState.h"
+#include "UTDomPlayerState.h"
 #include "UTDomStat.h"
 #include "UTDomGameState.h"
 
@@ -55,34 +56,29 @@ void AUTDomGameState::UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTea
 	}
 }
 
-AUTTeamInfo* AUTDomGameState::FindLeadingTeam()
+AUTDomTeamInfo* AUTDomGameState::FindLeadingTeam()
 {
-	AUTTeamInfo* TheWinningTeam = NULL;
-	bool bTied;
-
+	AUTDomTeamInfo* TheWinningTeam = Cast<AUTDomTeamInfo>(Teams[0]);
+	bool bNoScore = true;
 	if (Teams.Num() > 0)
 	{
-		TheWinningTeam = Teams[0];
-		bTied = false;
 		for (uint8 i = 1; i < Teams.Num(); i++)
 		{
-			if (Teams[i]->Score == TheWinningTeam->Score)
+			if (Cast<AUTDomTeamInfo>(Teams[i])->GetFloatScore() > TheWinningTeam->GetFloatScore())
 			{
-				bTied = true;
+				bNoScore = false;
+				TheWinningTeam = Cast<AUTDomTeamInfo>(Teams[i]);
 			}
-			else if (Teams[i]->Score > TheWinningTeam->Score)
-			{
-				TheWinningTeam = Teams[i];
-				bTied = false;
-			}
-		}
-
-		if (bTied)
-		{
-			TheWinningTeam = NULL;
 		}
 	}
-	return TheWinningTeam;
+	if (bNoScore)
+	{
+		return NULL;
+	}
+	else
+	{
+		return TheWinningTeam;
+	}
 }
 
 void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
@@ -106,30 +102,13 @@ AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
 	return Best;
 }
 
-int32 AUTDomGameState::GetOtherTeamScore(uint8 WinningTeamIndex) const
-{
-	if (!Teams.IsValidIndex(WinningTeamIndex))
-	{
-		WinningTeamIndex = 0;
-	}
-	int32 outputScore = 0;
-	for (uint8 i = 0; i < Teams.Num(); i++)
-	{
-		// Not 4 team compatible
-		if (Teams[i]->TeamIndex != WinningTeamIndex)
-		{
-			outputScore = Teams[i]->Score;
-			break;
-		}
-	}
-	return outputScore;
-}
-
 FText AUTDomGameState::GetGameStatusText(bool bForScoreboard)
 {
 	if (bForScoreboard)
 	{
-		return (GoalScore == 0) ? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit)) : FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
+		return (GoalScore == 0) 
+			? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit)) 
+			: FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
 	}
 
 	return Super::GetGameStatusText(bForScoreboard);

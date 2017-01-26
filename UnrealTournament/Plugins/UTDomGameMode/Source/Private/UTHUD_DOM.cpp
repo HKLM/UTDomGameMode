@@ -7,8 +7,8 @@
 AUTHUD_DOM::AUTHUD_DOM(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	static ConstructorHelpers::FObjectFinder<UTexture2D> DHUDTex(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DOM_HUDAtlas01.DOM_HUDAtlas01'"));
-	HUDAtlas = DHUDTex.Object;
+	static ConstructorHelpers::FObjectFinder<UTexture2D> DHUDTex(TEXT("Texture'/UTDomGameMode/UTDomGameContent/Textures/DOM_HUDAtlas01.DOM_HUDAtlas01'"));
+	HUDDomAtlas = DHUDTex.Object;
 
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_Paperdoll.bpHW_Paperdoll_C"));
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_WeaponInfo.bpHW_WeaponInfo_C"));
@@ -30,6 +30,12 @@ AUTHUD_DOM::AUTHUD_DOM(const FObjectInitializer& ObjectInitializer)
 	DOMTeamIconUV[2] = FVector2D(257.f, 853.f);
 	DOMTeamIconUV[3] = FVector2D(333.f, 853.f);
 	DOMTeamIconUV[4] = FVector2D(256.f, 770.f);
+}
+
+void AUTHUD_DOM::BeginPlay()
+{
+	HUDAtlas = HUDDomAtlas;
+	Super::BeginPlay();
 }
 
 FLinearColor AUTHUD_DOM::GetBaseHUDColor()

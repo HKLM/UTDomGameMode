@@ -4,6 +4,7 @@
 
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
+#include "UTDomGameState.h"
 #include "UTHUDWidget_DOMStatus.generated.h"
 
 USTRUCT()
@@ -25,9 +26,6 @@ UCLASS()
 class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 {
 	GENERATED_UCLASS_BODY()
-
-	/* colors assigned to the teams */
-	TArray<FLinearColor> TeamColors;
 
 	/* The control points */
 	TArray<FPointInfo> CtrlPoints;
@@ -72,4 +70,13 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	/* Gets the texture of the givin Team number
 	* @param TeamIndex The TeamIndex of team to look up */
 	UTexture2D* GetDomTeamIcon(uint8 TeamIndex) const;
+
+	/* Gets the TeamColor of the givin Team number
+	* @param TeamIndex The TeamIndex of team to look up */
+	FLinearColor GetDomTeamColor(uint8 TeamIndex) const;
+
+protected:
+	
+		/* Cached pointer to UTDomGameState */
+		AUTDomGameState* DomGameState;
 };
