@@ -64,7 +64,7 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	MeshSpinner->RotationRate.Yaw = 80.0f;
 
 	// Light
-	DomLightColor.Insert(FLinearColor::Red, 0);
+	DomLightColor.Insert(FLinearColor::FLinearColor(0.0f, 0.0f, 0.0f, 0.0f), 0);
 	DomLightColor.Insert(FLinearColor::Blue, 1);
 	DomLightColor.Insert(FLinearColor::Green, 2);
 	DomLightColor.Insert(FLinearColor::Yellow, 3);
@@ -158,15 +158,18 @@ void AControlPoint::CreateCarriedObject()
 
 void AControlPoint::TeamHeldTimer()
 {
-	if (bStopControlledTimer) return;
+	if (Role == ROLE_Authority)
+	{
+		if (bStopControlledTimer) return;
 
-	if (!bHidden && ControllingPawn != NULL)
-	{
-		ControllingPawn->ModifyStatsValue(NAME_ControlPointHeldTime, 1.0f);
-	}
-	if (!bHidden && ControllingTeam != NULL)
-	{
-		ControllingTeam->ModifyStatsValue(NAME_TeamControlPointHeldTime, 1.0f);
+		if (!bHidden && ControllingPawn != NULL)
+		{
+			ControllingPawn->ModifyStatsValue(NAME_ControlPointHeldTime, 1.0f);
+		}
+		if (!bHidden && ControllingTeam != NULL)
+		{
+			ControllingTeam->ModifyStatsValue(NAME_TeamControlPointHeldTime, 1.0f);
+		}
 	}
 }
 
@@ -187,13 +190,16 @@ AUTPlayerState* AControlPoint::GetCarriedObjectHolder()
 
 void AControlPoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AUTCharacter* Character = Cast<AUTCharacter>(OtherActor);
-	if (Character != NULL && !GetWorld()->LineTraceTestByChannel(OtherActor->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams))
+	if (Role == ROLE_Authority)
 	{
-		APawn* P = Cast<APawn>(OtherActor);
-		if (P != NULL)
+		AUTCharacter* Character = Cast<AUTCharacter>(OtherActor);
+		if (Character != NULL && !GetWorld()->LineTraceTestByChannel(OtherActor->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams))
 		{
-			ProcessTouch(Character);
+			APawn* P = Cast<APawn>(OtherActor);
+			if (P != NULL)
+			{
+				ProcessTouch(Character);
+			}
 		}
 	}
 }
@@ -306,7 +312,7 @@ void AControlPoint::UpdateStatus()
 /**
  * @note this should not be called directly. Use AUTDomGameState->UpdateControlPointFX()
  * 		 for changes to be replicated to clients.
- **/
+ */
 void AControlPoint::UpdateTeamEffects_Implementation(uint8 TeamIndex)
 {
 	if (TeamMesh.IsValidIndex(TeamIndex))

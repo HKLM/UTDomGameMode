@@ -1,10 +1,12 @@
 // Created by Brian 'Snake' Alexander, 2017
 #include "UnrealTournament.h"
-#include "UTGameMode.h"
+#include "UTDomGameMode.h"
+#include "UTDomGameState.h"
 #include "UTDomGameMessage.h"
-//#include "UTDomCharacter.h"
 #include "UTDomPlayerController.h"
-//#include "UTDomPlayerState.h"
+#include "UTDomCharacter.h"
+#include "UTPlayerState.h"
+#include "UTDomPlayerState.h"
 
 AUTDomPlayerState::AUTDomPlayerState(const class FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -21,7 +23,7 @@ void AUTDomPlayerState::HandleTeamChanged(AController* Controller)
 	if (Team)
 	{
 		int32 Switch = Team->TeamIndex + 9;
-		AUTPlayerController* PC = Cast<AUTPlayerController>(Controller);
+		AUTDomPlayerController* PC = Cast<AUTDomPlayerController>(Controller);
 		if (PC)
 		{
 			PC->ClientReceiveLocalizedMessage(UUTDomGameMessage::StaticClass(), Switch, this, NULL, NULL);
@@ -31,26 +33,38 @@ void AUTDomPlayerState::HandleTeamChanged(AController* Controller)
 
 void AUTDomPlayerState::ServerRequestChangeTeam_Implementation(uint8 NewTeamIndex)
 {
-	AUTGameMode* Game = GetWorld()->GetAuthGameMode<AUTGameMode>();
+	AUTDomGameMode* Game = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
 	if (Game != NULL && Game->bTeamGame)
 	{
-		AUTDomPlayerController* Controller = Cast<AUTDomPlayerController>(GetOwner());
+		AController* Controller = Cast<AController>(GetOwner());
 		if (Controller != NULL)
 		{
-			if (NewTeamIndex == 255 && Team != NULL)
+			AUTDomPlayerController* DomCon = Cast<AUTDomPlayerController>(Controller);
+			if (DomCon)
 			{
-				NewTeamIndex = (Team->TeamIndex + 1) % FMath::Max<uint8>(1, GetWorld()->GetGameState<AUTGameState>()->Teams.Num());
+				if (!GetWorld()->GetGameState<AUTDomGameState>()->Teams.IsValidIndex(NewTeamIndex) || NewTeamIndex == 255)
+				{
+					NewTeamIndex = 0;
+				}
+				if (Game->ChangeTeam(DomCon, NewTeamIndex, true))
+				{
+					HandleTeamChanged(DomCon);
+					MakeTeamSkin(NewTeamIndex);
+				}
 			}
-			else if (!GetWorld()->GetGameState<AUTGameState>()->Teams.IsValidIndex(NewTeamIndex))
-			{
-				NewTeamIndex = 0;
-			}
-		}
-
-		if (Game->ChangeTeam(Controller, NewTeamIndex, true))
-		{
-			HandleTeamChanged(Controller);
 		}
 	}
 }
 
+void AUTDomPlayerState::MakeTeamSkin(uint8 NewTeamIndex)
+{
+	AUTDomCharacter* UTC = Cast<AUTDomCharacter>(GetUTCharacter());
+	AUTDomGameState* DomGS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+	if (DomGS && UTC && DomGS->Teams.IsValidIndex(NewTeamIndex))
+	{
+		/* value what base color to use (red or blue) */
+		UTC->TeamBodySkinColor = DomGS->TeamBodySkinColor[NewTeamIndex];
+		UTC->TeamSkinOverlayColor = DomGS->TeamSkinOverlayColor[NewTeamIndex];
+		UTC->SetTeamSkin(NewTeamIndex);
+	}
+}

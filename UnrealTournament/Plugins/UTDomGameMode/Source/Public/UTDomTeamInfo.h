@@ -20,9 +20,9 @@ public:
 		virtual void SetFloatScore(float ScorePoints);
 
 	/** 
-	* Returns the teams FloatScore value 
-	* @return	The current value of FloatScore
-	*/
+	 * Returns the teams FloatScore value 
+	 * @return	The current value of FloatScore
+	 */
 	UFUNCTION(BlueprintCallable, Category = DomTeam)
 		virtual float GetFloatScore() { return FloatScore; }
 

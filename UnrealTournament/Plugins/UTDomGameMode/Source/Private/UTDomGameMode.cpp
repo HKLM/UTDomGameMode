@@ -31,12 +31,19 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 	SquadType = AUTDomSquadAI::StaticClass();
 	HUDClass = AUTHUD_DOM::StaticClass();
 	GameMessageClass = UUTDomGameMessage::StaticClass();
+
+	PlayerPawnObject.Reset();
+	PlayerPawnObject = FStringAssetReference(TEXT("/UTDomGameMode/UTDomGameContent/DefaultDomCharacter.DefaultDomCharacter_C"));
+
 	PlayerStateClass = AUTDomPlayerState::StaticClass();
 	PlayerControllerClass = AUTDomPlayerController::StaticClass();
 	VictoryMessageClass = UUTDomVictoryMessage::StaticClass();
 	MapPrefix = TEXT("DOM");
 	bAllowOvertime = false;
 	bUseTeamStarts = false;
+
+	//TEMP DISABLED
+	bBalanceTeams = false;
 
 	bAllowURLTeamCountOverride = true;
 	NumOfTeams = 4;
@@ -51,24 +58,20 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 
 	TranslocatorObject = FStringAssetReference(TEXT("/Game/RestrictedAssets/Weapons/Translocator/BP_Translocator.BP_Translocator_C"));
 
-	TeamColors[0] = FLinearColor(1.0f, 0.0f, 0.0f, 1.0f); 
- 	TeamColors[1] = FLinearColor(0.0f, 0.0f, 1.0f, 1.0f); 
-	TeamColors[2] = FLinearColor(0.0f, 0.75f, 0.0f, 1.0f); 
- 	TeamColors[3] = FLinearColor(0.65f, 0.65f, 0.0f, 1.0f); 
+	TeamColors[0] = FLinearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	TeamColors[1] = FLinearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	TeamColors[2] = FLinearColor(0.0f, 0.55f, 0.0f, 1.0f);
+	TeamColors[3] = FLinearColor(0.6f, 0.6f, 0.0f, 1.0f);
 
-	TeamSkins.InsertUninitialized(0, 1);
-	TeamSkins.InsertUninitialized(1, 1);
-	TeamSkins.InsertUninitialized(2, 1);
-	TeamSkins.InsertUninitialized(3, 1);
+	TeamBodySkinColor[0] = FLinearColor(4.6f, 0.1f, 0.1f, 1.0f);
+	TeamBodySkinColor[1] = FLinearColor(0.1f, 0.1f, 4.6f, 1.0f);
+	TeamBodySkinColor[2] = FLinearColor(0.01f, 4.1f, 0.01f, 1.0f);
+	TeamBodySkinColor[3] = FLinearColor(2.6f, 2.6f, 0.01f, 1.0f);
 
-	TeamSkins[0].TeamBodyColor = FLinearColor(5.0f, 0.1f, 0.0f, 1.0f);
-	TeamSkins[0].TeamBodyOverlay = FLinearColor(10.0f, 0.1f, 0.0f, 1.0f);
-	TeamSkins[1].TeamBodyColor = FLinearColor(0.0f, 0.0f, 5.18f, 1.0f);
-	TeamSkins[1].TeamBodyOverlay =FLinearColor(0.04f, 0.04f, 10.4f, 1.0f);
-	TeamSkins[2].TeamBodyColor = FLinearColor(0.1f, 5.0f, 0.0f, 1.0f);
-	TeamSkins[2].TeamBodyOverlay = FLinearColor(0.1f, 10.0f, 0.0f, 1.0f);
-	TeamSkins[3].TeamBodyColor = FLinearColor(2.1f, 2.1f, 0.0f, 1.0f);
-	TeamSkins[3].TeamBodyOverlay = FLinearColor(4.1f, 4.1f, 0.0f, 1.0f);
+	TeamSkinOverlayColor[0] = FLinearColor(7.0f, 0.02f, 0.02f, 1.0f);
+	TeamSkinOverlayColor[1] = FLinearColor(0.04f, 0.04f, 7.4f, 1.0f);
+	TeamSkinOverlayColor[2] = FLinearColor(0.02f, 6.0f, 0.02f, 1.0f);
+	TeamSkinOverlayColor[3] = FLinearColor(5.5f, 5.5f, 0.02f, 1.0f);
 }
 
 void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -140,6 +143,11 @@ void AUTDomGameMode::InitGameState()
 	Super::InitGameState();
 	DomGameState = Cast<AUTDomGameState>(GameState);
 	DomGameState->NumTeams = NumTeams;
+	for (uint8 i = 0; i < 4; i++)
+	{
+		DomGameState->TeamBodySkinColor[i] = TeamBodySkinColor[i];
+		DomGameState->TeamSkinOverlayColor[i] = TeamSkinOverlayColor[i];
+	}
 }
 
 void AUTDomGameMode::BeginPlay()
@@ -217,19 +225,92 @@ void AUTDomGameMode::GiveDefaultInventory(APawn* PlayerPawn)
 	}
 }
 
-void AUTDomGameMode::SetPlayerDefaults(APawn* PlayerPawn)
+bool AUTDomGameMode::ChangeTeam(AController* Player, uint8 NewTeam, bool bBroadcast)
 {
-	Super::SetPlayerDefaults(PlayerPawn);
-	if (NumTeams > 2)
+	if (Player == NULL)
 	{
-		AUTPlayerState* UTPS = Cast<AUTPlayerState>(PlayerPawn->PlayerState);
-		Set4TeamSkinForCharacter(UTPS);
+		return false;
+	}
+	else
+	{
+		AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(Player->PlayerState);
+		if (PS == NULL || PS->bOnlySpectator)
+		{
+			return false;
+		}
+		else
+		{
+			if ((bOfflineChallenge || bBasicTrainingGame) && PS->Team)
+			{
+				return false;
+			}
+
+			bool bForceTeam = false;
+			if (!Teams.IsValidIndex(NewTeam))
+			{
+				bForceTeam = true;
+			}
+			else
+			{
+				// see if someone is willing to switch
+				for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+				{
+					AUTDomPlayerController* NextPlayer = Cast<AUTDomPlayerController>(*Iterator);
+					AUTDomPlayerState* SwitchingPS = NextPlayer ? Cast<AUTDomPlayerState>(NextPlayer->PlayerState) : NULL;
+					if (SwitchingPS && SwitchingPS->bPendingTeamSwitch && (SwitchingPS->Team == Teams[NewTeam]) && Teams.IsValidIndex(1-NewTeam))
+					{
+						// Found someone who wants to leave team, so just replace them
+						MovePlayerToTeam(NextPlayer, SwitchingPS, 1 - NewTeam);
+						SwitchingPS->HandleTeamChanged(NextPlayer);
+						MovePlayerToTeam(Player, PS, NewTeam);
+						return true;
+					}
+				}
+
+				if (ShouldBalanceTeams(PS->Team == NULL))
+				{
+					for (int32 i = 0; i < Teams.Num(); i++)
+					{
+						// if this isn't smallest team, use PickBalancedTeam() to get right team
+						if (i != NewTeam && Teams[i]->GetSize() <= Teams[NewTeam]->GetSize())
+						{
+							bForceTeam = true;
+							break;
+						}
+					}
+				}
+			}
+			if (bForceTeam)
+			{
+				NewTeam = PickBalancedTeam(PS, NewTeam);
+			}
+		
+			if (MovePlayerToTeam(Player, PS, NewTeam))
+			{
+				AUTDomPlayerController* PC = Cast<AUTDomPlayerController>(Player);
+				if (PC && !HasMatchStarted() && bUseTeamStarts)
+				{
+					AActor* const StartSpot = FindPlayerStart(PC);
+					if (StartSpot != NULL)
+					{
+						PC->StartSpot = StartSpot;
+						PC->ViewStartSpot();
+					}
+				}
+				return true;
+			}
+
+			PS->bPendingTeamSwitch = true;
+			PS->ForceNetUpdate();
+			return false;
+		}
 	}
 }
 
 bool AUTDomGameMode::MovePlayerToTeam(AController* Player, AUTPlayerState* PS, uint8 NewTeam)
 {
-	if (Teams.IsValidIndex(NewTeam) && (PS->Team == NULL || PS->Team->TeamIndex != NewTeam))
+	AUTDomPlayerState* PSD = Cast<AUTDomPlayerState>(PS);
+	if (Teams.IsValidIndex(NewTeam) && PSD && (PSD->Team == NULL || PSD->Team->TeamIndex != NewTeam))
 	{
 		//Make sure we kill the player before they switch sides so the correct team loses the point
 		AUTCharacter* UTC = Cast<AUTCharacter>(Player->GetPawn());
@@ -237,28 +318,25 @@ bool AUTDomGameMode::MovePlayerToTeam(AController* Player, AUTPlayerState* PS, u
 		{
 			UTC->PlayerSuicide();
 		}
-
-		if (PS->Team != NULL)
+		if (PSD->Team != NULL)
 		{
-			PS->Team->RemoveFromTeam(Player);
+			PSD->Team->RemoveFromTeam(Player);
 		}
 		Teams[NewTeam]->AddToTeam(Player);
-		PS->bPendingTeamSwitch = false;
-		PS->ForceNetUpdate();
-		if (NumTeams > 2)
-		{
-			Set4TeamSkinForCharacter(PS);
-		}
+		PSD->bPendingTeamSwitch = false;
+		PSD->ForceNetUpdate();
 
+		PSD->MakeTeamSkin(NewTeam);
 		// Clear the player's gameplay mute list.
-		APlayerController* PlayerController = Cast<APlayerController>(Player);
-		AUTGameState* MyGameState = GetWorld()->GetGameState<AUTGameState>();
+
+		AUTDomPlayerController* PlayerController = Cast<AUTDomPlayerController>(Player);
+		AUTDomGameState* MyGameState = GetWorld()->GetGameState<AUTDomGameState>();
 
 		if (PlayerController && MyGameState)
 		{
 			for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 			{
-				AUTPlayerController* NextPlayer = Cast<AUTPlayerController>(*Iterator);
+				AUTDomPlayerController* NextPlayer = Cast<AUTDomPlayerController>(*Iterator);
 				if (NextPlayer)
 				{
 					TSharedPtr<const FUniqueNetId> Id = NextPlayer->PlayerState->UniqueId.GetUniqueNetId();
@@ -285,155 +363,12 @@ bool AUTDomGameMode::MovePlayerToTeam(AController* Player, AUTPlayerState* PS, u
 	return false;
 }
 
-bool AUTDomGameMode::Set4TeamSkinForCharacter(AUTPlayerState* PS)
-{
-	if (PS == NULL || PS->Team == NULL)
-	{
-		return false;
-	}
-	float FTeamNum;
-	if (PS->GetTeamNum() > 1 && PS->GetTeamNum() != 255) //Green & Gold
-	{
-		FTeamNum = (PS->GetTeamNum() == 2) ? 1.0f : 0.0f;
-	}
-	else
-	{
-		FTeamNum = PS->GetTeamNum();
-	}
-
-	AUTCharacter* UTC = PS->GetUTCharacter();
-	if (UTC != NULL)
-	{
-		FLinearColor PlayerTeamColor = PS->Team->TeamColor;
-		int32 i = 0;
-		for (UMaterialInstanceDynamic* MIDom : UTC->GetBodyMIs())
-		{
-			if (MIDom != NULL)
-			{
-				i++;
-				static FName NAME_TeamRedColor(TEXT("Red Team Color"));
-				static FName NAME_TeamBlueColor(TEXT("Blue Team Color"));
-				MIDom->SetScalarParameterValue("Use Team Colors", 1.0f);
-				if (FTeamNum != 255)
-				{
-					MIDom->SetScalarParameterValue("TeamSelect", FTeamNum);
-					if (PS->GetTeamNum() == 1 || PS->GetTeamNum() == 2) //Blue & Green Team
-					{
-						static FName NAME_TeamBlueOverlay(TEXT("Blue Overlay"));
-						MIDom->SetVectorParameterValue(NAME_TeamBlueColor, TeamSkins[PS->GetTeamNum()].TeamBodyColor);
-						MIDom->SetVectorParameterValue(NAME_TeamBlueOverlay, TeamSkins[PS->GetTeamNum()].TeamBodyOverlay);
-						//merc
-						static FName NAME_MercMaleTeamBluePlastic(TEXT("Blue Team Plastic"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamBluePlastic,  TeamSkins[PS->GetTeamNum()].TeamBodyColor);
-						static FName NAME_MercMaleTeamBlueCamo(TEXT("Blue Team Camo"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamBlueCamo, PlayerTeamColor);
-						static FName NAME_MercMaleTeamBlueNylon(TEXT("Blue Team Nylon"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamBlueNylon, PlayerTeamColor);
-						//nec male
-						static FName NAME_NecMaleTeamBlueDarkPlastic(TEXT("Blue Team Dark Plastic"));
-						MIDom->SetVectorParameterValue(NAME_NecMaleTeamBlueDarkPlastic, PlayerTeamColor);
-						static FName NAME_NecMaleTeamBlueLatex(TEXT("Blue Team Latex"));
-						MIDom->SetVectorParameterValue(NAME_NecMaleTeamBlueLatex, PlayerTeamColor);
-						//visse
-						static FName NAME_VisseTeamBlueRubberTint(TEXT("Rubber Tint"));
-						MIDom->SetVectorParameterValue(NAME_VisseTeamBlueRubberTint, PlayerTeamColor);
-						//Skaarj
-						static FName NAME_SkaarjTeamBlueTintAlpha(TEXT("Blue tint on alpha"));
-						MIDom->SetVectorParameterValue(NAME_SkaarjTeamBlueTintAlpha, PlayerTeamColor);
-					}
-					else if (UTC->GetTeamNum() == 0 || UTC->GetTeamNum() == 3) //Red & Gold Team
-					{
-						static FName NAME_TeamRedOverlay(TEXT("Red Overlay"));
-						MIDom->SetVectorParameterValue(NAME_TeamRedColor, TeamSkins[PS->GetTeamNum()].TeamBodyColor);
-						MIDom->SetVectorParameterValue(NAME_TeamRedOverlay, TeamSkins[PS->GetTeamNum()].TeamBodyOverlay);
-						//merc
-						static FName NAME_MercMaleTeamRedPlastic(TEXT("Red Team Plastic"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedPlastic, TeamSkins[PS->GetTeamNum()].TeamBodyColor);
-						static FName NAME_MercMaleTeamRedCamo(TEXT("Red Team Camo"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedCamo, PlayerTeamColor);
-						static FName NAME_MercMaleTeamRedNylon(TEXT("Red Team Nylon"));
-						MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedNylon, PlayerTeamColor);
-						//nec male
-						static FName NAME_NecMaleTeamRedDarkPlastic(TEXT("Red Team Dark Plastic"));
-						MIDom->SetVectorParameterValue(NAME_NecMaleTeamRedDarkPlastic, PlayerTeamColor);
-						static FName NAME_NecMaleTeamRedLatex(TEXT("Red Team Latex"));
-						MIDom->SetVectorParameterValue(NAME_NecMaleTeamRedLatex, PlayerTeamColor);
-						//visse
-						static FName NAME_VisseTeamRedRubberTint(TEXT("Rubber Tint"));
-						MIDom->SetVectorParameterValue(NAME_VisseTeamRedRubberTint, PlayerTeamColor);
-						//Skaarj
-						static FName NAME_SkaarjTeamRedTintAlpha(TEXT("Red tint on alpha"));
-						MIDom->SetVectorParameterValue(NAME_SkaarjTeamRedTintAlpha, PlayerTeamColor);
-
-					//	static FName NAME_TeamBlueOverlay(TEXT("Blue Overlay"));
-					//	MIDom->SetVectorParameterValue(NAME_TeamBlueColor, PlayerTeamColor);/* FLinearColor(0.0, 0.0, 5.18, 1.0));*/
-					//	MIDom->SetVectorParameterValue(NAME_TeamBlueOverlay, PlayerTeamColor);/* FLinearColor(0.04, 0.04, 10.4, 1.0));*/
-					//	//merc
-					//	static FName NAME_MercMaleTeamBluePlastic(TEXT("Blue Team Plastic"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamBluePlastic, PlayerTeamColor);
-					//	static FName NAME_MercMaleTeamBlueCamo(TEXT("Blue Team Camo"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamBlueCamo, PlayerTeamColor);
-					//	static FName NAME_MercMaleTeamBlueNylon(TEXT("Blue Team Nylon"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamBlueNylon, PlayerTeamColor);
-					//	//nec male
-					//	static FName NAME_NecMaleTeamBlueDarkPlastic(TEXT("Blue Team Dark Plastic"));
-					//	MIDom->SetVectorParameterValue(NAME_NecMaleTeamBlueDarkPlastic, PlayerTeamColor);
-					//	static FName NAME_NecMaleTeamBlueLatex(TEXT("Blue Team Latex"));
-					//	MIDom->SetVectorParameterValue(NAME_NecMaleTeamBlueLatex, PlayerTeamColor);
-					//	//visse
-					//	static FName NAME_VisseTeamBlueRubberTint(TEXT("Rubber Tint"));
-					//	MIDom->SetVectorParameterValue(NAME_VisseTeamBlueRubberTint, PlayerTeamColor);
-					//	//Skaarj
-					//	static FName NAME_SkaarjTeamBlueTintAlpha(TEXT("Blue tint on alpha"));
-					//	MIDom->SetVectorParameterValue(NAME_SkaarjTeamBlueTintAlpha, PlayerTeamColor);
-					//}
-					//else if (UTC->GetTeamNum() == 0 || UTC->GetTeamNum() == 3) //Red & Gold Team
-					//{
-					//	static FName NAME_TeamRedOverlay(TEXT("Red Overlay"));
-					//	MIDom->SetVectorParameterValue(NAME_TeamRedColor, PlayerTeamColor);/* FLinearColor(0.1, 5.0, 0.0, 1.0));*/
-					//	MIDom->SetVectorParameterValue(NAME_TeamRedOverlay, PlayerTeamColor);/* FLinearColor(0.1, 10.0, 0.0, 1.0));*/
-					//	//merc
-					//	static FName NAME_MercMaleTeamRedPlastic(TEXT("Red Team Plastic"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedPlastic, PlayerTeamColor);
-					//	static FName NAME_MercMaleTeamRedCamo(TEXT("Red Team Camo"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedCamo, PlayerTeamColor);
-					//	static FName NAME_MercMaleTeamRedNylon(TEXT("Red Team Nylon"));
-					//	MIDom->SetVectorParameterValue(NAME_MercMaleTeamRedNylon, PlayerTeamColor);
-					//	//nec male
-					//	static FName NAME_NecMaleTeamRedDarkPlastic(TEXT("Red Team Dark Plastic"));
-					//	MIDom->SetVectorParameterValue(NAME_NecMaleTeamRedDarkPlastic, PlayerTeamColor);
-					//	static FName NAME_NecMaleTeamRedLatex(TEXT("Red Team Latex"));
-					//	MIDom->SetVectorParameterValue(NAME_NecMaleTeamRedLatex, PlayerTeamColor);
-					//	//visse
-					//	static FName NAME_VisseTeamRedRubberTint(TEXT("Rubber Tint"));
-					//	MIDom->SetVectorParameterValue(NAME_VisseTeamRedRubberTint, PlayerTeamColor);
-					//	//Skaarj
-					//	static FName NAME_SkaarjTeamRedTintAlpha(TEXT("Red tint on alpha"));
-					//	MIDom->SetVectorParameterValue(NAME_SkaarjTeamRedTintAlpha, PlayerTeamColor);
-					}
-				}
-				else
-				{
-					MIDom->SetScalarParameterValue("TeamSelect", UTC->GetTeamNum());
-				}
-				UTC->UpdateSkin();
-			}
-		}
-		if (i != 0)
-		{
-			UTC->ForceNetUpdate();
-			return true;
-		}
-	}
-	return false;
-}
-
 bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 {
 	AUTDomTeamInfo* WinningTeam = NULL;
 	AUTPlayerState* BestPlayer = Scorer;
 	// check if team wins by points
-	if (GoalScore > 0)
+	if (GoalScore != 0)
 	{
 		for (uint8 i = 0; i < NumTeams; i++)
 		{
@@ -442,7 +377,10 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 				&& Cast<AUTDomTeamInfo>(Teams[i])->GetFloatScore() >= GoalScore)
 			{
 				BestPlayer = FindBestPlayerOnTeam(i);
-				if (BestPlayer == NULL && Scorer->GetTeamNum() == i) BestPlayer = Scorer;
+				if (BestPlayer == NULL && Scorer->Team == Teams[i])
+				{
+					BestPlayer = Scorer;
+				}
 				//DomGameState->SetWinner(BestPlayer);
 				EndGame(BestPlayer, FName(TEXT("scorelimit")));
 				return true;
@@ -450,45 +388,22 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 		}
 	}
 	// check if team wins by time limit
-	if (TimeLimit > 0 && DomGameState->GetRemainingTime() <= 0)
+	if (TimeLimit != 0 && DomGameState->GetRemainingTime() <= 0)
 	{
 		AUTDomTeamInfo* LeadingTeam = DomGameState->FindLeadingTeam();
 		if (LeadingTeam != NULL)
 		{
 			BestPlayer = FindBestPlayerOnTeam(LeadingTeam->GetTeamNum());
-			if (BestPlayer == NULL && Scorer->GetTeamNum() == LeadingTeam->GetTeamNum()) BestPlayer = Scorer;
+			if (BestPlayer == NULL && Scorer->GetTeamNum() == LeadingTeam->GetTeamNum())
+			{
+				BestPlayer = Scorer;
+			}
 			//DomGameState->SetWinner(BestPlayer);
 			EndGame(BestPlayer, FName(TEXT("TimeLimit")));
 			return true;
 		}
 	}
 	return false;
-}
-
-// Use Team skins for 3/4 team play
-void AUTDomGameMode::RestartPlayer(AController* aPlayer)
-{
-	Super::RestartPlayer(aPlayer);
-	if ((aPlayer == NULL) || (aPlayer->PlayerState == NULL) || aPlayer->PlayerState->PlayerName.IsEmpty() || !IsMatchInProgress() || aPlayer->PlayerState->bOnlySpectator)
-	{
-		return;
-	}
-	//if (NumTeams > 2)
-	//{
-	//	if (Cast<AUTDomPlayerState>(aPlayer->PlayerState))
-	//	{
-	//		AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(aPlayer->PlayerState);
-	//		if (PS->Team && Cast<AUTDomTeamInfo>(PS->Team))
-	//		{
-	//			AUTDomTeamInfo* DTI = Cast<AUTDomTeamInfo>(PS->Team);
-	//			if (DTI && DTI->TeamSkinOverlay && PS->GetUTCharacter())
-	//			{
-	//				AUTCharacter* UTC = PS->GetUTCharacter();
-	//				UTC->SetCharacterOverlayEffect(FOverlayEffect(DTI->TeamSkinOverlay), true);
-	//			}
-	//		}
-	//	}
-	//}
 }
 
 void AUTDomGameMode::Logout(AController* Exiting)
@@ -568,36 +483,40 @@ void AUTDomGameMode::EndGame(AUTPlayerState* Winner, FName Reason)
 
 void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 {
-	AControlPoint* WinningBase = NULL;
-	if (Winner != NULL)
+	AControlPoint* WinningBase = nullptr;
+	AUTDomTeamInfo* WinningTeam = (Winner && Winner->Team) ? Cast<AUTDomTeamInfo>(Winner->Team) : DomGameState->FindLeadingTeam();
+	if (Winner && DomGameState->GameControlPoints.Num() > 0)
 	{
 		// find control point owned by winning player
 		for (uint8 n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 		{
-			if (DomGameState->GameControlPoints[n]->ControllingTeam != NULL && DomGameState->GameControlPoints[n]->TeamNum == Winner->GetTeamNum() && DomGameState->GameControlPoints[n]->ActorIsNearMe(Winner))
+			if ((DomGameState->GameControlPoints[n] && DomGameState->GameControlPoints[n]->ControllingTeam && DomGameState->GameControlPoints[n]->TeamNum == WinningTeam->GetTeamNum()) && DomGameState->GameControlPoints[n]->ActorIsNearMe(Winner))
 			{
 				WinningBase = DomGameState->GameControlPoints[n];
 				break;
 			}
 		}
-		if (WinningBase == NULL)
+		if (WinningBase == nullptr)
 		{
 			// find control point owned by winning player
 			for (uint8 n = 0; n < DomGameState->GameControlPoints.Num(); n++)
 			{
-				if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->TeamNum == Winner->GetTeamNum()))
+				if (DomGameState->GameControlPoints[n] && DomGameState->GameControlPoints[n]->ControllingPawn)
 				{
-					WinningBase = DomGameState->GameControlPoints[n];
-					break;
+					if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
+					{
+						WinningBase = DomGameState->GameControlPoints[n];
+						break;
+					}
 				}
 			}
 		}
 		// no winning player control point found, so find the first control point owned by winning team
-		if (WinningBase == NULL)
+		if (WinningBase == nullptr)
 		{
 			for (uint8 i = 0; i < DomGameState->GameControlPoints.Num(); i++)
 			{
-				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->TeamNum == Winner->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
 				{
 					WinningBase = DomGameState->GameControlPoints[i];
 					break;
@@ -606,8 +525,8 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 		}
 	}
 
-	// If we don't have a winner, view 1st base
-	if (WinningBase == NULL && DomGameState->GameControlPoints[0] != NULL)
+	// If we don't have a winner, something must be wrong, just view 1st base
+	if (WinningBase == nullptr && DomGameState->GameControlPoints[0] != NULL)
 	{
 		WinningBase = DomGameState->GameControlPoints[0];
 	}
@@ -620,10 +539,10 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 
 	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
 	{
-		AUTPlayerController* Controller = Cast<AUTPlayerController>(*Iterator);
-		if ((EndGameFocus != NULL) && Controller && Controller->UTPlayerState)
+		AUTDomPlayerController* Controller = Cast<AUTDomPlayerController>(*Iterator);
+		if (Controller && Controller->UTPlayerState && Controller->UTPlayerState->Team)
 		{
-			Controller->GameHasEnded(EndGameFocus, Controller->UTPlayerState->Team == Winner->Team);
+			Controller->GameHasEnded(EndGameFocus, (Controller->UTPlayerState->Team->TeamIndex == WinningTeam->GetTeamNum()));
 		}
 	}
 }
@@ -634,18 +553,14 @@ void AUTDomGameMode::PlayEndOfMatchMessage()
 	{
 		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 		{
-			APlayerController* Controller = Iterator->Get();
-			if (Controller && Controller->IsA(AUTPlayerController::StaticClass()))
+			AUTPlayerController* PC = Cast<AUTPlayerController>(*Iterator);
+			if (PC && (PC->PlayerState != NULL) && !PC->PlayerState->bOnlySpectator)
 			{
-				AUTPlayerController* PC = Cast<AUTPlayerController>(Controller);
-				if (PC && Cast<AUTPlayerState>(PC->PlayerState))
-				{
-					PC->ClientReceiveLocalizedMessage(VictoryMessageClass,
-													  UTGameState->WinningTeam->GetTeamNum(),
-													  UTGameState->WinnerPlayerState,
-													  PC->PlayerState,
-													  UTGameState->WinningTeam);
-				}
+				PC->ClientReceiveLocalizedMessage(VictoryMessageClass,
+													UTGameState->WinningTeam->GetTeamNum(),
+													UTGameState->WinnerPlayerState,
+													PC->PlayerState,
+													UTGameState->WinningTeam);
 			}
 		}
 	}
@@ -874,33 +789,6 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldPoints", "Points from Capture"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldPoints)), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointCaps", "Captures"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointCaps)), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldTime", "Total Held Time"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldTime, nullptr, ToTime)), StatList);
-
-	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
-	RightPane->AddSlot().AutoHeight()[SNew(SBox)
-		.HeightOverride(50.0f)
-		[
-			SNew(STextBlock)
-			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-		.Text(NSLOCTEXT("ADomination", "PickupStats", " PICKUP STATS "))
-		]
-	];
-
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BeltPickups", "Shield Belt Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ShieldBeltCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "VestPickups", "Armor Vest Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ArmorVestCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "PadPickups", "Thigh Pad Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_ArmorPadsCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "HelmetPickups", "Helmet Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_HelmetCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "JumpBootJumps", "JumpBoot Jumps"), MakeShareable(new TAttributeStat(PlayerState, NAME_BootJumps)), StatList);
-
-	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "UDamagePickups", "UDamage Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_UDamageCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BerserkPickups", "Berserk Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_BerserkCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "InvisibilityPickups", "Invisibility Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_InvisibilityCount)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "KegPickups", "Keg Pickups"), MakeShareable(new TAttributeStat(PlayerState, NAME_KegCount)), StatList);
-
-	RightPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "UDamageControl", "UDamage Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_UDamageTime, nullptr, ToTime)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "BerserkControl", "Berserk Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_BerserkTime, nullptr, ToTime)), StatList);
-	NewPlayerInfoLine(RightPane, NSLOCTEXT("AUTGameMode", "InvisibilityControl", "Invisibility Control"), MakeShareable(new TAttributeStat(PlayerState, NAME_InvisibilityTime, nullptr, ToTime)), StatList);
 }
 
 #endif

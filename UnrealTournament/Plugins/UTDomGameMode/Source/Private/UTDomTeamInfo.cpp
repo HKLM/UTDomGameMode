@@ -3,6 +3,8 @@
 #include "UnrealTournament.h"
 #include "UTTeamInfo.h"
 #include "Net/UnrealNetwork.h"
+#include "UTDomSquadAI.h"
+#include "UTDomGameMode.h"
 #include "UTDomTeamInfo.h"
 
 AUTDomTeamInfo::AUTDomTeamInfo(const FObjectInitializer& ObjectInitializer)
@@ -34,22 +36,22 @@ void AUTDomTeamInfo::SetFloatScore(float ScorePoints)
 
 bool AUTDomTeamInfo::AssignToSquad(AController* C, FName Orders, AController* Leader)
 {
-	AUTSquadAI* NewSquad = NULL;
+	AUTDomSquadAI* NewSquad = NULL;
 	for (int32 i = 0; i < Squads.Num(); i++)
 	{
 		if (Squads[i] == NULL || Squads[i]->IsPendingKillPending())
 		{
 			Squads.RemoveAt(i--);
 		}
-		else if (Squads[i]->Orders == Orders && (Leader == NULL || Squads[i]->GetLeader() == Leader) && (Leader != NULL || Squads[i]->GetSize() < GetWorld()->GetAuthGameMode<AUTGameMode>()->MaxSquadSize))
+		else if (Squads[i]->Orders == Orders && (Leader == NULL || Squads[i]->GetLeader() == Leader) && (Leader != NULL || Squads[i]->GetSize() < GetWorld()->GetAuthGameMode<AUTDomGameMode>()->MaxSquadSize))
 		{
-			NewSquad = Squads[i];
+			NewSquad = Cast<AUTDomSquadAI>(Squads[i]);
 			break;
 		}
 	}
 	if (NewSquad == NULL && (Leader == NULL || Leader == C))
 	{
-		NewSquad = GetWorld()->SpawnActor<AUTSquadAI>(GetWorld()->GetAuthGameMode<AUTGameMode>()->SquadType);
+		NewSquad = GetWorld()->SpawnActor<AUTDomSquadAI>(GetWorld()->GetAuthGameMode<AUTDomGameMode>()->SquadType);
 		NewSquad->Initialize(this, Orders);
 		Squads.Add(NewSquad);
 	}

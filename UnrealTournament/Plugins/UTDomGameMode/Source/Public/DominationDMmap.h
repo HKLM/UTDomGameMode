@@ -1,8 +1,8 @@
 /**
-* Domination Game Mode, plays on DM maps
-* Control points will be automaticly added to the map at run time.
-* Created by Brian 'Snake' Alexander, 2016
-*/
+ * Domination Game Mode, plays on DM maps
+ * Control points will be automaticly added to the map at run time.
+ * Created by Brian 'Snake' Alexander, 2016
+ */
 #pragma once
 
 #include "UnrealTournament.h"

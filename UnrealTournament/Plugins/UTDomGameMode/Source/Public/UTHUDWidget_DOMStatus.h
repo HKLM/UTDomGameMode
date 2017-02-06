@@ -12,13 +12,13 @@ struct FPointInfo
 {
 	GENERATED_USTRUCT_BODY()
 
-	/* The current position on HUD to draw this at */
+	/** The current position on HUD to draw this at */
 	FVector2D StatusIcon;
 
-	/* The current ControlPoint associated with this */
+	/** The current ControlPoint associated with this */
 	AControlPoint* thePoint;
 
-	/* Directional arrow pointing in the direction of this ControlPoint from the players current location */
+	/** Directional arrow pointing in the direction of this ControlPoint from the players current location */
 	FHUDRenderObject_Texture DomArrowDir;
 };
 
@@ -27,33 +27,35 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 {
 	GENERATED_UCLASS_BODY()
 
-	/* The control points */
+	/** The control points */
 	TArray<FPointInfo> CtrlPoints;
 
-	/* Temp value of location on screen to draw the current ControlPoint icon */
+	/** Temp value of location on screen to draw the current ControlPoint icon */
 	FVector2D DomPosition;
 
-	/* array of dom team icon HUD texture */
+	/** array of dom team icon HUD texture */
 	TArray<UTexture2D*> DomTeamIconTexture;
 
-	/* draw direction arrow (ArrowDirTexture) for each control point on HUD */
+	/** draw direction arrow (ArrowDirTexture) for each control point on HUD */
 	bool bDrawDirectionArrow;
 
 	/**
-	* colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
-	* (e.g. A red arrow on a red team logo would not be visible.
-	*/
+	 * colors assigned to the Directional Arrow on a per team bases. This way we can change the arrow color depending on team.
+	 * (e.g. A red arrow on a red team logo would not be visible.
+	 */
 	TArray<FLinearColor> ArrowDirColor;
 
 	UPROPERTY(Transient)
 		bool bControlPointInitialized;
 
-	/* Base size of HUD icon for each control point */
+	/** Base size of HUD icon for each control point */
 	float IcoMulti;
 	float IconSize;
 
-	/* used as a quick way not to have to recalculate the icons.
-	* Copy of RenderScale to compair this time against. If differant then we will have to resetup the icons */
+	/**
+	 * used as a quick way not to have to recalculate the icons.
+	 * Copy of RenderScale to compair this time against. If differant then we will have to resetup the icons 
+	 */
 	float LastRenderScale;
 
 	virtual void Draw_Implementation(float DeltaTime);
@@ -64,19 +66,25 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 		return !bShowScores;
 	}
 
-	/* Cache the ControlPoints */
+	/** Cache the ControlPoints */
 	void FindControlPoints();
 
-	/* Gets the texture of the givin Team number
-	* @param TeamIndex The TeamIndex of team to look up */
+	/**
+	 * Gets the texture of the givin Team number
+	 * @param TeamIndex The TeamIndex of team to look up 
+	 */
 	UTexture2D* GetDomTeamIcon(uint8 TeamIndex) const;
 
-	/* Gets the TeamColor of the givin Team number
-	* @param TeamIndex The TeamIndex of team to look up */
+	/**
+	 * Gets the TeamColor of the givin Team number
+	 * @param TeamIndex The TeamIndex of team to look up 
+	 */
 	FLinearColor GetDomTeamColor(uint8 TeamIndex) const;
 
 protected:
 	
-		/* Cached pointer to UTDomGameState */
+		/**
+		 * Cached pointer to UTDomGameState 
+		 */
 		AUTDomGameState* DomGameState;
 };

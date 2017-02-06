@@ -65,11 +65,11 @@ FLinearColor AUTHUD_DOM::GetWidgetTeamColor()
 		{
 			switch (PS->GetTeamNum())
 			{
-			case 0: return FLinearColor(0.15, 0.0, 0.0, 1.0); break;
-			case 1: return FLinearColor(0.025, 0.025, 0.1, 1.0); break;
-			case 2: return FLinearColor(0.0, 0.25, 0.0, 1.0); break;
-			case 3: return FLinearColor(0.25, 0.25, 0.0, 1.0); break;
-			default: break;
+				case 0: return FLinearColor(0.15, 0.0, 0.0, 1.0); break;
+				case 1: return FLinearColor(0.025, 0.025, 0.1, 1.0); break;
+				case 2: return FLinearColor(0.0, 0.25, 0.0, 1.0); break;
+				case 3: return FLinearColor(0.25, 0.25, 0.0, 1.0); break;
+				default: break;
 			}
 		}
 	}
@@ -110,7 +110,7 @@ void AUTHUD_DOM::DrawMinimapSpectatorIcons()
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState());
 	if (GS == NULL) return;
 
-	TArray<AControlPoint*> ControlPts = GS->AUTDomGameState::GetControlPoints();	
+	TArray<AControlPoint*> ControlPts = GS->AUTDomGameState::GetControlPoints();
 	if (ControlPts.Num() > 0)
 	{
 		for (int32 CPIndex = 0; CPIndex < ControlPts.Num(); CPIndex++)

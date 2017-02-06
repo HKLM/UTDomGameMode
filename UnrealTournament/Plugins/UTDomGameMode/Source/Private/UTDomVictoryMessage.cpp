@@ -4,7 +4,6 @@
 #include "UTLocalMessage.h"
 #include "UTVictoryMessage.h"
 #include "UTDomVictoryMessage.h"
-//#include "UTHUD.h"
 #include "GameFramework/LocalMessage.h"
 
 UUTDomVictoryMessage::UUTDomVictoryMessage(const class FObjectInitializer& ObjectInitializer)

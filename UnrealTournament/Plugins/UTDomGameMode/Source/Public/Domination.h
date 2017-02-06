@@ -1,8 +1,8 @@
 /**
-* Domination (A.K.A. Classic Domination) Game Mode.
-* Based of the original UT:GoTY version of Domination.
-* Created by Brian 'Snake' Alexander, 2015
-*/
+ * Domination (A.K.A. Classic Domination) Game Mode.
+ * Based of the original UT:GoTY version of Domination.
+ * Created by Brian 'Snake' Alexander, 2015
+ */
 #pragma once
 
 #include "UnrealTournament.h"
@@ -17,10 +17,10 @@ class UTDOMGAMEMODE_API ADomination : public AUTDomGameMode
 	virtual void DefaultTimer();
 
 	/**
-	* Awards any controllingTeams TeamScoreAmount amount of points
-	* Called every tick of gameplay
-	* @param	ControlPointIndex	Index value of the ControlPoint in the CDomPoints array
-	* @param	TeamScoreAmount		Amount of points to award to each team
-	*/
+	 * Awards any controllingTeams TeamScoreAmount amount of points
+	 * Called every tick of gameplay
+	 * @param	ControlPointIndex	Index value of the ControlPoint in the CDomPoints array
+	 * @param	TeamScoreAmount		Amount of points to award to each team
+	 */
 	virtual void ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount);
 };

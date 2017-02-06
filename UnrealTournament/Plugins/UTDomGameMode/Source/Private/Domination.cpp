@@ -18,18 +18,13 @@ void ADomination::DefaultTimer()
 	Super::DefaultTimer();
 	if (HasMatchStarted() && !HasMatchEnded())
 	{
-		float c = 0.2;
+		float c = 0.2f;
 		if (TimeLimit > 0)
 		{
 			// Award more points toward the end of the match
 			if (DomGameState->GetRemainingTime() < 0.25 * TimeLimit)
 			{
-				if (DomGameState->GetRemainingTime() < 0.1 * TimeLimit){
-					c = 0.8;
-				}
-				else{
-					c = 0.4;
-				}
+				c = (DomGameState->GetRemainingTime() < 0.1 * TimeLimit) ? 0.8f : 0.4f;
 			}
 		}
 
@@ -42,7 +37,7 @@ void ADomination::DefaultTimer()
 
 void ADomination::ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount)
 {
-	if ((CDomPoints[ControlPointIndex] != NULL && CDomPoints[ControlPointIndex]->ControllingTeam != NULL) && CDomPoints[ControlPointIndex]->bScoreReady)
+	if ((CDomPoints[ControlPointIndex] != NULL && CDomPoints[ControlPointIndex]->ControllingTeam != NULL) && CDomPoints[ControlPointIndex]->GetIsScoreReady())
 	{
 		for (uint8 i = 0; i < NumTeams; i++)
 		{

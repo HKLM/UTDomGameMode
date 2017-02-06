@@ -3,13 +3,15 @@ Domination Game Modes C++ plug-in for Unreal Tournament 4
 
 Public access to the source code for the UTDomGameMode plug-in.
 
-Version: Beta 3.2
+## NOW WITH FULL 4 TEAM PLAY
+
+Version: Beta 3.4
 Author: Brian 'Snake' Alexander  sw_snakepliskin@hotmail.com
-Date: 12/13/2016
+Date: 2/6/2017
 
 
 ### REQUIREMENTS:
-UT4 Version: `Release date: 11/10/2016`
+UT4 Version: `4.15.0-3270765+++UT+Release-Next`
 
 
 ##### NOTES
@@ -111,6 +113,9 @@ C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDo
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Server-Win64-Shipping.modules
 
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Config\DefaultGame.ini
+
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\BaseUTDomCharacter.uasset
+C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\DefaultDomCharacter.uasset
 
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomB.uasset
 C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGN.uasset

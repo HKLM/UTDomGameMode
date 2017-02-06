@@ -151,51 +151,51 @@ void ADominationDMmap::CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSp
 	if (MaxControlPointsAttr.IsValid())
 	{
 		MenuSpace->AddSlot()
-		.AutoHeight()
-		.VAlign(VAlign_Top)
-		.Padding(0.0f,0.0f,0.0f,5.0f)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
+			.AutoHeight()
+			.VAlign(VAlign_Top)
+			.Padding(0.0f, 0.0f, 0.0f, 5.0f)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
 			.AutoWidth()
 			.VAlign(VAlign_Center)
 			[
 				SNew(SBox)
 				.WidthOverride(350)
-				[
-					SNew(STextBlock)
-					.TextStyle(SUWindowsStyle::Get(),"UT.Common.NormalText")
-					.Text(NSLOCTEXT("UTDomGameMode", "NumControlPoints", "Control Points"))
-				]
+			[
+				SNew(STextBlock)
+				.TextStyle(SUWindowsStyle::Get(), "UT.Common.NormalText")
+			.Text(NSLOCTEXT("UTDomGameMode", "NumControlPoints", "Control Points"))
 			]
-			+ SHorizontalBox::Slot()
-			.Padding(20.0f,0.0f,0.0f,0.0f)
+			]
+		+ SHorizontalBox::Slot()
+			.Padding(20.0f, 0.0f, 0.0f, 0.0f)
 			.AutoWidth()
 			[
 				SNew(SBox)
 				.WidthOverride(300)
-				[
-					bCreateReadOnly ?
-					StaticCastSharedRef<SWidget>(
-						SNew(STextBlock)
-						.TextStyle(SUWindowsStyle::Get(),"UT.Common.ButtonText.White")
-						.Text(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::GetAsText)
-					) :
-					StaticCastSharedRef<SWidget>(
-						SNew(SNumericEntryBox<int32>)
-						.Value(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::GetOptional)
-						.OnValueChanged(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::Set)
-						.AllowSpin(true)
-						.Delta(1)
-						.MinValue(1)
-						.MaxValue(7)
-						.MinSliderValue(1)
-						.MaxSliderValue(7)
-						.EditableTextBoxStyle(SUWindowsStyle::Get(), "UT.Common.NumEditbox.White")
-					)
-				]
+			[
+				bCreateReadOnly ?
+				StaticCastSharedRef<SWidget>(
+			SNew(STextBlock)
+			.TextStyle(SUWindowsStyle::Get(), "UT.Common.ButtonText.White")
+			.Text(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::GetAsText)
+			) :
+			StaticCastSharedRef<SWidget>(
+			SNew(SNumericEntryBox<int32>)
+			.Value(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::GetOptional)
+			.OnValueChanged(MaxControlPointsAttr.ToSharedRef(), &TAttributeProperty<int32>::Set)
+			.AllowSpin(true)
+			.Delta(1)
+			.MinValue(1)
+			.MaxValue(7)
+			.MinSliderValue(1)
+			.MaxSliderValue(7)
+			.EditableTextBoxStyle(SUWindowsStyle::Get(), "UT.Common.NumEditbox.White")
+			)
 			]
-		];
+			]
+			];
 	}
 }
 #endif

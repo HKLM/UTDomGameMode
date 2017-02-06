@@ -1,7 +1,7 @@
 /**
-* Base class for Domination game modes
-* Created by Brian 'Snake' Alexander, 2015
-**/
+ * Base class for Domination game modes
+ * Created by Brian 'Snake' Alexander, 2015
+ */
 #pragma once
 
 #include "UnrealTournament.h"
@@ -11,21 +11,6 @@
 #include "UTDomGameMode.generated.h"
 
 const int32 MAX_NUM_TEAMS = 4;
-
-/**
-* Bright 4 team skin colors
-*/
-USTRUCT(BlueprintType)
-struct FTeamSkinsColor
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DOM)
-	FLinearColor TeamBodyColor;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = DOM)
-	FLinearColor TeamBodyOverlay;
-};
 
 UCLASS(Abstract, Config = UTDomGameMode)
 class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
@@ -47,24 +32,31 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
 		int32 MaxControlPoints;
 
-	/* Used by the UI to set the NumTeams value */
+	/** Used by the UI to set the NumTeams value */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
 		int32 NumOfTeams;
+
+	/** The main color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
+	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
+		FLinearColor TeamBodySkinColor[4];
+	
+	/** The team overlay color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
+	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
+		FLinearColor TeamSkinOverlayColor[4];
 
 	TAssetSubclassOf<AUTWeapon> TranslocatorObject;
 
 	/**
-	* Adds the DomObj to the CDomPoints array
-	* @param	DomObj	the AControlPoint actor to register
-	*/
+	 * Adds the DomObj to the CDomPoints array
+	 * @param	DomObj	the AControlPoint actor to register
+	 */
 	virtual void RegisterGameControlPoint(AControlPoint* DomObj);
 
 	/**
-	* Logic to make stock character skins into, green and gold team skins.
-	* @param	PS	The AUTPlayerState of the player or bot to change skin on
-	*/
-	UFUNCTION(BlueprintCallable, Category = UTDomGameMode)
-	virtual bool Set4TeamSkinForCharacter(AUTPlayerState* PS);
+	 * Called when a player leaves the match
+	 * @param	ControllingPawn		The leaving player
+	 */
+	virtual void ClearControl(AUTPlayerState* ControllingPawn);
 
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void InitGameState() override;
@@ -72,33 +64,20 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
 	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
 	virtual void AnnounceMatchStart() override;
 	virtual void GiveDefaultInventory(APawn* PlayerPawn) override;
-	virtual void SetPlayerDefaults(APawn* PlayerPawn) override;
+	virtual bool ChangeTeam(AController* Player, uint8 NewTeam = 255, bool bBroadcast = true) override;
 	virtual bool MovePlayerToTeam(AController* Player, AUTPlayerState* PS, uint8 NewTeam) override;
 	virtual bool CheckScore_Implementation(AUTPlayerState* Scorer) override;
 	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
 	virtual void EndGame(AUTPlayerState* Winner, FName Reason) override;
 	virtual void SetEndGameFocus(AUTPlayerState* Winner) override;
 	virtual void PlayEndOfMatchMessage() override;
-	virtual void RestartPlayer(AController* aPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	virtual void CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBase>>& MenuProps) override;
-	void BuildServerResponseRules(FString& OutRules);
-
-	/**
-	* Called when a player leaves the match
-	* @param	ControllingPawn		The leaving player
-	**/
-	virtual void ClearControl(AUTPlayerState* ControllingPawn);
+	void BuildServerResponseRules(FString& OutRules) override;
 
 #if !UE_SERVER
 	virtual void CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSpace, bool bCreateReadOnly, TArray< TSharedPtr<TAttributePropertyBase> >& ConfigProps, int32 MinimumPlayers) override;
 	virtual void BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<class SUTTabWidget> TabWidget, TArray<TSharedPtr<struct TAttributeStat> >& StatList) override;
 #endif
-	
-protected:
-	/**
-	* Array of FTeamSkinsColor used to make team skins (mainly for green and gold team skins
-	*/
-	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere, Category = DOM)
-		TArray<FTeamSkinsColor> TeamSkins;
+
 };

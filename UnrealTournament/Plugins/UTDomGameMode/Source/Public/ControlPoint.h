@@ -1,7 +1,7 @@
 /**
-* Control Point Actor - Game Objective of Domination Game Mode
-* Created by Brian 'Snake' Alexander, 2015
-*/
+ * Control Point Actor - Game Objective of Domination Game Mode
+ * Created by Brian 'Snake' Alexander, 2015
+ */
 #pragma once
 
 #include "UnrealTournament.h"
@@ -14,7 +14,7 @@
 extern FCollisionResponseParams WorldResponseParams;
 
 /** Control Point is the objective actor for Domination game mode. */
-UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint)
+UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint, meta=(ShortTooltip="Control Point is the objective actor for Domination game mode."))
 class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 {
 	GENERATED_UCLASS_BODY()
@@ -30,22 +30,6 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	/** The controlling team.  replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
 		AUTDomTeamInfo* ControllingTeam;
-
-	float ControlledTime;
-
-	UPROPERTY(Transient)
-		bool bStopControlledTimer;
-
-	/** will be 'true' if and when the domination point can be captured */
-	UPROPERTY(Transient)
-		bool bScoreReady;
-
-	/**
-	* The ammount of time other teams must wait after, the current team has touched the control point,
-	* before it will allow the next team to be able to touch it.
-	*/
-	UPROPERTY(Transient)
-		float ScoreTime;
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
@@ -78,12 +62,14 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	UPROPERTY()
 	TArray<UStaticMesh*> TeamMesh;
 
-	/** 
-	* Extremly simple StaticMesh (StaticMesh & Material = 6.4KB resource size) to load in place
-	* of green and gold team meshes, when those meshes are not needed. (e.g. in 2 team mode)
-	*/
-	UStaticMesh* TeamNullMesh;
+	UPROPERTY(Transient)
+		bool bStopControlledTimer;
 
+	/** 
+	 * Extremly simple StaticMesh (StaticMesh & Material = 6.4KB resource size) to load in place
+	 * of green and gold team meshes, when those meshes are not needed. (e.g. in 2 team mode)
+	 */
+	UStaticMesh* TeamNullMesh;
 
 	//=========================================================================
 
@@ -92,43 +78,60 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 		UBillboardComponent* EditorSprite;
 #endif
 
+protected:
+	float ControlledTime;
+
+	/** will be 'true' if and when the domination point can be captured */
+	UPROPERTY(Transient)
+		bool bScoreReady;
 
 	/**
-	* Gets point name.
-	* @return	The point name.
-	*/
-	UFUNCTION(BlueprintPure, Category = ControlPoint)
-	virtual FString GetPointName() const;
+	 * The ammount of time other teams must wait after, the current team has touched the control point,
+	 * before it will allow the next team to be able to touch it.
+ 	 */
+	UPROPERTY(Transient)
+		float ScoreTime;
 
 	/** timer for stats- how long this has been controlled by a team */
 	virtual void TeamHeldTimer();
-
-	/** Updates players stats of how many times this has been captured by a player */
-	UFUNCTION()
-	virtual void UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAmmount);
 
 	/** Timer that counts down the ScoreTime and then calls SendHomeWithNotify() */
 	FTimerHandle ScoreTimeNotifyHandle;
 	UFUNCTION()
 	virtual void ScoreTimeNotify();
 
+public:
+	UFUNCTION()
+		bool GetIsScoreReady() const { return bScoreReady; };
+
+	/** Updates players stats of how many times this has been captured by a player */
+	UFUNCTION()
+	virtual void UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAmmount);
+
 	/**
-	* Gets the current playerState of the control point holder.
-	* @return	AUTPlayerState	the control point holder otherwise returns NULL.
-	*/
+	 * Gets point name.
+	 * @return	The point name.
+	 */
+	UFUNCTION(BlueprintPure, Category = ControlPoint)
+	virtual FString GetPointName() const;
+
+	/**
+	 * Gets the current playerState of the control point holder.
+	 * @return	AUTPlayerState	the control point holder otherwise returns NULL.
+	 */
 	UFUNCTION(BlueprintPure, Category = ControlPoint)
 	virtual AUTPlayerState* GetControlPointHolder() const;
 
-	/*!
-	* Returns a valid TeamNum for DOM
-	* @return	int8	Number( >= 0 && <= 4 )
-	* @note	0=Red Team
-	*		1=Blue Team
-	*		2=Green Team
-	*		3=Gold Team
-	*		4=Neutral/No Team
-	*		5=Disabled (Reserved for DDOM)
-	*/
+	/**
+	 * Returns a valid TeamNum for DOM
+	 * @return	int8	current status
+	 * @note	0=Red Team
+	 *			1=Blue Team
+	 *			2=Green Team
+	 *			3=Gold Team
+	 *			4=Neutral/No Team
+	 *			5=Disabled (Reserved for DDOM)
+	 */
 	UFUNCTION(BlueprintPure, Category = ControlPoint)
 	virtual uint8 GetTeamNum() const;
 
@@ -137,30 +140,30 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	virtual void UpdateStatus();
 
 	/**
-	* Updates effects and send out messages when the status of this point has changed.
-	* @note this should not be called directly. Use AUTDomGameState->UpdateControlPointFX()
-	* 		for changes to be replicated to clients.
-	*		ControllingPawn should be set before calling this and child classes need to
-	*		set ControllingTeam before calling super.UpdateStatus()
-	* @param	TeamIndex	The teamID of what team to change the mesh and materials to
-	*/
+	 * Updates effects and send out messages when the status of this point has changed.
+	 * @note this should not be called directly. Use AUTDomGameState->UpdateControlPointFX()
+	 * 		for changes to be replicated to clients.
+	 *		ControllingPawn should be set before calling this and child classes need to
+	 *		set ControllingTeam before calling super.UpdateStatus()
+	 * @param	TeamIndex	The teamID of what team to change the mesh and materials to
+	 */
 	UFUNCTION(NetMulticast, Reliable)
 	void UpdateTeamEffects(uint8 TeamIndex);
 
 	/**
-	* For use in BluePrints for Map Authors to trigger differant code depending on what team, without having to, do a lot of trying to figure out what team triggered it.
-	* @note		EASY SETUP: Drag out from the Return Value to place a new node and select "Utilities|Flow Control|Switch|Switch on EControllingTeam"
-	*			Now connect the Exec of the switch to OnActorBeginOverlap of the ControlPoint. Now you have a easy way to trigger team based stuff
-	*
-	* @return	EControllingTeamEnum of the ControllingTeam
-	*/
+	 * For use in BluePrints for Map Authors to trigger differant code depending on what team, without having to, do a lot of trying to figure out what team triggered it.
+	 * @note		EASY SETUP: Drag out from the Return Value to place a new node and select "Utilities|Flow Control|Switch|Switch on EControllingTeam"
+	 *				Now connect the Exec of the switch to OnActorBeginOverlap of the ControlPoint. Now you have a easy way to trigger team based stuff
+	 *
+	 * @return		EControllingTeamEnum of the ControllingTeam
+	 */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
 		TEnumAsByte<EControllingTeam::Type> NotifyTeamChanged() const;
 
 	/**
-	* Reset or reset and disable this control point. Clear controlling team, pawn, etc
-	* @param	IsEnabled	True=Reset this control point, False=Disable this control point.
-	*/
+	 * Reset or reset and disable this control point. Clear controlling team, pawn, etc
+	 * @param	IsEnabled	True=Reset this control point, False=Disable this control point.
+	 */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
 	virtual void ResetPoint(bool IsEnabled);
 	virtual void Reset_Implementation();

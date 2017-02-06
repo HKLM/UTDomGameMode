@@ -24,13 +24,3 @@ namespace EControllingTeam
 
 	};
 }
-
-/**
-* The Team that owns this actor
-*/
-UENUM(BlueprintType)
-enum class EBaseTeam : uint8
-{
-	Team_Red	UMETA(DisplayName = "RedTeam"),
-	Team_Blue	UMETA(DisplayName = "BlueTeam")
-};

@@ -1,7 +1,7 @@
 /**
-* Adds 4 team support
-* Created by Brian 'Snake' Alexander, 2016
-**/
+ * Adds 4 team support
+ * Created by Brian 'Snake' Alexander, 2017
+ */
 #pragma once
 
 #include "UnrealTournament.h"

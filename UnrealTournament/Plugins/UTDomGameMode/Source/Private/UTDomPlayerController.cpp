@@ -1,8 +1,8 @@
-// Created by Brian 'Snake' Alexander, 2015
+// Created by Brian 'Snake' Alexander, 2017
 #include "UnrealTournament.h"
-#include "UTPlayerController.h"
 #include "UTDomGameState.h"
-//#include "UTDomPlayerState.h"
+#include "UTDomPlayerState.h"
+#include "UTPlayerController.h"
 #include "UTDomPlayerController.h"
 
 AUTDomPlayerController::AUTDomPlayerController(const class FObjectInitializer& ObjectInitializer)
@@ -11,56 +11,41 @@ AUTDomPlayerController::AUTDomPlayerController(const class FObjectInitializer& O
 
 void AUTDomPlayerController::ServerSwitchTeam_Implementation()
 {
-	AUTDomGameState* GS = GetWorld()->GetGameState<AUTDomGameState>();
-	if (GS == NULL)
+	// Ranked sessions don't allow team changes
+	AUTGameMode* GameMode = GetWorld()->GetAuthGameMode<AUTGameMode>();
+	if (GameMode && GameMode->bRankedSession)
 	{
 		return;
 	}
-	uint8 NumOfTeams = GS->Teams.Num(); -1;
-	if (UTPlayerState && UTPlayerState->Team && (UTPlayerState->Team->TeamIndex != 255))
+	if (UTPlayerState != NULL && UTPlayerState->Team != NULL)
 	{
-		uint8 i = UTPlayerState->Team->TeamIndex;
-		if (UTPlayerState->bPendingTeamSwitch)
+		AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(UTPlayerState);
+		if (PS)
 		{
-			UTPlayerState->bPendingTeamSwitch = false;
-		}
-		else if (!GetWorld()->GetAuthGameMode()->HasMatchStarted())
-		{
-			if (UTPlayerState->bIsWarmingUp)
+			uint8 testteam = PS->Team->TeamIndex + 1;
+			uint8 NewTeam = (GetWorld()->GetGameState<AUTDomGameState>()->Teams.IsValidIndex(testteam)) ? testteam : 0;
+			if (PS->bPendingTeamSwitch)
 			{
-				// no team swaps while warming up
-				return;
+				PS->bPendingTeamSwitch = false;
+			}
+			else if (!GetWorld()->GetAuthGameMode()->HasMatchStarted())
+			{
+				if (PS->bIsWarmingUp)
+				{
+					// no team swaps while warming up
+					return;
+				}
+				ChangeTeam(NewTeam);
+				if (PS->bPendingTeamSwitch)
+				{
+					PS->SetReadyToPlay(false);
+				}
 			}
 			else
 			{
-				if (i + 1 <= NumOfTeams && GS->Teams.IsValidIndex(i + 1))
-				{
-					// Go to next higher team index
-					ChangeTeam(i + 1);
-				}
-				else if (i + 1 > NumOfTeams)
-				{
-					//Go to the 1st team
-					ChangeTeam(0);
-				}
+				ChangeTeam(NewTeam);
 			}
-			if (UTPlayerState->bPendingTeamSwitch)
-			{
-				UTPlayerState->SetReadyToPlay(false);
-			}
+			PS->ForceNetUpdate();
 		}
-		else
-		{
-			if (i + 1 <= NumOfTeams && GS->Teams.IsValidIndex(i + 1))
-			{
-				ChangeTeam(i + 1);
-			}
-			else if (i + 1 > NumOfTeams)
-			{
-				ChangeTeam(0);
-			}
-		}
-		UTPlayerState->ForceNetUpdate();
 	}
 }
-
