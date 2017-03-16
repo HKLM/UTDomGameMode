@@ -61,7 +61,7 @@ void AUTDomSquadAI::Initialize(AUTTeamInfo* InTeam, FName InOrders)
 		for (AController* C : Members)
 		{
 			AUTBot* B = Cast<AUTBot>(C);
-			if (B != NULL)
+			if (B != nullptr)
 			{
 				B->WhatToDoNext();
 			}
@@ -93,7 +93,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		FindControlPoints();
 	}
 
-	AUTGameObjective* tmpObjective = NULL;
+	AUTGameObjective* tmpObjective = nullptr;
 
 	int8 Lottery = FMath::RandRange(0, 10);
 	bool bLottery = Lottery > 5 ? true : false;
@@ -104,7 +104,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		B->StartWaitForMove();
 		return true;
 	}
-	else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum()
+	else if (GameObjective != nullptr && GameObjective->GetTeamNum() != B->GetTeamNum()
 			 && B->LineOfSightTo(GameObjective)
 			 && ((GameObjective->GetActorLocation() - B->GetPawn()->GetActorLocation()).Size() < 700.0f))
 	{
@@ -113,7 +113,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 	}
 	else if (CurrentOrders == NAME_Attack || CurrentOrders == NAME_Roam)
 	{
-		if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
+		if (GameObjective != nullptr && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
 			return B->TryPathToward(GameObjective, false, true, BotOrderString);
@@ -127,10 +127,10 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		{
 			return true;
 		}
-		else if (GameObjective != NULL && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 10.0f > LastObjectiveChange)
+		else if (GameObjective != nullptr && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 10.0f > LastObjectiveChange)
 		{
 			tmpObjective = GetNewObjective(GameObjective, B);
-			if (tmpObjective != NULL)
+			if (tmpObjective != nullptr)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
@@ -148,14 +148,14 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		if (CurrentOrders == NAME_Defend  && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 120.0f > LastObjectiveChange)
 		{
 			tmpObjective = GetNewObjective(GameObjective, B);
-			if (tmpObjective != NULL)
+			if (tmpObjective != nullptr)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New Objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
 				return B->TryPathToward(tmpObjective, false, true, BotOrderString);
 			}
 		}
-		else if (GameObjective != NULL && GameObjective->GetTeamNum() != B->GetTeamNum())
+		else if (GameObjective != nullptr && GameObjective->GetTeamNum() != B->GetTeamNum())
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(GameObjective));
 			return B->TryPathToward(GameObjective, bLottery, true, BotOrderString);
@@ -165,10 +165,10 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 			B->GoalString = "DEFEND-Fight";
 			return false;
 		}
-		else if (CurrentOrders == NAME_Backup && GameObjective != NULL && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 30.0f > LastObjectiveChange)
+		else if (CurrentOrders == NAME_Backup && GameObjective != nullptr && GameObjective->GetTeamNum() == B->GetTeamNum() && GetWorld()->GetTimeSeconds() - 30.0f > LastObjectiveChange)
 		{
 			tmpObjective = GetNewObjective(GameObjective, B);
-			if (tmpObjective != NULL)
+			if (tmpObjective != nullptr)
 			{
 				SetObjective(tmpObjective);
 				BotOrderString = FString::Printf(TEXT("%s-Got New objective : %s"), *CurrentOrders.ToString(), *GetControlPointName(tmpObjective));
@@ -179,7 +179,7 @@ bool AUTDomSquadAI::CheckSquadObjectives(AUTBot* B)
 		{
 			return true;
 		}
-		else if (B->GetDefensePoint() != NULL)
+		else if (B->GetDefensePoint() != nullptr)
 		{
 			BotOrderString = FString::Printf(TEXT("%s-Goto defense point : %s"), *CurrentOrders.ToString(), *B->GetDefensePoint()->GetName());
 			return B->TryPathToward(B->GetDefensePoint(), true, true, BotOrderString);
@@ -204,7 +204,7 @@ bool AUTDomSquadAI::IsNearEnemyBase(const FVector& TestLoc)
 AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B)
 {
 	LastObjectiveChange = GetWorld()->GetTimeSeconds();
-	AUTGameObjective* BestObjective = NULL;
+	AUTGameObjective* BestObjective = nullptr;
 	AUTGameObjective* TheOldObjective = Cast<AUTGameObjective>(OldObjective);
 	if (GameControlPoints.Num() < 2)
 	{
@@ -218,9 +218,9 @@ AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B
 		return GameControlPoints[LotteryNumber];
 	}
 
-	if (B != NULL)
+	if (B != nullptr)
 	{
-		if (TheOldObjective != NULL)
+		if (TheOldObjective != nullptr)
 		{
 			for (uint8 i = 0; i < GameControlPoints.Num(); i++)
 			{
@@ -234,7 +234,7 @@ AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B
 					break;
 				}
 			}
-			if (BestObjective == NULL)
+			if (BestObjective == nullptr)
 			{
 				// Find just a control point that our team does not control
 				for (uint8 j = 0; j < GameControlPoints.Num(); j++)
@@ -247,7 +247,7 @@ AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B
 					}
 				}
 				// Find a control point that is a differant then the original one
-				if (BestObjective == NULL)
+				if (BestObjective == nullptr)
 				{
 					for (uint8 l = 0; l < GameControlPoints.Num(); l++)
 					{
@@ -260,7 +260,7 @@ AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B
 				}
 			}
 		}
-		if (BestObjective == NULL)
+		if (BestObjective == nullptr)
 		{
 			for (uint8 p = 0; p < GameControlPoints.Num(); p++)
 			{
@@ -275,7 +275,7 @@ AUTGameObjective* AUTDomSquadAI::GetNewObjective(AActor* OldObjective, AUTBot* B
 			}
 		}
 		// Last resort, pick anything
-		if (BestObjective == NULL)
+		if (BestObjective == nullptr)
 		{
 			for (uint8 k = 0; k < GameControlPoints.Num(); k++)
 			{
@@ -309,7 +309,7 @@ void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* Insti
 	{
 		// re-enable alternate paths for flag carrier so it can consider them for planning its escape
 		AUTBot* B = Cast<AUTBot>(InstigatedBy);
-		if (B != NULL)
+		if (B != nullptr)
 		{
 			B->bDisableSquadRoutes = false;
 			B->SquadRouteGoal.Clear();
@@ -323,7 +323,7 @@ void AUTDomSquadAI::NotifyObjectiveEvent(AActor* InObjective, AController* Insti
 
 AUTGameObjective* AUTDomSquadAI::GetNearestObjective(AUTBot* InstigatedBy, bool bOnlyNotControlled)
 {
-	AUTGameObjective* BestObjective = NULL;
+	AUTGameObjective* BestObjective = nullptr;
 	float bestDistance = 100000.0f;
 
 	FDomAITargets f;

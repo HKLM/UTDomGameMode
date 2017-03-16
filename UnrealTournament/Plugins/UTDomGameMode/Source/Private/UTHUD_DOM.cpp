@@ -45,7 +45,7 @@ FLinearColor AUTHUD_DOM::GetBaseHUDColor()
 	if (HUDPawn)
 	{
 		AUTPlayerState* PS = Cast<AUTPlayerState>(HUDPawn->PlayerState);
-		if (PS != NULL && PS->Team != NULL)
+		if (PS != nullptr && PS->Team != nullptr)
 		{
 			TeamColor = PS->Team->TeamColor;
 		}
@@ -57,11 +57,11 @@ FLinearColor AUTHUD_DOM::GetWidgetTeamColor()
 {
 	// Add code to cache and return the team color if it's a team game
 	AUTGameState* GS = GetWorld()->GetGameState<AUTGameState>();
-	if (GS == NULL || (GS->bTeamGame && UTPlayerOwner && UTPlayerOwner->GetViewTarget()))
+	if (GS == nullptr || (GS->bTeamGame && UTPlayerOwner && UTPlayerOwner->GetViewTarget()))
 	{
 		APawn* HUDPawn = Cast<APawn>(UTPlayerOwner->GetViewTarget());
 		AUTPlayerState* PS = HUDPawn ? Cast<AUTPlayerState>(HUDPawn->PlayerState) : NULL;
-		if (PS != NULL)
+		if (PS != nullptr)
 		{
 			switch (PS->GetTeamNum())
 			{

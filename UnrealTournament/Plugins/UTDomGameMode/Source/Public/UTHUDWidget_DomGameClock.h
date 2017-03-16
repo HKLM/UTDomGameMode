@@ -11,11 +11,11 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DomGameClock : public UUTHUDWidget
 	GENERATED_UCLASS_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Scoreboard")
-		UTexture2D* DomAtlas;
+	UTexture2D* DomAtlas;
 
 	/* array of dom team icon HUD texture */
 	UPROPERTY(EditAnywhere, Category = "Scoreboard")
-		TArray<UTexture2D*> DomTeamIcon;
+	TArray<UTexture2D*> DomTeamIcon;
 
 	virtual void InitializeWidget(AUTHUD* Hud);
 	virtual void Draw_Implementation(float DeltaTime);
@@ -27,63 +27,63 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DomGameClock : public UUTHUDWidget
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture BackgroundSlate;
+	FHUDRenderObject_Texture BackgroundSlate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture BackgroundBorder;
+	FHUDRenderObject_Texture BackgroundBorder;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture RedTeamLogo;
+	FHUDRenderObject_Texture RedTeamLogo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture BlueTeamLogo;
+	FHUDRenderObject_Texture BlueTeamLogo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture GreenTeamLogo;
+	FHUDRenderObject_Texture GreenTeamLogo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Texture GoldTeamLogo;
+	FHUDRenderObject_Texture GoldTeamLogo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text RedScoreText;
+	FHUDRenderObject_Text RedScoreText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text BlueScoreText;
+	FHUDRenderObject_Text BlueScoreText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text GreenScoreText;
+	FHUDRenderObject_Text GreenScoreText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text GoldScoreText;
+	FHUDRenderObject_Text GoldScoreText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text RoleText;
+	FHUDRenderObject_Text RoleText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text TeamNameText;
+	FHUDRenderObject_Text TeamNameText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text ClockText;
+	FHUDRenderObject_Text ClockText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		FHUDRenderObject_Text GameStateText;
+	FHUDRenderObject_Text GameStateText;
 
 	// The scale factor to use on the clock when it has to show hours
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RenderObject")
-		float AltClockScale;
+	float AltClockScale;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetRedScoreText();
+	FText GetRedScoreText();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetBlueScoreText();
+	FText GetBlueScoreText();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetGreenScoreText();
+	FText GetGreenScoreText();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetGoldScoreText();
+	FText GetGoldScoreText();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "RenderObject")
-		FText GetClockText();
+	FText GetClockText();
 };

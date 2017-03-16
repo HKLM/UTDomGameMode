@@ -16,7 +16,7 @@ AUTDomPlayerState::AUTDomPlayerState(const class FObjectInitializer& ObjectIniti
 void AUTDomPlayerState::HandleTeamChanged(AController* Controller)
 {
 	AUTCharacter* Pawn = GetUTCharacter();
-	if (Pawn != NULL)
+	if (Pawn != nullptr)
 	{
 		Pawn->PlayerChangedTeam();
 	}
@@ -34,10 +34,10 @@ void AUTDomPlayerState::HandleTeamChanged(AController* Controller)
 void AUTDomPlayerState::ServerRequestChangeTeam_Implementation(uint8 NewTeamIndex)
 {
 	AUTDomGameMode* Game = GetWorld()->GetAuthGameMode<AUTDomGameMode>();
-	if (Game != NULL && Game->bTeamGame)
+	if (Game != nullptr && Game->bTeamGame)
 	{
 		AController* Controller = Cast<AController>(GetOwner());
-		if (Controller != NULL)
+		if (Controller != nullptr)
 		{
 			AUTDomPlayerController* DomCon = Cast<AUTDomPlayerController>(Controller);
 			if (DomCon)

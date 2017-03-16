@@ -3,15 +3,16 @@ Domination Game Modes C++ plug-in for Unreal Tournament 4
 
 Public access to the source code for the UTDomGameMode plug-in.
 
-## NOW WITH FULL 4 TEAM PLAY
+## ALL DOM GAME MODES HAVE UP TO 4 TEAM PLAY
+## ADDED DOUBLE DOMINATION GAME MODE
 
-Version: Beta 3.4
+Version: Beta 3.4.2
 Author: Brian 'Snake' Alexander  sw_snakepliskin@hotmail.com
-Date: 2/6/2017
+Date: 3/15/2017
 
 
 ### REQUIREMENTS:
-UT4 Version: `4.15.0-3270765+++UT+Release-Next`
+UT4 Version: `build 3315666`
 
 
 ##### NOTES
@@ -95,52 +96,85 @@ C:\Program Files\Epic Games\UnrealTournament\UnrealTournament\Plugins\UTDomGameM
 
 ##### UT4 "LAUNCHER" EDITOR - DEFAULT FILE INSTALL LOCATIONS:
 ```
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGameMode.uplugin
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGameVersion.dll
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGame_README.txt
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\UTDomGameMode.uplugin
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\libUE4-UTDomGameMode-Linux-Shipping.so
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\libUE4Server-UTDomGameMode-Linux-Shipping.so
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\UE4-Linux-Shippingx86_64-unknown-linux-gnu.modules
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Linux\UE4Server-Linux-Shippingx86_64-unknown-linux-gnu.modules
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win32\UE4-UTDomGameMode-Win32-Shipping.dll
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win32\UE4-Win32-Shipping.modules
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4-UTDomGameMode-Win64-Shipping.dll
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4-Win64-Shipping.modules
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor-UTDomGameMode.dll
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor.modules
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Server-UTDomGameMode-Win64-Shipping.dll
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Server-Win64-Shipping.modules
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor-UTDomGameMode.dll
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor.modules
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Config\DefaultGame.ini
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Config\DefaultGame.ini
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\BaseUTDomCharacter.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\DefaultDomCharacter.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\BaseUTDomCharacter.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\DefaultDomCharacter.uasset
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomB.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGN.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGold.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomNULL.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomR.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomX.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomB.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGN.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGold.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomR.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomX.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\xDomA.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\xDomB.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\xDomBase.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\xDomRing.uasset
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Sounds\ControlSound.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Sounds\ControlSound_Cue.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Sounds\ControlSound.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Sounds\ControlSound_Cue.uasset
 
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BaseSkin_Mat.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Blank_Mat.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BlueTeamSymbol.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DOM_HUDAtlas01.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DomHUDAtlas01.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\goldskin2.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GoldTeamSymbol.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GraySkin.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GreenTeamSymbol.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\NeutralSymbol.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\RedTeamSymbol.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin0_Mat_Inst.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin1_Mat_Inst.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin2_Mat.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin3_Mat.uasset
-C:\Program Files\Epic Games\UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin4_Mat_Inst.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BaseSkin_Mat.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\BlueTeamSymbol.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DomHUDAtlas01.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DOM_HUDAtlas01.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\goldskin2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GoldTeamSymbol.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GraySkin.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\GreenTeamSymbol.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\NeutralSymbol.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\RedTeamSymbol.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin0_Mat_Inst.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin1_Mat_Inst.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin2_Mat.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin3_Mat.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\Skin4_Mat_Inst.uasset
+
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DDomA.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DDomB.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DominationPointTex.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_0.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_1.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_3.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_4.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMLetter_MASTER.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMPointABb.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMPointABg.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMPointABgold.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMPointABgreen.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMPointABr.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointBLUE.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointGOLD.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointGREEN.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointGREY.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointLINESb.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointLINESg.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointLINESgold.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointLINESgreen.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointLINESr.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMpointRED.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_Mat_MASTER.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_0.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_1.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_3.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_4.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DomPoint_MI_5.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMRing_0.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMRing_1.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMRing_2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMRing_3.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\DOMRing_4.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\PickupLines2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\Static.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\xDomBase_N2.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\xDomBase__Height_.uasset
+UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Textures\DDom\xDomBase__Specular_.uasset
+
 ```

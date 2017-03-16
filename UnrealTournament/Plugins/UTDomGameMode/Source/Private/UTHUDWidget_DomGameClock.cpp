@@ -1,3 +1,4 @@
+// Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
 #include "UTHUDWidget.h"
@@ -211,7 +212,7 @@ void UUTHUDWidget_DomGameClock::InitializeWidget(AUTHUD* Hud)
 void UUTHUDWidget_DomGameClock::Draw_Implementation(float DeltaTime)
 {
 	FText StatusText = FText::GetEmpty();
-	if (UTGameState != NULL)
+	if (UTGameState != nullptr)
 	{
 		StatusText = UTGameState->GetGameStatusText(false);
 	}

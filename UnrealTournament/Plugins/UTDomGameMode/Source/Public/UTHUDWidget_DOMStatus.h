@@ -36,6 +36,8 @@ class UTDOMGAMEMODE_API UUTHUDWidget_DOMStatus : public UUTHUDWidget
 	/** array of dom team icon HUD texture */
 	TArray<UTexture2D*> DomTeamIconTexture;
 
+	TArray<UTexture2D*> xDDomTeamIconTexture;
+
 	/** draw direction arrow (ArrowDirTexture) for each control point on HUD */
 	bool bDrawDirectionArrow;
 
@@ -87,4 +89,8 @@ protected:
 		 * Cached pointer to UTDomGameState 
 		 */
 		AUTDomGameState* DomGameState;
+
+		UPROPERTY(Transient)
+		bool bIsDoubleDom;
+
 };

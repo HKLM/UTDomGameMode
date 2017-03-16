@@ -7,7 +7,7 @@
 #include "UnrealTournament.h"
 #include "UTDomGameState.h"
 #include "ControlPoint.h"
-#include "UTPathBuilderInterface.h"
+#include "UTADomTypes.h"
 #include "UTDomGameMode.generated.h"
 
 const int32 MAX_NUM_TEAMS = 4;
@@ -17,32 +17,35 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
 {
 	GENERATED_UCLASS_BODY()
 
+	UPROPERTY()
+	TEnumAsByte<EControlPoint::Type> ObjectiveType;
+
 	/** Array of the ControlPoints for the map */
-	UPROPERTY(BlueprintReadOnly, Category = DOM)
-		TArray<AControlPoint*> CDomPoints;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = DOM)
+	TArray<AControlPoint*> CDomPoints;
 
 	UPROPERTY(BlueprintReadOnly, Category = DOM)
-		AUTDomGameState* DomGameState;
+	AUTDomGameState* DomGameState;
 
 	/** Allow the use of the translocator */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-		bool bAllowTranslocator;
+	bool bAllowTranslocator;
 
 	/** Max number of Control Points allowed to be in play. If there are more than this number, they will be disabled and removed from play */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-		int32 MaxControlPoints;
+	int32 MaxControlPoints;
 
 	/** Used by the UI to set the NumTeams value */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-		int32 NumOfTeams;
+	int32 NumOfTeams;
 
 	/** The main color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-		FLinearColor TeamBodySkinColor[4];
+	FLinearColor TeamBodySkinColor[4];
 	
 	/** The team overlay color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-		FLinearColor TeamSkinOverlayColor[4];
+	FLinearColor TeamSkinOverlayColor[4];
 
 	TAssetSubclassOf<AUTWeapon> TranslocatorObject;
 
@@ -61,7 +64,7 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AUTTeamGameMode
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
-	virtual void GameObjectiveInitialized(AUTGameObjective* Obj) override;
+	virtual void PostInitializeComponents() override;
 	virtual void AnnounceMatchStart() override;
 	virtual void GiveDefaultInventory(APawn* PlayerPawn) override;
 	virtual bool ChangeTeam(AController* Player, uint8 NewTeam = 255, bool bBroadcast = true) override;

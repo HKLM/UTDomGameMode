@@ -1,12 +1,12 @@
 {
 	"FileVersion" : 3,
 	
-	"FriendlyName" : "Domination Game Mode",
+	"FriendlyName" : "Domination Game Modes",
 	"Version" : 3,
-	"VersionName" : "3.4",
+	"VersionName" : "3.4.2",
 	"CreatedBy": "Brian 'Snake' Alexander",
 	"EngineVersion" : "4.7.0",
-	"Description" : "Domination Game Mode - Capture and hold control points to win in up to 4 team play.",
+	"Description" : "Domination Game Modes - Capture and hold control points to win in up to 4 team play.",
 	"Category" : "UnrealTournament.GameMode",
 	"EnabledByDefault" : true,
 	"CanContainContent" : true,

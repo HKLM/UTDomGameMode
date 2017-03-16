@@ -1,7 +1,12 @@
 // Created by Brian 'Snake' Alexander, 2015
 #include "UnrealTournament.h"
-#include "ControlPoint.h"
+
+#include "UTDomControlPoint.h"
+#include "xDomPointA.h"
+#include "xDomPointB.h"
+
 #include "UTDomGameState.h"
+#include "UTDoubleDomGameState.h"
 #include "UTHUDWidget.h"
 #include "UTHUDWidget_DOMStatus.h"
 
@@ -30,6 +35,12 @@ UUTHUDWidget_DOMStatus::UUTHUDWidget_DOMStatus(const FObjectInitializer& ObjectI
 	DomTeamIconTexture.Insert(Tex3.Object, 3);
 	DomTeamIconTexture.Insert(Tex4.Object, 4);
 
+	static ConstructorHelpers::FObjectFinder<UTexture2D> DDTexA(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DDom/DDomA.DDomA'"));
+	xDDomTeamIconTexture.Insert(DDTexA.Object, 0);
+	static ConstructorHelpers::FObjectFinder<UTexture2D> DDTexB(TEXT("Texture2D'/UTDomGameMode/UTDomGameContent/Textures/DDom/DDomB.DDomB'"));
+	xDDomTeamIconTexture.Insert(DDTexB.Object, 1);
+
+	bIsDoubleDom = false;
 	IcoMulti = 56.0f;
 }
 
@@ -49,18 +60,20 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	}
 	IconSize = FMath::Clamp(IcoMulti * RenderScale, 50.0f, 65.0f);
 
-	if (DomGameState == nullptr) 
+	if (DomGameState == nullptr && UTGameState)
 	{
-		if (UTGameState)
+		DomGameState = Cast<AUTDomGameState>(UTGameState);
+		if (DomGameState)
 		{
-			DomGameState = Cast<AUTDomGameState>(UTGameState);
+			if (DomGameState->bIsDDOMGame)
+			{
+				DomGameState = Cast<AUTDoubleDomGameState>(UTGameState);
+				bIsDoubleDom = true;
+				DomTeamIconTexture.Empty();
+			}
 		}
-		else
-		{
-			DomGameState = GetWorld()->GetGameState<AUTDomGameState>();
-		}		
 	}
-	if (!bControlPointInitialized)
+	if (CtrlPoints.Num() < 1)
 	{
 		LastRenderScale = RenderScale;
 		FindControlPoints();
@@ -106,15 +119,15 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 	for (uint8 i = 0; i < CtrlPoints.Num(); i++)
 	{
 		// Set the team icon to display
-		if (CtrlPoints[i].thePoint != NULL
-			&& CtrlPoints[i].thePoint->ControllingTeam != NULL
+		if (CtrlPoints[i].thePoint != nullptr
+			&& CtrlPoints[i].thePoint->ControllingTeam != nullptr
 			&& CtrlPoints[i].thePoint->ControllingTeam->GetTeamNum() != 255)
 		{
 			nTeam = CtrlPoints[i].thePoint->ControllingTeam->GetTeamNum();
 		}
-		else if (CtrlPoints[i].thePoint != NULL
-				 && CtrlPoints[i].thePoint->ControllingPawn != NULL
-				 && CtrlPoints[i].thePoint->ControllingPawn->Team !=NULL)
+		else if (CtrlPoints[i].thePoint != nullptr
+				 && CtrlPoints[i].thePoint->ControllingPawn != nullptr
+				 && CtrlPoints[i].thePoint->ControllingPawn->Team != nullptr)
 		{
 			nTeam = CtrlPoints[i].thePoint->ControllingPawn->Team->TeamIndex;
 		}
@@ -126,15 +139,23 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 		POS.X = CtrlPoints[i].StatusIcon.X * RenderScale;
 		POS.Y = CtrlPoints[i].StatusIcon.Y;
 		float WSO = 1.45f * UTHUDOwner->GetHUDWidgetSlateOpacity();
-		DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), GetDomTeamColor(nTeam));
+		if (bIsDoubleDom)
+		{
+			DrawTexture(xDDomTeamIconTexture[i], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), GetDomTeamColor(nTeam));
+		}
+		else
+		{
+			DrawTexture(DomTeamIconTexture[nTeam], POS.X, POS.Y, IconSize, IconSize, 2, 2, 255, 255, FMath::Clamp(WSO, 0.0f, 1.0f), GetDomTeamColor(nTeam));
+		}
 
 		FString work;
 		float px = POS.X;
 		float py = POS.Y;
-		if (CtrlPoints[i].thePoint != NULL)
+		if (CtrlPoints[i].thePoint != nullptr)
 		{
 			// Draw the points name
-			work = CtrlPoints[i].thePoint->PointName;
+			work = CtrlPoints[i].thePoint->GetPointName();
+
 			float HSO = 1.82f * UTHUDOwner->GetHUDWidgetSlateOpacity();
 			float txt_px = (CtrlPoints[i].StatusIcon.X + (IconSize / 2) - (IconSize * 0.35f)) * RenderScale;
 			float txt_py = py + (IconSize / 2) + 0.01f;
@@ -150,7 +171,7 @@ void UUTHUDWidget_DOMStatus::Draw_Implementation(float DeltaTime)
 					 , ETextVertPos::Bottom);
 
 			if (bDrawDirectionArrow
-				&& UTCharacterOwner != NULL
+				&& UTCharacterOwner != nullptr
 				&& UTPlayerOwner->GetPawnOrSpectator())
 			{
 				APawn* P = UTPlayerOwner->GetPawn();
@@ -185,12 +206,11 @@ void UUTHUDWidget_DOMStatus::FindControlPoints()
 {
 	if (DomGameState)
 	{
-		CtrlPoints.Empty();
 		FPointInfo f;
 		TArray<AControlPoint*> CP = DomGameState->GetControlPoints();
 		for (AControlPoint* C : CP)
 		{
-			if (C != NULL)
+			if (C != nullptr)
 			{
 				f.thePoint = C;
 				CtrlPoints.Add(f);

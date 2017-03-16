@@ -12,11 +12,11 @@ class UTDOMGAMEMODE_API AUTHUD_DOM : public AUTHUD
 
 	// Icons to display on minimap
 	UPROPERTY(EditAnywhere, Category = "HUD")
-		FVector2D DOMTeamIconUV[5];
+	FVector2D DOMTeamIconUV[5];
 
 	// Custom HUDAtlas based off original, but adds 4 team logos
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		UTexture2D* HUDDomAtlas;
+	UTexture2D* HUDDomAtlas;
 
 	virtual void BeginPlay() override;
 	virtual FLinearColor GetBaseHUDColor() override;

@@ -1,3 +1,4 @@
+// Created by Brian 'Snake' Alexander, 2016
 #include "UnrealTournament.h"
 #include "UTDomStat.h"
 

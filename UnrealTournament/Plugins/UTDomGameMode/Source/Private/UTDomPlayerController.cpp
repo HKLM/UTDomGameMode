@@ -17,7 +17,11 @@ void AUTDomPlayerController::ServerSwitchTeam_Implementation()
 	{
 		return;
 	}
-	if (UTPlayerState != NULL && UTPlayerState->Team != NULL)
+
+	// Flag this player as not being idle
+	if (UTPlayerState) UTPlayerState->NotIdle();
+
+	if (UTPlayerState != nullptr && UTPlayerState->Team != nullptr)
 	{
 		AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(UTPlayerState);
 		if (PS)
@@ -30,15 +34,10 @@ void AUTDomPlayerController::ServerSwitchTeam_Implementation()
 			}
 			else if (!GetWorld()->GetAuthGameMode()->HasMatchStarted())
 			{
+				ChangeTeam(NewTeam);
 				if (PS->bIsWarmingUp)
 				{
-					// no team swaps while warming up
-					return;
-				}
-				ChangeTeam(NewTeam);
-				if (PS->bPendingTeamSwitch)
-				{
-					PS->SetReadyToPlay(false);
+					ServerToggleWarmup();
 				}
 			}
 			else

@@ -14,7 +14,7 @@ class UTDOMGAMEMODE_API ADomination : public AUTDomGameMode
 {
 	GENERATED_UCLASS_BODY()
 
-	virtual void DefaultTimer();
+	virtual void DefaultTimer() override;
 
 	/**
 	 * Awards any controllingTeams TeamScoreAmount amount of points

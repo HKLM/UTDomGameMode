@@ -28,10 +28,10 @@ void UUTDomScoreboard::Draw_Implementation(float RenderDelta)
 	Super::UUTHUDWidget::Draw_Implementation(RenderDelta);
 
 	AUTDomGameState* GameState = Cast<AUTDomGameState>(UTGameState);
-	if (GameState == NULL) return;
+	if (GameState == nullptr) return;
 	GameNumTeams = GameState->NumTeams;
 
-	bHaveWarmup = false;
+	//bHaveWarmup = false;
 	float YOffset = 16.f*RenderScale;
 	DrawGamePanel(RenderDelta, YOffset);
 	DrawTeamPanel(RenderDelta, YOffset);
@@ -53,10 +53,10 @@ void UUTDomScoreboard::Draw_Implementation(float RenderDelta)
 	//DrawServerPanel(RenderDelta, FooterPosY);
 
 	DrawMinimap(RenderDelta);
-	if (bHaveWarmup)
-	{
-		DrawText(WarmupWarningText, 16.f * RenderScale, 16.f*RenderScale, UTHUDOwner->SmallFont, RenderScale, 1.f, FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Center);
-	}
+	//if (bHaveWarmup)
+	//{
+	//	DrawText(WarmupWarningText, 16.f * RenderScale, 16.f*RenderScale, UTHUDOwner->SmallFont, RenderScale, 1.f, FLinearColor::White, ETextHorzPos::Left, ETextVertPos::Center);
+	//}
 }
 
 void UUTDomScoreboard::Draw4ScorePanel(float RenderDelta, float& YOffset)
@@ -75,7 +75,7 @@ void UUTDomScoreboard::Draw4ScorePanel(float RenderDelta, float& YOffset)
 
 void UUTDomScoreboard::DrawTeamPanel(float RenderDelta, float& YOffset)
 {
-	if (UTGameState == NULL || UTGameState->Teams.Num() < 2 || UTGameState->Teams[0] == NULL || UTGameState->Teams[1] == NULL) return;
+	if (UTGameState == nullptr || UTGameState->Teams.Num() < 2 || UTGameState->Teams[0] == nullptr || UTGameState->Teams[1] == nullptr) return;
 
 	float Width = 0.5f * (Size.X - 400.f) * RenderScale;
 
@@ -109,7 +109,7 @@ void UUTDomScoreboard::DrawTeamPanel(float RenderDelta, float& YOffset)
 
 void UUTDomScoreboard::Draw4TeamPanel(float RenderDelta, float& YOffset)
 {
-	if (UTGameState == NULL || UTGameState->Teams.Num() < 2 || (UTGameState->NumTeams > 2 && UTGameState->Teams[2] == NULL) || (UTGameState->NumTeams == 4 && UTGameState->Teams[3] == NULL)) return;
+	if (UTGameState == NULL || UTGameState->Teams.Num() < 2 || (UTGameState->NumTeams > 2 && UTGameState->Teams[2] == nullptr) || (UTGameState->NumTeams == 4 && UTGameState->Teams[3] == nullptr)) return;
 
 	float Width = 0.5f * (Size.X - 400.f) * RenderScale;
 
@@ -285,7 +285,7 @@ void UUTDomScoreboard::Draw4PlayerScores(float RenderDelta, float& YOffset)
 void UUTDomScoreboard::SelectNext(int32 Offset, bool bDoNoWrap)
 {
 	AUTGameState* GS = UTHUDOwner->GetWorld()->GetGameState<AUTGameState>();
-	if (GS == NULL) return;
+	if (GS == nullptr) return;
 
 	GS->SortPRIArray();
 	int32 SelectedIndex = GS->PlayerArray.Find(SelectedPlayer.Get());
@@ -327,7 +327,7 @@ void UUTDomScoreboard::SelectionLeft()
 void UUTDomScoreboard::SelectionRight()
 {
 	AUTGameState* GS = UTHUDOwner->GetWorld()->GetGameState<AUTGameState>();
-	if (GS == NULL) return;
+	if (GS == nullptr) return;
 	GS->SortPRIArray();
 
 	if (SelectedPlayer.IsValid())

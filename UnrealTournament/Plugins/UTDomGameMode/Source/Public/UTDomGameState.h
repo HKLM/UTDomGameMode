@@ -3,6 +3,7 @@
 
 #include "UnrealTournament.h"
 #include "ControlPoint.h"
+#include "UTADomTypes.h"
 #include "UTDomGameState.generated.h"
 
 UCLASS()
@@ -11,30 +12,39 @@ class UTDOMGAMEMODE_API AUTDomGameState : public AUTGameState
 	GENERATED_UCLASS_BODY()
 
 	/** Array of The control points */
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = GameStateDOM)
-		TArray<AControlPoint*> GameControlPoints;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = GameStateDOM)
+	TArray<AControlPoint*> GameControlPoints;
 
 	/** 
 	 * The main color used in each teams material skins. 
 	 * Replicated Value is set by UTDomGameMode::InitGameState() 
 	 * Array index == TeamNum
 	 */
-	UPROPERTY(Replicated, VisibleAnywhere, Category = TeamSkins)
-		FLinearColor TeamBodySkinColor[4];
+	UPROPERTY(Replicated, EditAnywhere, Category = TeamSkins)
+	FLinearColor TeamBodySkinColor[4];
 
 	/**
 	 * The team overlay color used in each teams material skins. 
 	 * Replicated Value is set by UTDomGameMode::InitGameState() 
 	 * Array index == TeamNum
 	 */
-	UPROPERTY(Replicated, VisibleAnywhere, Category = TeamSkins)
-		FLinearColor TeamSkinOverlayColor[4];
+	UPROPERTY(Replicated, EditAnywhere, Category = TeamSkins)
+	FLinearColor TeamSkinOverlayColor[4];
+
+	UPROPERTY(Replicated)
+	bool bIsDDOMGame;
 
 private:
+	/**
+	 * Used to limit updating team skins to every other tick
+	 */
 	UPROPERTY(Transient)
-		bool bSkipThisTick;
+	bool bSkipThisTick;
 
 public:
+
+	virtual TEnumAsByte<EControlPoint::Type> GetControlPointType();
+
 	/**
 	 * Registers the control point described by DomObj.
 	 * @param	DomObj			the AControlPoint.
@@ -72,13 +82,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = GameStateDOM)
 	const TArray<AControlPoint*>& GetControlPoints() { return GameControlPoints; };
 
-	/** Returns the TeamBodySkinColor for the given TeamIndex */
+	/** 
+	 * Returns the TeamBodySkinColor for the given TeamIndex 
+	 * @param	TeamIndex		TeamIndex of the team to lookup
+	 * @return	FLinearColor	The TeamBodySkinColor for the givin TeamIndex
+	 */
 	UFUNCTION(BlueprintCallable, Category = TeamSkins)
 	inline FLinearColor GetTeamSkinColor(uint8 TeamIndex) const { return TeamBodySkinColor[TeamIndex]; };
 
-	/** Returns the TeamSkinOverlayColor for the given TeamIndex */
+	/** 
+	 * Returns the TeamSkinOverlayColor for the given TeamIndex 
+	 * @param	TeamIndex		TeamIndex of the team to lookup
+	 * @return	FLinearColor	The TeamSkinOverlayColor for the givin TeamIndex
+	 */
 	UFUNCTION(BlueprintCallable, Category = TeamSkins)
 	inline FLinearColor GetTeamSkinOverlayColor(uint8 TeamIndex) const { return TeamSkinOverlayColor[TeamIndex]; };
+
+	/** Used by DDOM */
+	virtual void SendDDomMessage(int32 MsgIndex, UObject* OptionalObj) {};
 
 	virtual void SetWinner(AUTPlayerState* NewWinner) override;
 	virtual FText GetGameStatusText(bool bForScoreboard = false) override;

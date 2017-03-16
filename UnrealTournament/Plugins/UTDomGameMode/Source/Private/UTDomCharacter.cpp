@@ -18,8 +18,6 @@ void AUTDomCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 
 void AUTDomCharacter::SetTeamSkin(uint8 NewTeamIndex)
 {
-	//AUTDomGameState* DomGS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
-	//if (DomGS && DomGS->Teams.IsValidIndex(NewTeamIndex))
 	if (NewTeamIndex < 4)
 	{
 		/* value what base color to use (red or blue) */

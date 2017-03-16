@@ -36,26 +36,26 @@ void AUTDomTeamInfo::SetFloatScore(float ScorePoints)
 
 bool AUTDomTeamInfo::AssignToSquad(AController* C, FName Orders, AController* Leader)
 {
-	AUTDomSquadAI* NewSquad = NULL;
+	AUTDomSquadAI* NewSquad = nullptr;
 	for (int32 i = 0; i < Squads.Num(); i++)
 	{
-		if (Squads[i] == NULL || Squads[i]->IsPendingKillPending())
+		if (Squads[i] == nullptr || Squads[i]->IsPendingKillPending())
 		{
 			Squads.RemoveAt(i--);
 		}
-		else if (Squads[i]->Orders == Orders && (Leader == NULL || Squads[i]->GetLeader() == Leader) && (Leader != NULL || Squads[i]->GetSize() < GetWorld()->GetAuthGameMode<AUTDomGameMode>()->MaxSquadSize))
+		else if (Squads[i]->Orders == Orders && (Leader == nullptr || Squads[i]->GetLeader() == Leader) && (Leader != nullptr || Squads[i]->GetSize() < GetWorld()->GetAuthGameMode<AUTDomGameMode>()->MaxSquadSize))
 		{
 			NewSquad = Cast<AUTDomSquadAI>(Squads[i]);
 			break;
 		}
 	}
-	if (NewSquad == NULL && (Leader == NULL || Leader == C))
+	if (NewSquad == nullptr && (Leader == nullptr || Leader == C))
 	{
 		NewSquad = GetWorld()->SpawnActor<AUTDomSquadAI>(GetWorld()->GetAuthGameMode<AUTDomGameMode>()->SquadType);
 		NewSquad->Initialize(this, Orders);
 		Squads.Add(NewSquad);
 	}
-	if (NewSquad == NULL)
+	if (NewSquad == nullptr)
 	{
 		return false;
 	}
@@ -63,7 +63,7 @@ bool AUTDomTeamInfo::AssignToSquad(AController* C, FName Orders, AController* Le
 	{
 		// assign squad
 		AUTBot* B = Cast<AUTBot>(C);
-		if (B != NULL)
+		if (B != nullptr)
 		{
 			B->SetSquad(NewSquad);
 		}
@@ -77,7 +77,7 @@ bool AUTDomTeamInfo::AssignToSquad(AController* C, FName Orders, AController* Le
 
 void AUTDomTeamInfo::AssignDefaultSquadFor(AController* C)
 {
-	if (Cast<AUTBot>(C) != NULL)
+	if (Cast<AUTBot>(C) != nullptr)
 	{
 		if (DefaultOrders.Num() > 0)
 		{

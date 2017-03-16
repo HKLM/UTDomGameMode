@@ -4,10 +4,14 @@
 #include "CollisionQueryParams.h"
 #include "UTDomGameMode.h"
 #include "UTDomGameState.h"
+#include "UTDoubleDomGameState.h"
 #include "UTDomTeamInfo.h"
 #include "UTDomStat.h"
 #include "UTADomTypes.h"
 #include "UTDomGameMessage.h"
+#include "xDomPointA.h"
+#include "xDomPointB.h"
+#include "UTDomControlPoint.h"
 #include "ControlPoint.h"
 
 FCollisionResponseParams WorldResponseParams = []()
@@ -30,41 +34,8 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	DomCollision->OnComponentEndOverlap.AddDynamic(this, &AControlPoint::OnOverlapEnd);
 	DomCollision->SetupAttachment(RootComponent);
 
-	// StaticMesh assets
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint0Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomR.DomR'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint1Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomB.DomB'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint2Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomGN.DomGN'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint3Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomGold.DomGold'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPoint4Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomX.DomX'"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ControlPointNullMesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomNULL.DomNULL'"));
-
-	TeamMesh.Insert(ControlPoint0Mesh.Object, 0);
-	TeamMesh.Insert(ControlPoint1Mesh.Object, 1);
-	TeamMesh.Insert(ControlPoint2Mesh.Object, 2);
-	TeamMesh.Insert(ControlPoint3Mesh.Object, 3);
-	TeamMesh.Insert(ControlPoint4Mesh.Object, 4);
-	TeamMesh.Insert(ControlPointNullMesh.Object, 5);
-	TeamNullMesh = ControlPointNullMesh.Object;
-
-	// StaticMesh
-	DomMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, FName(TEXT("Mesh")));
-	DomMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	DomMesh->SetStaticMesh(ControlPoint4Mesh.Object);
-	DomMesh->AlwaysLoadOnClient = true;
-	DomMesh->AlwaysLoadOnServer = true;
-	DomMesh->bCastDynamicShadow = true;
-	DomMesh->bAffectDynamicIndirectLighting = true;
-	DomMesh->bReceivesDecals = false;
-	DomMesh->SetupAttachment(RootComponent);
-	DomMesh->RelativeLocation.Z = 40;
-
-	// Spinner
-	MeshSpinner = ObjectInitializer.CreateDefaultSubobject<URotatingMovementComponent>(this, FName(TEXT("MeshSpinner")));
-	MeshSpinner->UpdatedComponent = DomMesh;
-	MeshSpinner->RotationRate.Yaw = 80.0f;
-
 	// Light
-	DomLightColor.Insert(FLinearColor::FLinearColor(0.0f, 0.0f, 0.0f, 0.0f), 0);
+	DomLightColor.Insert(FLinearColor::Red, 0);
 	DomLightColor.Insert(FLinearColor::Blue, 1);
 	DomLightColor.Insert(FLinearColor::Green, 2);
 	DomLightColor.Insert(FLinearColor::Yellow, 3);
@@ -84,6 +55,27 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	ControlPointCaptureSound = CaptureSound.Object;
 
 #if WITH_EDITORONLY_DATA
+	//--------Control Point----------------
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> EditorControlPoint4Mesh(TEXT("StaticMesh'/UTDomGameMode/UTDomGameContent/Meshes/DomX.DomX'"));
+	// StaticMesh
+	EditorDomMesh = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UStaticMeshComponent>(this, FName(TEXT("EditorDomMesh")));
+	EditorDomMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EditorDomMesh->SetStaticMesh(EditorControlPoint4Mesh.Object);
+	EditorDomMesh->AlwaysLoadOnClient = true;
+	EditorDomMesh->AlwaysLoadOnServer = true;
+	EditorDomMesh->bCastDynamicShadow = true;
+	EditorDomMesh->bAffectDynamicIndirectLighting = true;
+	EditorDomMesh->bReceivesDecals = false;
+	EditorDomMesh->SetupAttachment(RootComponent);
+	EditorDomMesh->RelativeLocation.Z = 40;
+	EditorDomMesh->bIsEditorOnly = true;
+
+	// Spinner
+	EditorMeshSpinner = ObjectInitializer.CreateEditorOnlyDefaultSubobject<URotatingMovementComponent>(this, FName(TEXT("EditorMeshSpinner")));
+	EditorMeshSpinner->UpdatedComponent = EditorDomMesh;
+	EditorMeshSpinner->RotationRate.Yaw = 80.0f;
+	EditorMeshSpinner->bIsEditorOnly = true;
+
 	EditorSprite = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(FName(TEXT("EditorSprite")));
 	if (EditorSprite != NULL)
 	{
@@ -101,8 +93,9 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 	}
 #endif
 
+	ObjectiveType = EControlPoint::PT_ControlPoint;
 	ScoreTime = 0.1f;
-	MessageClass = UUTDomGameMessage::StaticClass();
+	//MessageClass = UUTDomGameMessage::StaticClass();
 	TeamNum = 255;
 	SetReplicates(true);
 	bReplicateMovement = true;
@@ -115,11 +108,23 @@ AControlPoint::AControlPoint(const FObjectInitializer& ObjectInitializer)
 void AControlPoint::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AControlPoint, DomMesh);
 	DOREPLIFETIME(AControlPoint, ControllingPawn);
 	DOREPLIFETIME(AControlPoint, ControllingTeam);
+	DOREPLIFETIME_CONDITION(AControlPoint, bIsGameObjective, COND_None);
+	DOREPLIFETIME(AControlPoint, ThisControlPoint);
+	DOREPLIFETIME_CONDITION(AControlPoint, ObjectiveType, COND_None);
 	DOREPLIFETIME_CONDITION(AControlPoint, PointName, COND_InitialOnly);
 }
+
+#if WITH_EDITOR
+void AControlPoint::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	ObjectiveType = EControlPoint::PT_ControlPoint;
+	EditorDomMesh->SetHiddenInGame(true);
+	EditorDomMesh->SetVisibility(true);
+}
+#endif
 
 void AControlPoint::BeginPlay()
 {
@@ -128,31 +133,52 @@ void AControlPoint::BeginPlay()
 
 	if (Role == ROLE_Authority)
 	{
-		FTimerHandle TempHandle;
-		GetWorldTimerManager().SetTimer(TempHandle, this, &AControlPoint::TeamHeldTimer, 1.0f, true);
+		//FTimerHandle TempHandle;
+		GetWorldTimerManager().SetTimer(ControlledTimerHandle, this, &AControlPoint::TeamHeldTimer, 1.0f, true);
 	}
 }
 
 void AControlPoint::CreateCarriedObject()
 {
-	//Optimize game resources. Dont need green and gold team meshes if playing 2 team mode.
-	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
-	if (GS != NULL)
+	AUTDoubleDomGameState* DDGS = Cast<AUTDoubleDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+	if (DDGS)
 	{
-		uint8 TotalTeams = GS->NumTeams;
-		if (TotalTeams == 2)
+		ObjectiveType = DDGS->GetControlPointType();
+	}
+	else
+	{
+		AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+		if (GS)
 		{
-			TeamMesh[2] = TeamNullMesh;
-			TeamMesh[3] = TeamNullMesh;
+			ObjectiveType = GS->GetControlPointType();
 		}
-		else if (TotalTeams == 3)
-		{
-			TeamMesh[3] = TeamNullMesh;
-		}
-		else if (TotalTeams == 4)
-		{
-			TeamNullMesh->ReleaseResources();
-		}
+	}
+	if (ObjectiveType == EControlPoint::PT_Disabled) return;
+
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	if (ObjectiveType == EControlPoint::PT_ControlPoint)
+	{
+		ThisControlPoint = GetWorld()->SpawnActor<AUTDomControlPoint>(AUTDomControlPoint::StaticClass(), GetActorLocation(), GetActorRotation(), Params);
+		ThisControlPoint->PointName = this->PointName;
+	}
+	else if (ObjectiveType == EControlPoint::PT_xDomA)
+	{
+		ThisControlPoint = GetWorld()->SpawnActor<AxDomPointA>(AxDomPointA::StaticClass(), GetActorLocation(), GetActorRotation(), Params);
+		ThisControlPoint->PointName = TEXT("A");
+	}
+	else if (ObjectiveType == EControlPoint::PT_xDomB)
+	{
+		ThisControlPoint = GetWorld()->SpawnActor<AxDomPointB>(AxDomPointB::StaticClass(), GetActorLocation(), GetActorRotation(), Params);
+		ThisControlPoint->PointName = TEXT("B");
+	}
+
+	if (ThisControlPoint != nullptr)
+	{
+		ThisControlPoint->Init(this);
+		ThisControlPoint->SetReplicates(true);
+		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::SnapToTargetNotIncludingScale;
+		ThisControlPoint->AttachToActor(this, AttachmentRules, NAME_None);
 	}
 }
 
@@ -160,13 +186,15 @@ void AControlPoint::TeamHeldTimer()
 {
 	if (Role == ROLE_Authority)
 	{
-		if (bStopControlledTimer) return;
+		AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+		
+		if ((GS && (!GS->HasMatchStarted() || GS->HasMatchEnded())) || bStopControlledTimer) return;
 
-		if (!bHidden && ControllingPawn != NULL)
+		if (ControllingPawn != nullptr)
 		{
 			ControllingPawn->ModifyStatsValue(NAME_ControlPointHeldTime, 1.0f);
 		}
-		if (!bHidden && ControllingTeam != NULL)
+		if (ControllingTeam != nullptr)
 		{
 			ControllingTeam->ModifyStatsValue(NAME_TeamControlPointHeldTime, 1.0f);
 		}
@@ -193,10 +221,10 @@ void AControlPoint::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
 	if (Role == ROLE_Authority)
 	{
 		AUTCharacter* Character = Cast<AUTCharacter>(OtherActor);
-		if (Character != NULL && !GetWorld()->LineTraceTestByChannel(OtherActor->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams))
+		if (Character != nullptr && !GetWorld()->LineTraceTestByChannel(OtherActor->GetActorLocation(), GetActorLocation(), ECC_Pawn, FCollisionQueryParams(), WorldResponseParams))
 		{
 			APawn* P = Cast<APawn>(OtherActor);
-			if (P != NULL)
+			if (P != nullptr)
 			{
 				ProcessTouch(Character);
 			}
@@ -208,20 +236,24 @@ void AControlPoint::ProcessTouch_Implementation(APawn* TouchedBy)
 {
 	if (Role == ROLE_Authority
 		&& bScoreReady
-		&& TouchedBy->Controller != NULL
+		&& TouchedBy->Controller != nullptr
 		&& !((AUTCharacter*)TouchedBy)->IsRagdoll()
-		&& TouchedBy->PlayerState != NULL)
+		&& TouchedBy->PlayerState != nullptr)
 	{
 		AUTPlayerState* PS = Cast<AUTPlayerState>(TouchedBy->PlayerState);
-		if (PS != NULL)
+		if (PS != nullptr)
 		{
-			if (ControllingPawn == NULL
+			if (ControllingPawn == nullptr
 				|| (PS != ControllingPawn)
 				|| (PS != ControllingPawn && PS->Team->GetTeamNum() != GetTeamNum())
 				|| (PS == ControllingPawn && PS->Team->GetTeamNum() != GetTeamNum()))
 			{
-				ControllingPawn = PS;
-				UpdateStatus();
+				AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+				if (GS != nullptr && (GS->IsMatchInProgress() && !GS->HasMatchEnded()))
+				{
+					ControllingPawn = PS;
+					UpdateStatus();
+				}
 			}
 		}
 	}
@@ -236,16 +268,20 @@ void AControlPoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActo
 		for (AActor* TouchingActor : Touching)
 		{
 			APawn* P = Cast<APawn>(TouchingActor);
-			if (P != NULL
+			if (P != nullptr
 				&& !((AUTCharacter*)P)->IsRagdoll()
-				&& P->PlayerState != NULL)
+				&& P->PlayerState != nullptr)
 			{
 				AUTPlayerState* PS = Cast<AUTPlayerState>(P->PlayerState);
-				if (PS != NULL)
+				if (PS != nullptr)
 				{
-					ControllingPawn = PS;
-					UpdateStatus();
-					break;
+					AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+					if (GS != nullptr && (GS->IsMatchInProgress() && !GS->HasMatchEnded()))
+					{
+						ControllingPawn = PS;
+						UpdateStatus();
+						break;
+					}
 				}
 			}
 		}
@@ -255,7 +291,7 @@ void AControlPoint::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActo
 void AControlPoint::UpdateStatus()
 {
 	uint8 newTeam = 255;
-	if (ControllingPawn == NULL || (ControllingPawn	&& ControllingPawn->Team == NULL))
+	if (ControllingPawn == nullptr || (ControllingPawn	&& ControllingPawn->Team == nullptr))
 	{
 		newTeam = 255;
 	}
@@ -270,13 +306,13 @@ void AControlPoint::UpdateStatus()
 	}
 
 	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
-	if (GS == NULL) return;
+	if (GS == nullptr) return;
 
 	TeamNum = newTeam;
 	ControllingTeam = Cast<AUTDomTeamInfo>(ControllingPawn->Team);
 	ControlledTime = GetWorld()->GetTimeSeconds();
 	// Neutral or no controlling team
-	if (ControllingTeam == NULL || TeamNum == 4)
+	if (ControllingTeam == nullptr || TeamNum == 4)
 	{
 		GS->UpdateControlPointFX(this, 4);
 	}
@@ -315,44 +351,46 @@ void AControlPoint::UpdateStatus()
  */
 void AControlPoint::UpdateTeamEffects_Implementation(uint8 TeamIndex)
 {
-	if (TeamMesh.IsValidIndex(TeamIndex))
-	{
-		DomMesh->SetStaticMesh(TeamMesh[TeamIndex]);
-	}
-	if (DomLightColor.IsValidIndex(TeamIndex))
-	{
-		DomLight->SetLightColor(DomLightColor[TeamIndex]);
-	}
 	ForceNetUpdate();
 }
 
 void AControlPoint::ResetPoint(bool IsEnabled)
 {
-	Reset_Implementation();
-	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
-	if (GS)
+	if (IsEnabled)
 	{
-		if (IsEnabled)
-		{
-			//Reset to Neutral
-			TeamNum = 255;
-			GS->UpdateControlPointFX(this, 4);
-		}
-		else
-		{
-			//Disable
-			TeamNum = 5;
-			GS->UpdateControlPointFX(this, 5);
-		}
+		//Reset to Neutral
+		TeamNum = 255;
 	}
+	else
+	{
+		//Disable
+		TeamNum = 5;
+	}
+	Reset();
 }
 
 void AControlPoint::Reset_Implementation()
 {
-	ControllingPawn = NULL;
-	ControllingTeam = NULL;
-	CarriedObjectHolder = NULL;
+	ControllingPawn = nullptr;
+	ControllingTeam = nullptr;
+	CarriedObjectHolder = nullptr;
 	ControlledTime = GetWorld()->TimeSeconds;
+	GetWorldTimerManager().ClearTimer(ControlledTimerHandle);
+	AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+	if (GS && TeamNum == 5)
+	{
+		//Disable
+		GS->UpdateControlPointFX(this, 5);
+	}
+	else
+	{
+		TeamNum = 255;
+		if (GS)
+		{
+			//Reset to Neutral
+			GS->UpdateControlPointFX(this, 4);
+		}
+	}
 	ForceNetUpdate();
 }
 
@@ -363,13 +401,11 @@ void AControlPoint::DisablePoint()
 
 void AControlPoint::Disable_Implementation()
 {
-	ControllingPawn = NULL;
-	ControllingTeam = NULL;
-	CarriedObjectHolder = NULL;
+	ControllingPawn = nullptr;
+	ControllingTeam = nullptr;
+	CarriedObjectHolder = nullptr;
 	TeamNum = 5;
 	DomCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	DomMesh->SetVisibility(false);
-	DomMesh->SetHiddenInGame(true);
 	DomLight->SetVisibility(false);
 	DomLight->SetHiddenInGame(true);
 	SetActorEnableCollision(false);
@@ -379,7 +415,7 @@ void AControlPoint::Disable_Implementation()
 
 uint8 AControlPoint::GetTeamNum() const
 {
-	if (ControllingTeam != NULL)
+	if (ControllingTeam != nullptr)
 	{
 		return ControllingTeam->TeamIndex;
 	}
@@ -396,9 +432,13 @@ void AControlPoint::ScoreTimeNotify()
 
 void AControlPoint::UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAmmount)
 {
-	if (Role == ROLE_Authority && thePlayer != NULL)
+	if (Role == ROLE_Authority && thePlayer != nullptr)
 	{
-		thePlayer->ModifyStatsValue(NAME_ControlPointHeldPoints, ScoreAmmount);
+		AUTDomGameState* GS = Cast<AUTDomGameState>(GetWorld()->GetGameState<AUTGameState>());
+		if (GS && GS->HasMatchStarted() && !GS->HasMatchEnded())
+		{
+			thePlayer->ModifyStatsValue(NAME_ControlPointHeldPoints, ScoreAmmount);
+		}
 	}
 }
 
@@ -406,11 +446,11 @@ TEnumAsByte<EControllingTeam::Type> AControlPoint::NotifyTeamChanged() const
 {
 	switch (this->GetTeamNum())
 	{
-	case 0: return EControllingTeam::TE_Red; break;
-	case 1: return EControllingTeam::TE_Blue; break;
-	case 2: return EControllingTeam::TE_Green; break;
-	case 3: return EControllingTeam::TE_Gold; break;
-	case 5: return EControllingTeam::TE_Disabled; break;
-	default: return EControllingTeam::TE_Neutral; break;
+		case 0: return EControllingTeam::TE_Red; break;
+		case 1: return EControllingTeam::TE_Blue; break;
+		case 2: return EControllingTeam::TE_Green; break;
+		case 3: return EControllingTeam::TE_Gold; break;
+		case 5: return EControllingTeam::TE_Disabled; break;
+		default: return EControllingTeam::TE_Neutral; break;
 	}
 }

@@ -9,6 +9,7 @@
 #include "UTWeap_Translocator.h"
 #include "StatNames.h"
 #include "UTDomStat.h"
+#include "UTADomTypes.h"
 #include "UTFirstBloodMessage.h"
 #include "UTMutator.h"
 #include "Private/Slate/Widgets/SUTTabWidget.h"
@@ -21,6 +22,7 @@
 #include "UTDomPlayerController.h"
 #include "UTDomPlayerState.h"
 #include "UTDomVictoryMessage.h"
+#include "UTDomEndFocusActor.h"
 #include "UTDomGameMode.h"
 
 AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
@@ -60,12 +62,12 @@ AUTDomGameMode::AUTDomGameMode(const FObjectInitializer& ObjectInitializer)
 
 	TeamColors[0] = FLinearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	TeamColors[1] = FLinearColor(0.0f, 0.0f, 1.0f, 1.0f);
-	TeamColors[2] = FLinearColor(0.0f, 0.55f, 0.0f, 1.0f);
-	TeamColors[3] = FLinearColor(0.6f, 0.6f, 0.0f, 1.0f);
+	TeamColors[2] = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f);
+	TeamColors[3] = FLinearColor(0.75f, 0.75f, 0.0f, 1.0f);
 
 	TeamBodySkinColor[0] = FLinearColor(4.6f, 0.1f, 0.1f, 1.0f);
 	TeamBodySkinColor[1] = FLinearColor(0.1f, 0.1f, 4.6f, 1.0f);
-	TeamBodySkinColor[2] = FLinearColor(0.01f, 4.1f, 0.01f, 1.0f);
+	TeamBodySkinColor[2] = FLinearColor(0.01f, 1.0f, 0.01f, 1.0f);
 	TeamBodySkinColor[3] = FLinearColor(2.6f, 2.6f, 0.01f, 1.0f);
 
 	TeamSkinOverlayColor[0] = FLinearColor(7.0f, 0.02f, 0.02f, 1.0f);
@@ -112,21 +114,24 @@ void AUTDomGameMode::InitGame(const FString& MapName, const FString& Options, FS
 	bUseTeamStarts = false;
 }
 
-void AUTDomGameMode::GameObjectiveInitialized(AUTGameObjective* Obj)
+void AUTDomGameMode::PostInitializeComponents()
 {
-	Super::GameObjectiveInitialized(Obj);
-	AControlPoint* DomFact = Cast<AControlPoint>(Obj);
-	if (DomFact != NULL)
+	for (TActorIterator<AUTGameObjective> ObjIt(GetWorld()); ObjIt; ++ObjIt)
 	{
-		RegisterGameControlPoint(DomFact);
+		AControlPoint* CPitem = Cast<AControlPoint>(*ObjIt);
+		if (CPitem && CPitem->GetIsGameObjective())
+		{
+			RegisterGameControlPoint(CPitem);
+		}
 	}
+	Super::PostInitializeComponents();
 }
 
 void AUTDomGameMode::RegisterGameControlPoint(AControlPoint* DomObj)
 {
-	if (DomObj != NULL)
+	if (DomObj != nullptr)
 	{
-		if (CDomPoints.Num() <= MaxControlPoints && !DomObj->bHidden)
+		if (CDomPoints.Num() <= MaxControlPoints && !DomObj->bHidden/* && DomObj->GetIsGameObjective()*/)
 		{
 			CDomPoints.AddUnique(DomObj);
 			DomGameState->RegisterControlPoint(DomObj, false);
@@ -188,7 +193,7 @@ void AUTDomGameMode::AnnounceMatchStart()
 void AUTDomGameMode::GiveDefaultInventory(APawn* PlayerPawn)
 {
 	AUTCharacter* UTCharacter = Cast<AUTCharacter>(PlayerPawn);
-	if (UTCharacter != NULL)
+	if (UTCharacter != nullptr)
 	{
 		if (bClearPlayerInventory)
 		{
@@ -234,7 +239,7 @@ bool AUTDomGameMode::ChangeTeam(AController* Player, uint8 NewTeam, bool bBroadc
 	else
 	{
 		AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(Player->PlayerState);
-		if (PS == NULL || PS->bOnlySpectator)
+		if (PS == nullptr || PS->bOnlySpectator)
 		{
 			return false;
 		}
@@ -318,7 +323,7 @@ bool AUTDomGameMode::MovePlayerToTeam(AController* Player, AUTPlayerState* PS, u
 		{
 			UTC->PlayerSuicide();
 		}
-		if (PSD->Team != NULL)
+		if (PSD->Team != nullptr)
 		{
 			PSD->Team->RemoveFromTeam(Player);
 		}
@@ -365,7 +370,7 @@ bool AUTDomGameMode::MovePlayerToTeam(AController* Player, AUTPlayerState* PS, u
 
 bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 {
-	AUTDomTeamInfo* WinningTeam = NULL;
+	AUTDomTeamInfo* WinningTeam = nullptr;
 	AUTPlayerState* BestPlayer = Scorer;
 	// check if team wins by points
 	if (GoalScore != 0)
@@ -377,7 +382,7 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 				&& Cast<AUTDomTeamInfo>(Teams[i])->GetFloatScore() >= GoalScore)
 			{
 				BestPlayer = FindBestPlayerOnTeam(i);
-				if (BestPlayer == NULL && Scorer->Team == Teams[i])
+				if (BestPlayer == nullptr && Scorer->Team == Teams[i])
 				{
 					BestPlayer = Scorer;
 				}
@@ -391,10 +396,10 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 	if (TimeLimit != 0 && DomGameState->GetRemainingTime() <= 0)
 	{
 		AUTDomTeamInfo* LeadingTeam = DomGameState->FindLeadingTeam();
-		if (LeadingTeam != NULL)
+		if (LeadingTeam != nullptr)
 		{
 			BestPlayer = FindBestPlayerOnTeam(LeadingTeam->GetTeamNum());
-			if (BestPlayer == NULL && Scorer->GetTeamNum() == LeadingTeam->GetTeamNum())
+			if (BestPlayer == nullptr && Scorer->GetTeamNum() == LeadingTeam->GetTeamNum())
 			{
 				BestPlayer = Scorer;
 			}
@@ -409,7 +414,7 @@ bool AUTDomGameMode::CheckScore_Implementation(AUTPlayerState* Scorer)
 void AUTDomGameMode::Logout(AController* Exiting)
 {
 	AUTPlayerState* PS = Cast<AUTPlayerState>(Exiting->PlayerState);
-	if (PS != NULL && !PS->bOnlySpectator)
+	if (PS != nullptr && !PS->bOnlySpectator)
 	{
 		ClearControl(PS);
 	}
@@ -430,7 +435,7 @@ void AUTDomGameMode::ClearControl(AUTPlayerState* PS)
 	uint8 Num, i;
 
 	// find a teammate
-	if (PS == NULL)
+	if (PS == nullptr)
 	{
 		return;
 	}
@@ -503,7 +508,7 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 			{
 				if (DomGameState->GameControlPoints[n] && DomGameState->GameControlPoints[n]->ControllingPawn)
 				{
-					if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[n]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
+					if ((DomGameState->GameControlPoints[n]->ControllingPawn == Winner) && (DomGameState->GameControlPoints[n]->ControllingTeam != nullptr) && (DomGameState->GameControlPoints[n]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
 					{
 						WinningBase = DomGameState->GameControlPoints[n];
 						break;
@@ -516,7 +521,7 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 		{
 			for (uint8 i = 0; i < DomGameState->GameControlPoints.Num(); i++)
 			{
-				if ((DomGameState->GameControlPoints[i]->ControllingTeam != NULL) && (DomGameState->GameControlPoints[i]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
+				if ((DomGameState->GameControlPoints[i]->ControllingTeam != nullptr) && (DomGameState->GameControlPoints[i]->ControllingTeam->TeamIndex == WinningTeam->GetTeamNum()))
 				{
 					WinningBase = DomGameState->GameControlPoints[i];
 					break;
@@ -526,16 +531,29 @@ void AUTDomGameMode::SetEndGameFocus(AUTPlayerState* Winner)
 	}
 
 	// If we don't have a winner, something must be wrong, just view 1st base
-	if (WinningBase == nullptr && DomGameState->GameControlPoints[0] != NULL)
+	if (WinningBase == nullptr && DomGameState->GameControlPoints[0] != nullptr)
 	{
 		WinningBase = DomGameState->GameControlPoints[0];
 	}
 
 	if (WinningBase)
 	{
-		EndGameFocus = WinningBase;
-		EndGameFocus->bAlwaysRelevant = true;
-	}
+		//Move focus up as to prevent bug of viewing the EndGameFocus underground
+		FActorSpawnParameters Params;
+		Params.Owner = WinningBase;
+		AUTDomEndFocusActor* EndFocus = GetWorld()->SpawnActor<AUTDomEndFocusActor>(AUTDomEndFocusActor::StaticClass(), WinningBase->GetActorLocation() + FVector(0.0f, 0.0f, 25.0f), WinningBase->GetActorRotation(), Params);
+		if (EndFocus)
+		{
+			EndFocus->bAlwaysRelevant = true;
+			EndFocus->SetReplicates(true);
+			EndFocus->ForceNetUpdate();
+			EndGameFocus = EndFocus;
+		}
+		else
+		{
+			EndGameFocus = WinningBase;
+		}
+	}	
 
 	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
 	{
@@ -743,7 +761,7 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 
 	TabWidget->AddTab(NSLOCTEXT("AUTGameMode", "Score", "Score"), HBox);
 
-	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "Score", "Player Score"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->Score;	})), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTDomGameMode", "Score", "Player Score"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->Score;	})), StatList);
 
 	LeftPane->AddSlot().AutoHeight()[SNew(SBox).HeightOverride(40.0f)];
 	LeftPane->AddSlot().AutoHeight()[SNew(SBox)
@@ -751,11 +769,11 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 		[
 			SNew(STextBlock)
 			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-		.Text(NSLOCTEXT("ADomination", "Scoring", " SCORING "))
+		.Text(NSLOCTEXT("AUTDomGameMode", "Scoring", " SCORING "))
 		]
 	];
 
-	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "RegularKillPoints", "Score from Frags"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->GetStatsValue(NAME_RegularKillPoints);	})), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTDomGameMode", "RegularKillPoints", "Score from Frags"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->GetStatsValue(NAME_RegularKillPoints);	})), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Kills", "Kills"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float { return PS->Kills;	})), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Deaths", "Deaths"), MakeShareable(new TAttributeStat(PlayerState, NAME_None, [](const AUTPlayerState* PS, const TAttributeStat* Stat) -> float {	return PS->Deaths; })), StatList);
 	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTGameMode", "Suicides", "Suicides"), MakeShareable(new TAttributeStat(PlayerState, NAME_Suicides)), StatList);
@@ -774,7 +792,7 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 		[
 			SNew(STextBlock)
 			.TextStyle(SUWindowsStyle::Get(), "UT.Common.BoldText")
-		.Text(NSLOCTEXT("ADomination", "ControlPointStats", " CONTROL POINTS STATS "))
+		.Text(NSLOCTEXT("AUTDomGameMode", "ControlPointStats", " CONTROL POINTS STATS "))
 		]
 	];
 
@@ -786,9 +804,9 @@ void AUTDomGameMode::BuildScoreInfo(AUTPlayerState* PlayerState, TSharedPtr<clas
 		return FText::FromString(FString::Printf(TEXT("%d:%02d"), Mins, Seconds));
 	};
 
-	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldPoints", "Points from Capture"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldPoints)), StatList);
-	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointCaps", "Captures"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointCaps)), StatList);
-	NewPlayerInfoLine(LeftPane, NSLOCTEXT("ADomination", "ControlPointHeldTime", "Total Held Time"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldTime, nullptr, ToTime)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTDomGameMode", "ControlPointHeldPoints", "Points from Capture"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldPoints)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTDomGameMode", "ControlPointCaps", "Captures"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointCaps)), StatList);
+	NewPlayerInfoLine(LeftPane, NSLOCTEXT("AUTDomGameMode", "ControlPointHeldTime", "Total Held Time"), MakeShareable(new TAttributeStat(PlayerState, NAME_ControlPointHeldTime, nullptr, ToTime)), StatList);
 }
 
 #endif

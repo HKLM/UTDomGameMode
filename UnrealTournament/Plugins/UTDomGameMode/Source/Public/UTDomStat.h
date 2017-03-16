@@ -1,3 +1,4 @@
+// Created by Brian 'Snake' Alexander, 2016
 #pragma once
 
 #include "UnrealTournament.h"

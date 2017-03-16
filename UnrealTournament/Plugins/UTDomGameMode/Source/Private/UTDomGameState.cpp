@@ -5,6 +5,7 @@
 #include "Net/UnrealNetwork.h"
 #include "UTDomGameMode.h"
 #include "StatNames.h"
+#include "UTADomTypes.h"
 #include "UTGameState.h"
 #include "UTDomPlayerState.h"
 #include "UTDomStat.h"
@@ -19,6 +20,8 @@ AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
 	GameScoreStats.Add(NAME_ControlPointHeldPoints);
 
 	TeamStats.Add(NAME_TeamControlPointHeldTime);
+
+	bIsDDOMGame = false;
 }
 
 void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -27,6 +30,12 @@ void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & O
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, TeamBodySkinColor, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, TeamSkinOverlayColor, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(AUTDomGameState, bIsDDOMGame, COND_InitialOnly);
+}
+
+TEnumAsByte<EControlPoint::Type> AUTDomGameState::GetControlPointType()
+{
+	return EControlPoint::PT_ControlPoint;
 }
 
 void AUTDomGameState::RegisterControlPoint(AControlPoint* DomObj, bool bIsDisabled)
@@ -82,7 +91,14 @@ AUTDomTeamInfo* AUTDomGameState::FindLeadingTeam()
 void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
 {
 	WinnerPlayerState = NewWinner;
-	WinningTeam = NewWinner->Team; // FindLeadingTeam();
+	if (NewWinner && NewWinner->Team)
+	{
+		WinningTeam = NewWinner->Team;
+	}
+	else
+	{
+		WinningTeam = FindLeadingTeam();
+	}
 	ForceNetUpdate();
 }
 
@@ -125,7 +141,7 @@ void AUTDomGameState::Tick(float DeltaTime)
 		for (uint8 i = 0; i < PlayerArray.Num(); i++)
 		{
 			AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(PlayerArray[i]);
-			if (PS != NULL)
+			if (PS != nullptr)
 			{
 				PS->MakeTeamSkin(PS->GetTeamNum());
 			}

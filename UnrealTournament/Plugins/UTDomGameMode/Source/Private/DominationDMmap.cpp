@@ -1,6 +1,7 @@
 // Created by Brian 'Snake' Alexander, 2016
 #include "UnrealTournament.h"
-#include "ControlPoint.h"
+//#include "ControlPoint.h"
+#include "UTDomControlPoint.h"
 #include "Domination.h"
 #include "Private/Slate/Widgets/SUTTabWidget.h"
 #include "SNumericEntryBox.h"
@@ -16,7 +17,7 @@ ADominationDMmap::ADominationDMmap(const FObjectInitializer& ObjectInitializer)
 
 void ADominationDMmap::PreInitializeComponents()
 {
-	if (GetWorld()->GetMapName().StartsWith("DM-"))
+	if (GetWorld()->IsPlayInEditor() || GetWorld()->GetMapName().StartsWith("DM-"))
 	{
 		AutoGenerateControlPoints();
 	}
@@ -49,13 +50,27 @@ void ADominationDMmap::AutoGenerateControlPoints()
 				}
 			}
 		}
-		int32 RandomActorIndex = FMath::RandRange(0, SomeActor.Num());
+		if (SomeActor.Num() < 2)
+		{
+			return; // ERROR - Something is wrong
+		}
+		int32 RandomActorIndex = FMath::RandRange(0, (SomeActor.Num() - 1));
+		while ( !SomeActor.IsValidIndex(RandomActorIndex) )
+		{
+			RandomActorIndex = FMath::RandRange(0, (SomeActor.Num() - 1));
+		}
+
 		for (int32 SpawnedCount = 0; SpawnedCount < MaxControlPoints; SpawnedCount++)
 		{
 			if (SpawnedCount != 0)
 			{
-				RandomActorIndex = FMath::RandRange(0, SomeActor.Num());
+				RandomActorIndex = FMath::RandRange(0, (SomeActor.Num() - 1));
+				while ( !SomeActor.IsValidIndex(RandomActorIndex) )
+				{
+					RandomActorIndex = FMath::RandRange(0, (SomeActor.Num() - 1));
+				}
 			}
+
 			const FVector MyLoc = SomeActor[RandomActorIndex]->GetActorLocation();
 			const UUTPathNode* MyNode = NavData->FindNearestNode(MyLoc, NavData->GetPOIExtent(SomeActor[RandomActorIndex]));
 
@@ -79,7 +94,7 @@ void ADominationDMmap::AutoGenerateControlPoints()
 			for (const UUTPathNode* Node : AllNodes)
 			{
 				bool bGotChoice = false;
-				if (Node != MyNode)
+				if (Node != MyNode && !Node->bDestinationOnly)
 				{
 					for (NavNodeRef TestPoly : Node->Polys)
 					{
@@ -108,31 +123,20 @@ void ADominationDMmap::AutoGenerateControlPoints()
 			{
 				if (SpawnedPoints.Num() == MaxControlPoints) return;
 
-				bool bSkipThis = false;
-				// Prevent spawning too close to other ControlPoint
-				if (SpawnedPoints.IsValidIndex(0) && SpawnedPoints[0] != nullptr && SpawnedPoints.Num() > 0)
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				AControlPoint* NewPoint = GetWorld()->SpawnActor<AControlPoint>(Pt.Loc + FVector(0, 0, -70), FRotator(0, 0, 0), Params);
+				if (NewPoint != NULL)
 				{
-					for (uint8 i = 0; i < SpawnedPoints.Num(); i++)
+					SpawnedPoints.AddUnique(NewPoint);
+					NewPoint->PointName = FString::FromInt(SpawnedPoints.Num());
+					NewPoint->TeamNum = 4;
+					if (SpawnedPoints.Num() == MaxControlPoints)
 					{
-						if ((SpawnedPoints[i]->GetActorLocation() - Pt.Loc).Size() < 2000.f)
-						{
-							bSkipThis = true;
-							break;
-						}
+						return;
 					}
-				}
-				if (!bSkipThis)
-				{
-					FActorSpawnParameters Params;
-					Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-					AControlPoint* NewPoint = GetWorld()->SpawnActor<AControlPoint>(Pt.Loc + FVector(0, 0, -70), FRotator(0, 0, 0), Params);
-					if (NewPoint != NULL)
+					else
 					{
-						SpawnedPoints.Add(NewPoint);
-						NewPoint->PointName = FString::FromInt(SpawnedPoints.Num());
-						NewPoint->TeamNum = 4;
-						if (SpawnedPoints.Num() == MaxControlPoints) return;
-
 						break;
 					}
 				}
@@ -188,9 +192,9 @@ void ADominationDMmap::CreateConfigWidgets(TSharedPtr<class SVerticalBox> MenuSp
 			.AllowSpin(true)
 			.Delta(1)
 			.MinValue(1)
-			.MaxValue(7)
+			.MaxValue(6)
 			.MinSliderValue(1)
-			.MaxSliderValue(7)
+			.MaxSliderValue(6)
 			.EditableTextBoxStyle(SUWindowsStyle::Get(), "UT.Common.NumEditbox.White")
 			)
 			]

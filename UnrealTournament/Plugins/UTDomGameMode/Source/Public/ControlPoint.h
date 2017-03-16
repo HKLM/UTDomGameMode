@@ -1,5 +1,7 @@
 /**
- * Control Point Actor - Game Objective of Domination Game Mode
+ * Control Point Actor - Base Game Objective of the Domination Game Modes.
+ * This actor will spawn a TSubclassOf<AControlPoint> that will be used by the
+ * current game mode.
  * Created by Brian 'Snake' Alexander, 2015
  */
 #pragma once
@@ -9,31 +11,46 @@
 #include "UTADomTypes.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
+#include "UTResetInterface.h"
 #include "ControlPoint.generated.h"
+
+class AUTDomControlPoint;
+class AxDomPointA;
+class AxDomPointB;
 
 extern FCollisionResponseParams WorldResponseParams;
 
-/** Control Point is the objective actor for Domination game mode. */
-UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint, meta=(ShortTooltip="Control Point is the objective actor for Domination game mode."))
-class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
+/** Control Point is the objective actor for the Domination game modes. */
+UCLASS(HideCategories = GameObject, autoexpandcategories = ControlPoint, meta=(ShortTooltip="Control Point is the objective actor for the Domination game modes."))
+class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective, public IUTResetInterface
 {
 	GENERATED_UCLASS_BODY()
 
+#if WITH_EDITOR
+	virtual void OnConstruction(const FTransform& Transform) override;
+#endif
+
+	UPROPERTY(Replicated, EditInstanceOnly, Category = ControlPoint)
+	TEnumAsByte<EControlPoint::Type> ObjectiveType;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	AControlPoint* ThisControlPoint;
+
 	/** The name to display on HUD of this point */
 	UPROPERTY(Replicated, EditInstanceOnly, BlueprintReadWrite, Category = ControlPoint)
-		FString PointName;
+	FString PointName;
 
 	/** The controlling pawn. Replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
-		AUTPlayerState* ControllingPawn;
+	AUTPlayerState* ControllingPawn;
 
 	/** The controlling team.  replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
-		AUTDomTeamInfo* ControllingTeam;
+	AUTDomTeamInfo* ControllingTeam;
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
-		USoundBase* ControlPointCaptureSound;
+	USoundBase* ControlPointCaptureSound;
 
 	TSubclassOf<UUTLocalMessage> MessageClass;
 
@@ -44,53 +61,54 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective
 	UPROPERTY(EditInstanceOnly)
 	UCapsuleComponent* DomCollision;
 
-	/** The mesh that is displayed, that makes up this base. */
-	UPROPERTY(Replicated)
-		class UStaticMeshComponent* DomMesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ControlPoint)
-		class URotatingMovementComponent* MeshSpinner;
-
 	/** The point light that displays the controlling teams color */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
-		class UPointLightComponent* DomLight;
+	class UPointLightComponent* DomLight;
 
 	/** Array of light colors for DomLight. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ControlPoint)
-		TArray<FLinearColor> DomLightColor;
+	TArray<FLinearColor> DomLightColor;
 
 	/** Array of staticmeshes to display on DomMesh. Index = TeamNum */
 	UPROPERTY()
 	TArray<UStaticMesh*> TeamMesh;
 
 	UPROPERTY(Transient)
-		bool bStopControlledTimer;
+	bool bStopControlledTimer;
 
-	/** 
-	 * Extremly simple StaticMesh (StaticMesh & Material = 6.4KB resource size) to load in place
-	 * of green and gold team meshes, when those meshes are not needed. (e.g. in 2 team mode)
-	 */
-	UStaticMesh* TeamNullMesh;
+	FTimerHandle ControlledTimerHandle;
 
 	//=========================================================================
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		UBillboardComponent* EditorSprite;
+	UBillboardComponent* EditorSprite;
 #endif
 
 protected:
+#if WITH_EDITORONLY_DATA
+
+	UPROPERTY(Transient)
+	class UStaticMeshComponent* EditorDomMesh;
+	UPROPERTY(Transient)
+	class URotatingMovementComponent* EditorMeshSpinner;
+#endif
+	/** This should only be true for subclass actors spawned by AControlPoint */
+	UPROPERTY(Replicated)
+	bool bIsGameObjective;
+
 	float ControlledTime;
 
 	/** will be 'true' if and when the domination point can be captured */
 	UPROPERTY(Transient)
-		bool bScoreReady;
+	bool bScoreReady;
 
 	/**
 	 * The ammount of time other teams must wait after, the current team has touched the control point,
 	 * before it will allow the next team to be able to touch it.
  	 */
 	UPROPERTY(Transient)
-		float ScoreTime;
+	float ScoreTime;
 
 	/** timer for stats- how long this has been controlled by a team */
 	virtual void TeamHeldTimer();
@@ -101,8 +119,19 @@ protected:
 	virtual void ScoreTimeNotify();
 
 public:
+	virtual void Init(AControlPoint* RegThis) {};
+
+	/**
+	 * This should only return true for subclass actors spawned by AControlPoint. 
+	 * AControlPoint should allways return False;
+	 */
+	bool inline GetIsGameObjective() const
+	{
+		return bIsGameObjective;
+	};
+
 	UFUNCTION()
-		bool GetIsScoreReady() const { return bScoreReady; };
+	bool GetIsScoreReady() const { return bScoreReady; };
 
 	/** Updates players stats of how many times this has been captured by a player */
 	UFUNCTION()
@@ -148,7 +177,7 @@ public:
 	 * @param	TeamIndex	The teamID of what team to change the mesh and materials to
 	 */
 	UFUNCTION(NetMulticast, Reliable)
-	void UpdateTeamEffects(uint8 TeamIndex);
+	virtual void UpdateTeamEffects(uint8 TeamIndex);
 
 	/**
 	 * For use in BluePrints for Map Authors to trigger differant code depending on what team, without having to, do a lot of trying to figure out what team triggered it.
@@ -158,7 +187,7 @@ public:
 	 * @return		EControllingTeamEnum of the ControllingTeam
 	 */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-		TEnumAsByte<EControllingTeam::Type> NotifyTeamChanged() const;
+	TEnumAsByte<EControllingTeam::Type> NotifyTeamChanged() const;
 
 	/**
 	 * Reset or reset and disable this control point. Clear controlling team, pawn, etc
@@ -166,7 +195,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
 	virtual void ResetPoint(bool IsEnabled);
-	virtual void Reset_Implementation();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Game)
+	void Reset() override;
 
 	/** Disables the point and removes it from play */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
@@ -188,11 +219,11 @@ protected:
 	virtual void CreateCarriedObject() override;
 
 	UFUNCTION()
-		virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-		virtual void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintNativeEvent)
-		void ProcessTouch(APawn* TouchedBy);
+	void ProcessTouch(APawn* TouchedBy);
 };

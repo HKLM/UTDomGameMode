@@ -2,6 +2,8 @@
 #include "UnrealTournament.h"
 #include "UTDomGameMode.h"
 #include "ControlPoint.h"
+#include "UTDomControlPoint.h"
+#include "UTADomTypes.h"
 #include "UTDomTeamInfo.h"
 #include "Domination.h"
 
@@ -37,13 +39,13 @@ void ADomination::DefaultTimer()
 
 void ADomination::ScoreTeam(uint8 ControlPointIndex, float TeamScoreAmount)
 {
-	if ((CDomPoints[ControlPointIndex] != NULL && CDomPoints[ControlPointIndex]->ControllingTeam != NULL) && CDomPoints[ControlPointIndex]->GetIsScoreReady())
+	if ((CDomPoints[ControlPointIndex] != nullptr && CDomPoints[ControlPointIndex]->ControllingTeam != nullptr) && CDomPoints[ControlPointIndex]->GetIsScoreReady())
 	{
 		for (uint8 i = 0; i < NumTeams; i++)
 		{
 			if (CDomPoints[ControlPointIndex]->ControllingTeam->GetTeamNum() == i)
 			{
-				if (CDomPoints[ControlPointIndex]->ControllingPawn != NULL)
+				if (CDomPoints[ControlPointIndex]->ControllingPawn != nullptr)
 				{
 					// award points to player
 					CDomPoints[ControlPointIndex]->ControllingPawn->Score += TeamScoreAmount;

@@ -15,19 +15,19 @@ class UTDOMGAMEMODE_API UUTDomScoreboard : public UUTScoreboard
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		FText RedTeamText;
+	FText RedTeamText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		FText BlueTeamText;
+	FText BlueTeamText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		FText GreenTeamText;
+	FText GreenTeamText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		FText GoldTeamText;
+	FText GoldTeamText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoreboard")
-		bool bUseRoundKills;
+	bool bUseRoundKills;
 
 	virtual void Draw_Implementation(float DeltaTime) override;
 	virtual void SelectNext(int32 Offset, bool bDoNoWrap = false);
@@ -37,10 +37,10 @@ public:
 protected:
 	/** Cache NumTeams value from GameState. Used to determin if green and/or gold teams are drawn */
 	UPROPERTY()
-		int8 GameNumTeams;
+	int8 GameNumTeams;
 
 	UPROPERTY()
-		FText TeamScoringHeader;
+	FText TeamScoringHeader;
 
 	virtual void Draw4ScorePanel(float RenderDelta, float& YOffset);
 
