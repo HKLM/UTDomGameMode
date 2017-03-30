@@ -7,8 +7,9 @@
 #pragma once
 
 #include "UnrealTournament.h"
-#include "UTDomTeamInfo.h"
+#include "MultiTeamTeamInfo.h"
 #include "UTADomTypes.h"
+#include "UTMultiTeamTypes.h"
 #include "Net/UnrealNetwork.h"
 #include "CollisionQueryParams.h"
 #include "UTResetInterface.h"
@@ -46,7 +47,7 @@ class UTDOMGAMEMODE_API AControlPoint : public AUTGameObjective, public IUTReset
 
 	/** The controlling team.  replicated */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = ControlPoint)
-	AUTDomTeamInfo* ControllingTeam;
+	AMultiTeamTeamInfo* ControllingTeam;
 
 	/** Sound to play when point is captured */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
@@ -187,7 +188,7 @@ public:
 	 * @return		EControllingTeamEnum of the ControllingTeam
 	 */
 	UFUNCTION(BlueprintCallable, Category = ControlPoint)
-	TEnumAsByte<EControllingTeam::Type> NotifyTeamChanged() const;
+	TEnumAsByte<EControllingMultiTeam::Type> NotifyTeamChanged() const;
 
 	/**
 	 * Reset or reset and disable this control point. Clear controlling team, pawn, etc

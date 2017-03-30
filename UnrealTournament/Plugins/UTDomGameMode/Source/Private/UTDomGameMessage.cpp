@@ -81,7 +81,7 @@ void UUTDomGameMessage::GetArgs(FFormatNamedArguments& Args, int32 Switch, bool 
 	{
 		AControlPoint* CP = Cast<AControlPoint>(OptionalObject);
 		Args.Add(TEXT("OptionalControlPoint"), CP ? FText::FromString(CP->PointName) : FText::GetEmpty());
-		AUTDomTeamInfo* DTI = Cast<AUTDomTeamInfo>(CP->ControllingTeam);
+		AMultiTeamTeamInfo* DTI = Cast<AMultiTeamTeamInfo>(CP->ControllingTeam);
 		if (DTI != NULL)
 		Args.Add(TEXT("OptionalTeam"), DTI ? DTI->TeamName : FText::GetEmpty());
 	}

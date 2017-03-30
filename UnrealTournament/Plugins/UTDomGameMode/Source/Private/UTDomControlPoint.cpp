@@ -4,7 +4,7 @@
 #include "CollisionQueryParams.h"
 #include "UTDomGameMode.h"
 #include "UTDomGameState.h"
-#include "UTDomTeamInfo.h"
+#include "MultiTeamTeamInfo.h"
 #include "UTDomStat.h"
 #include "UTADomTypes.h"
 #include "UTDomGameMessage.h"

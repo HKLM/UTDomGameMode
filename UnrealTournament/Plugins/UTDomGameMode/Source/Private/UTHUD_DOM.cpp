@@ -12,7 +12,7 @@ AUTHUD_DOM::AUTHUD_DOM(const FObjectInitializer& ObjectInitializer)
 
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_Paperdoll.bpHW_Paperdoll_C"));
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_WeaponInfo.bpHW_WeaponInfo_C"));
-	HudWidgetClasses.AddUnique(TEXT("/Script/UTDomGameMode.UTHUDWidget_DomGameClock"));
+	HudWidgetClasses.AddUnique(TEXT("/Script/MultiTeamGame.UTHUDWidget_MultiTeamClock"));
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_WeaponBar.bpHW_WeaponBar_C"));
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_Powerups.bpHW_Powerups_C"));
 	HudWidgetClasses.AddUnique(TEXT("/Game/RestrictedAssets/UI/HUDWidgets/bpHW_FloatingScore.bpHW_FloatingScore_C"));

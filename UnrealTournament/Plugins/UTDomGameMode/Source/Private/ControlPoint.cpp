@@ -5,9 +5,10 @@
 #include "UTDomGameMode.h"
 #include "UTDomGameState.h"
 #include "UTDoubleDomGameState.h"
-#include "UTDomTeamInfo.h"
+#include "MultiTeamTeamInfo.h"
 #include "UTDomStat.h"
 #include "UTADomTypes.h"
+#include "UTMultiTeamTypes.h"
 #include "UTDomGameMessage.h"
 #include "xDomPointA.h"
 #include "xDomPointB.h"
@@ -309,7 +310,7 @@ void AControlPoint::UpdateStatus()
 	if (GS == nullptr) return;
 
 	TeamNum = newTeam;
-	ControllingTeam = Cast<AUTDomTeamInfo>(ControllingPawn->Team);
+	ControllingTeam = Cast<AMultiTeamTeamInfo>(ControllingPawn->Team);
 	ControlledTime = GetWorld()->GetTimeSeconds();
 	// Neutral or no controlling team
 	if (ControllingTeam == nullptr || TeamNum == 4)
@@ -442,15 +443,15 @@ void AControlPoint::UpdateHeldPointStat(AUTPlayerState* thePlayer, float ScoreAm
 	}
 }
 
-TEnumAsByte<EControllingTeam::Type> AControlPoint::NotifyTeamChanged() const
+TEnumAsByte<EControllingMultiTeam::Type> AControlPoint::NotifyTeamChanged() const
 {
 	switch (this->GetTeamNum())
 	{
-		case 0: return EControllingTeam::TE_Red; break;
-		case 1: return EControllingTeam::TE_Blue; break;
-		case 2: return EControllingTeam::TE_Green; break;
-		case 3: return EControllingTeam::TE_Gold; break;
-		case 5: return EControllingTeam::TE_Disabled; break;
-		default: return EControllingTeam::TE_Neutral; break;
+		case 0: return EControllingMultiTeam::TE_Red; break;
+		case 1: return EControllingMultiTeam::TE_Blue; break;
+		case 2: return EControllingMultiTeam::TE_Green; break;
+		case 3: return EControllingMultiTeam::TE_Gold; break;
+		case 5: return EControllingMultiTeam::TE_Disabled; break;
+		default: return EControllingMultiTeam::TE_Neutral; break;
 	}
 }

@@ -5,8 +5,8 @@
 #include "UTDomGameMode.h"
 #include "UTADomTypes.h"
 
-#include "UTDomTeamInfo.h"
-#include "UTDomSquadAI.h"
+#include "MultiTeamTeamInfo.h"
+//#include "UTDomSquadAI.h"
 #include "ControlPoint.h"
 #include "UTHUD_DOM.h"
 #include "UTDoubleDomGameMessage.h"
@@ -22,9 +22,9 @@
 #include "UTPickupHealth.h"
 #include "UTRecastNavMesh.h"
 #include "UTPathBuilderInterface.h"
-#include "UTDomPlayerController.h"
-#include "UTDomPlayerState.h"
-#include "UTDomVictoryMessage.h"
+#include "MultiTeamPlayerController.h"
+#include "MultiTeamPlayerState.h"
+#include "MultiTeamVictoryMessage.h"
 
 #include "xDomPoint.h"
 #include "xDomPointA.h"

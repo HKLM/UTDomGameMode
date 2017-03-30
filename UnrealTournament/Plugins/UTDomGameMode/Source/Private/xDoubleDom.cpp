@@ -1,7 +1,7 @@
 // Created by Brian 'Snake' Alexander, 2017
 #include "UnrealTournament.h"
 #include "UTDoubleDomGameMode.h"
-#include "UTDomTeamInfo.h"
+#include "MultiTeamTeamInfo.h"
 #include "xDoubleDom.h"
 
 AxDoubleDom::AxDoubleDom(const FObjectInitializer& ObjectInitializer)

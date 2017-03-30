@@ -6,9 +6,10 @@
 #include "UTDomGameMode.h"
 #include "StatNames.h"
 #include "UTADomTypes.h"
-#include "UTGameState.h"
-#include "UTDomPlayerState.h"
+//#include "UTGameState.h"
+#include "MultiTeamPlayerState.h"
 #include "UTDomStat.h"
+#include "MultiTeamGameState.h"
 #include "UTDomGameState.h"
 
 AUTDomGameState::AUTDomGameState(const FObjectInitializer& ObjectInitializer)
@@ -28,8 +29,8 @@ void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
-	DOREPLIFETIME_CONDITION(AUTDomGameState, TeamBodySkinColor, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(AUTDomGameState, TeamSkinOverlayColor, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(AUTDomGameState, TeamBodySkinColor, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(AUTDomGameState, TeamSkinOverlayColor, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, bIsDDOMGame, COND_InitialOnly);
 }
 
@@ -69,18 +70,18 @@ void AUTDomGameState::UpdateControlPointFX(AControlPoint* ThePoint, uint8 NewTea
 	}
 }
 
-AUTDomTeamInfo* AUTDomGameState::FindLeadingTeam()
+AMultiTeamTeamInfo* AUTDomGameState::FindLeadingTeam()
 {
-	if (Teams[0] && Cast<AUTDomTeamInfo>(Teams[0]))
+	if (Teams[0] && Cast<AMultiTeamTeamInfo>(Teams[0]))
 	{
-		AUTDomTeamInfo* TheWinningTeam = Cast<AUTDomTeamInfo>(Teams[0]);
+		AMultiTeamTeamInfo* TheWinningTeam = Cast<AMultiTeamTeamInfo>(Teams[0]);
 		for (uint8 i = 1; i < Teams.Num(); i++)
 		{
 			if (Teams[i] 
-				&& Cast<AUTDomTeamInfo>(Teams[i]) 
-				&& (Cast<AUTDomTeamInfo>(Teams[i])->GetFloatScore() > TheWinningTeam->GetFloatScore()))
+				&& Cast<AMultiTeamTeamInfo>(Teams[i]) 
+				&& (Cast<AMultiTeamTeamInfo>(Teams[i])->GetFloatScore() > TheWinningTeam->GetFloatScore()))
 			{
-				TheWinningTeam = Cast<AUTDomTeamInfo>(Teams[i]);
+				TheWinningTeam = Cast<AMultiTeamTeamInfo>(Teams[i]);
 			}
 		}
 		return TheWinningTeam;
@@ -88,77 +89,77 @@ AUTDomTeamInfo* AUTDomGameState::FindLeadingTeam()
 	return NULL;
 }
 
-void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
-{
-	WinnerPlayerState = NewWinner;
-	if (NewWinner && NewWinner->Team)
-	{
-		WinningTeam = NewWinner->Team;
-	}
-	else
-	{
-		WinningTeam = FindLeadingTeam();
-	}
-	ForceNetUpdate();
-}
+//void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
+//{
+//	WinnerPlayerState = NewWinner;
+//	if (NewWinner && NewWinner->Team)
+//	{
+//		WinningTeam = NewWinner->Team;
+//	}
+//	else
+//	{
+//		WinningTeam = FindLeadingTeam();
+//	}
+//	ForceNetUpdate();
+//}
+//
+//AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
+//{
+//	AUTPlayerState* Best = NULL;
+//	for (uint8 i = 0; i < PlayerArray.Num(); i++)
+//	{
+//		AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
+//		if (PS != NULL && PS->GetTeamNum() == TeamNumToTest && (Best == NULL || Best->Score < PS->Score))
+//		{
+//			Best = PS;
+//		}
+//	}
+//	return Best;
+//}
+//
+//FText AUTDomGameState::GetGameStatusText(bool bForScoreboard)
+//{
+//	if (bForScoreboard)
+//	{
+//		return (GoalScore == 0)
+//			? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit))
+//			: FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
+//	}
+//
+//	return Super::GetGameStatusText(bForScoreboard);
+//}
 
-AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
-{
-	AUTPlayerState* Best = NULL;
-	for (uint8 i = 0; i < PlayerArray.Num(); i++)
-	{
-		AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
-		if (PS != NULL && PS->GetTeamNum() == TeamNumToTest && (Best == NULL || Best->Score < PS->Score))
-		{
-			Best = PS;
-		}
-	}
-	return Best;
-}
-
-FText AUTDomGameState::GetGameStatusText(bool bForScoreboard)
-{
-	if (bForScoreboard)
-	{
-		return (GoalScore == 0)
-			? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit))
-			: FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
-	}
-
-	return Super::GetGameStatusText(bForScoreboard);
-}
-
-void AUTDomGameState::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	if (bSkipThisTick)
-	{
-		bSkipThisTick = false;
-	}
-	else
-	{
-		bSkipThisTick = true;
-		for (uint8 i = 0; i < PlayerArray.Num(); i++)
-		{
-			AUTDomPlayerState* PS = Cast<AUTDomPlayerState>(PlayerArray[i]);
-			if (PS != nullptr)
-			{
-				PS->MakeTeamSkin(PS->GetTeamNum());
-			}
-		}
-	}
-}
+//void AUTDomGameState::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//	if (bSkipThisTick)
+//	{
+//		bSkipThisTick = false;
+//	}
+//	else
+//	{
+//		bSkipThisTick = true;
+//		for (uint8 i = 0; i < PlayerArray.Num(); i++)
+//		{
+//			AMultiTeamPlayerState* PS = Cast<AMultiTeamPlayerState>(PlayerArray[i]);
+//			if (PS != nullptr)
+//			{
+//				PS->MakeTeamSkin(PS->GetTeamNum());
+//			}
+//		}
+//	}
+//}
 
 void AUTDomGameState::UpdateHighlights_Implementation()
 {
 	// add highlights to each player in order of highlight priority, filling to 5 if possible
-	AUTDomPlayerState* TopScorer[4];
-	AUTDomPlayerState* MostKills = NULL;
-	AUTDomPlayerState* LeastDeaths = NULL;
-	AUTDomPlayerState* BestKDPS = NULL;
-	AUTDomPlayerState* BestComboPS = NULL;
-	AUTDomPlayerState* MostHeadShotsPS = NULL;
-	AUTDomPlayerState* MostAirRoxPS = NULL;
+	AMultiTeamPlayerState* TopScorer[4];
+	AMultiTeamPlayerState* MostKills = NULL;
+	AMultiTeamPlayerState* LeastDeaths = NULL;
+	AMultiTeamPlayerState* BestKDPS = NULL;
+	AMultiTeamPlayerState* BestComboPS = NULL;
+	AMultiTeamPlayerState* MostHeadShotsPS = NULL;
+	AMultiTeamPlayerState* MostAirRoxPS = NULL;
 
 	//Collect all the weapons
 	TArray<AUTWeapon *> StatsWeapons;
@@ -176,10 +177,10 @@ void AUTDomGameState::UpdateHighlights_Implementation()
 
 	for (uint8 i = 0; i < Teams.Num(); i++)
 	{
-		TopScorer[i] = Cast<AUTDomPlayerState>(FindBestPlayerOnTeam(i));
-		for (TActorIterator<AUTDomPlayerState> It(GetWorld()); It; ++It)
+		TopScorer[i] = Cast<AMultiTeamPlayerState>(FindBestPlayerOnTeam(i));
+		for (TActorIterator<AMultiTeamPlayerState> It(GetWorld()); It; ++It)
 		{
-			AUTDomPlayerState* PS = *It;
+			AMultiTeamPlayerState* PS = *It;
 			if (PS && !PS->bOnlySpectator && PS->Team && PS->Team->TeamIndex == i)
 			{
 				if (PS->Score > (TopScorer[i] ? TopScorer[i]->Score : 0))
@@ -261,9 +262,9 @@ void AUTDomGameState::UpdateHighlights_Implementation()
 		}
 	}
 
-	for (TActorIterator<AUTDomPlayerState> It(GetWorld()); It; ++It)
+	for (TActorIterator<AMultiTeamPlayerState> It(GetWorld()); It; ++It)
 	{
-		AUTDomPlayerState* PS = *It;
+		AMultiTeamPlayerState* PS = *It;
 		if (PS && !PS->bOnlySpectator)
 		{
 			if (MostKills && (PS->Kills == MostKills->Kills))
@@ -281,9 +282,9 @@ void AUTDomGameState::UpdateHighlights_Implementation()
 		}
 	}
 
-	for (TActorIterator<AUTDomPlayerState> It(GetWorld()); It; ++It)
+	for (TActorIterator<AMultiTeamPlayerState> It(GetWorld()); It; ++It)
 	{
-		AUTDomPlayerState* PS = *It;
+		AMultiTeamPlayerState* PS = *It;
 		if (PS && !PS->bOnlySpectator)
 		{
 			// only add low priority highlights if not enough high priority highlights

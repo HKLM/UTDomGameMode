@@ -19,8 +19,13 @@ namespace UnrealBuildTool.Rules
                     "UnrealTournament",
                     "InputCore",
                     "Slate",
-                    "SlateCore"
+                    "SlateCore",
+                    "MultiTeamGame"
                 }
+                );
+            PrivateDependencyModuleNames.AddRange(
+                new string[] 
+                { "MultiTeamGame" }
                 );
         }
     }

@@ -4,7 +4,7 @@
 #include "ControlPoint.h"
 #include "UTDomControlPoint.h"
 #include "UTADomTypes.h"
-#include "UTDomTeamInfo.h"
+#include "MultiTeamTeamInfo.h"
 #include "Domination.h"
 
 ADomination::ADomination(const FObjectInitializer& ObjectInitializer)
