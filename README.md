@@ -3,16 +3,19 @@ Domination Game Modes C++ plug-in for Unreal Tournament 4
 
 Public access to the source code for the UTDomGameMode plug-in.
 
+#### FOR THE OFFICIAL PLAYABLE RELEASE, Get at: http://www.moddb.com/mods/domination-game-mode ####
+
 ## ALL DOM GAME MODES HAVE UP TO 4 TEAM PLAY
 ## ADDED DOUBLE DOMINATION GAME MODE
 
-Version: Beta 3.4.2
+Version: Beta 3.4.3
 Author: Brian 'Snake' Alexander  sw_snakepliskin@hotmail.com
-Date: 3/15/2017
+Date: 4/5/2017
 
 
 ### REQUIREMENTS:
-UT4 Version: `build 3315666`
+- UT4 Version: `build ++UT+Release-Next-CL-3361702`
+- The MultiTeam Plugin for UT4  https://github.com/HKLM/MultiTeamGame/
 
 
 ##### NOTES
@@ -26,17 +29,20 @@ UT4 Version: `build 3315666`
 ## COMPILE THE PLUGIN
 You must have Visual Studio 2015 and a current copy of the UnrealTournament (release branch) source code from GitHub.
 
-1. Place the source files/Clone the UTDomGameMode GitHub respository to the plugins to your `<UnrealTournament GitHub project root>\UnrealTournament\Plugins` folder
+1. You MUST have a clone of the MultiTeam plugin repository in your UT plugins `<UnrealTournament GitHub project root>\UnrealTournament\Plugins` folder
+2. Place the source files/Clone the UTDomGameMode GitHub respository to the UT plugins to your `<UnrealTournament GitHub project root>\UnrealTournament\Plugins` folder
   * VERIFY: UTDomGameMode.uplugin is at `<UnrealTournament GitHub project root>\UnrealTournament\Plugins\UTDomGameMode\UTDomGameMode.uplugin` and the Source folder is at `<UnrealTournament GitHub project root>\UnrealTournament\Plugins\UTDomGameMode\Source\`
-2. Run the GenerateProjectFiles.bat file.
-3. Open the UE4.sln
-4. Set the build configuration to "Development Editor" and build the UnrealTournament project.
+3. Run the GenerateProjectFiles.bat file.
+4. Open the UE4.sln
+5. Set the build configuration to "Development Editor" and build the UnrealTournament project.
   * Once the build has finished follow the instruction on how to Install for Editor below.
-5. Set the build configuration to "Shipping" and build the UnrealTournament project again.
+6. Set the build configuration to "Shipping" and build the UnrealTournament project again.
   * Once the build has finished follow the instruction on how to Install for Game below.
 
 
 ## TO INSTALL FOR GAME
+You MUST have the MultiTeam plugin installed for UT4 ( Source is at https://github.com/HKLM/MultiTeamGame/ )
+
 Requires the plugin to have been built using the "Shipping" configuration ( `UE4-UTDomGameMode-Win64-Shipping.dll` and `UE4-Win64-Shipping.modules` files) 
 
 Follow the instructions for Distributing a Plugin starting at step 6 https://docs.unrealengine.com/latest/INT/Programming/Plugins/index.html#distributingaplugin
@@ -53,7 +59,7 @@ Follow the instructions for Distributing a Plugin starting at step 6 https://doc
 ## QUICK START ON DOMINATION MAP MAKING:
 1. You must save your map with the prefix **DOM-** in the file name (example: DOM-myMapName)
 2. From within the Editor, Go to Settings\-\>World Settings
-3. Set GameMode Override to **Domination**
+3. Set GameMode Override to **Domination** (or **xDoubleDom** for Double Domination game)
 4. Place at least 1 (3 is recommended) ControlPoint actors in to your map.
 5. On each ControlPoint actors' details. Set the "Point Name" to the name/title for this point.
 
@@ -102,9 +108,6 @@ UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4
 UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Binaries\Win64\UE4Editor.modules
 
 UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Config\DefaultGame.ini
-
-UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\BaseUTDomCharacter.uasset
-UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\DefaultDomCharacter.uasset
 
 UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomB.uasset
 UnrealTournamentEditor\UnrealTournament\Plugins\UTDomGameMode\Content\UTDomGameContent\Meshes\DomGN.uasset

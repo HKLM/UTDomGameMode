@@ -1,5 +1,4 @@
 // Created by Brian 'Snake' Alexander, 2015
-
 using UnrealBuildTool;
 
 namespace UnrealBuildTool.Rules
@@ -24,7 +23,7 @@ namespace UnrealBuildTool.Rules
                 }
                 );
             PrivateDependencyModuleNames.AddRange(
-                new string[] 
+                new string[]
                 { "MultiTeamGame" }
                 );
         }

@@ -6,7 +6,6 @@
 #include "UTADomTypes.h"
 
 #include "MultiTeamTeamInfo.h"
-//#include "UTDomSquadAI.h"
 #include "ControlPoint.h"
 #include "UTHUD_DOM.h"
 #include "UTDoubleDomGameMessage.h"

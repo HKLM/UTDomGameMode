@@ -6,7 +6,6 @@
 #include "UTDomGameMode.h"
 #include "StatNames.h"
 #include "UTADomTypes.h"
-//#include "UTGameState.h"
 #include "MultiTeamPlayerState.h"
 #include "UTDomStat.h"
 #include "MultiTeamGameState.h"
@@ -29,8 +28,6 @@ void AUTDomGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AUTDomGameState, GameControlPoints);
-	//DOREPLIFETIME_CONDITION(AUTDomGameState, TeamBodySkinColor, COND_InitialOnly);
-	//DOREPLIFETIME_CONDITION(AUTDomGameState, TeamSkinOverlayColor, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(AUTDomGameState, bIsDDOMGame, COND_InitialOnly);
 }
 
@@ -88,67 +85,6 @@ AMultiTeamTeamInfo* AUTDomGameState::FindLeadingTeam()
 	}
 	return NULL;
 }
-
-//void AUTDomGameState::SetWinner(AUTPlayerState* NewWinner)
-//{
-//	WinnerPlayerState = NewWinner;
-//	if (NewWinner && NewWinner->Team)
-//	{
-//		WinningTeam = NewWinner->Team;
-//	}
-//	else
-//	{
-//		WinningTeam = FindLeadingTeam();
-//	}
-//	ForceNetUpdate();
-//}
-//
-//AUTPlayerState* AUTDomGameState::FindBestPlayerOnTeam(uint8 TeamNumToTest)
-//{
-//	AUTPlayerState* Best = NULL;
-//	for (uint8 i = 0; i < PlayerArray.Num(); i++)
-//	{
-//		AUTPlayerState* PS = Cast<AUTPlayerState>(PlayerArray[i]);
-//		if (PS != NULL && PS->GetTeamNum() == TeamNumToTest && (Best == NULL || Best->Score < PS->Score))
-//		{
-//			Best = PS;
-//		}
-//	}
-//	return Best;
-//}
-//
-//FText AUTDomGameState::GetGameStatusText(bool bForScoreboard)
-//{
-//	if (bForScoreboard)
-//	{
-//		return (GoalScore == 0)
-//			? FText::Format(NSLOCTEXT("UTDomGameState", "GoalTimeFormat", "Score most points in {0} minutes"), FText::AsNumber(TimeLimit))
-//			: FText::Format(NSLOCTEXT("UTDomGameState", "GoalScoreFormat", "First Team to {0} Points"), FText::AsNumber(GoalScore));
-//	}
-//
-//	return Super::GetGameStatusText(bForScoreboard);
-//}
-
-//void AUTDomGameState::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//	if (bSkipThisTick)
-//	{
-//		bSkipThisTick = false;
-//	}
-//	else
-//	{
-//		bSkipThisTick = true;
-//		for (uint8 i = 0; i < PlayerArray.Num(); i++)
-//		{
-//			AMultiTeamPlayerState* PS = Cast<AMultiTeamPlayerState>(PlayerArray[i]);
-//			if (PS != nullptr)
-//			{
-//				PS->MakeTeamSkin(PS->GetTeamNum());
-//			}
-//		}
-//	}
-//}
 
 void AUTDomGameState::UpdateHighlights_Implementation()
 {

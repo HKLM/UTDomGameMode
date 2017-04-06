@@ -1,6 +1,5 @@
 // Created by Brian 'Snake' Alexander, 2016
 #include "UnrealTournament.h"
-//#include "ControlPoint.h"
 #include "UTDomControlPoint.h"
 #include "Domination.h"
 #include "Private/Slate/Widgets/SUTTabWidget.h"

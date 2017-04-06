@@ -9,6 +9,5 @@ AxDoubleDom::AxDoubleDom(const FObjectInitializer& ObjectInitializer)
 {
 	DisplayName = NSLOCTEXT("UTDomGameMode", "DDOM", "Double Domination");
 	GoalScore = 10;
-	MinPlayersToStart = 1;
 	bAllowTranslocator = false;
 }

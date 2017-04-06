@@ -11,8 +11,6 @@
 #include "UTADomTypes.h"
 #include "UTDomGameMode.generated.h"
 
-//const int32 MAX_NUM_TEAMS = 4;
-
 UCLASS(Abstract, Config = UTDomGameMode)
 class UTDOMGAMEMODE_API AUTDomGameMode : public AMultiTeamGameMode
 {
@@ -36,18 +34,6 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AMultiTeamGameMode
 	UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
 	int32 MaxControlPoints;
 
-	/** Used by the UI to set the NumTeams value */
-	//UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-	//int32 NumOfTeams;
-
-	/** The main color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
-	//UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-	//FLinearColor TeamBodySkinColor[4];
-	
-	/** The team overlay color used in each teams material skins. Value is given to UTDomGameState for replication. Array index == TeamNum */
-	//UPROPERTY(Config, EditDefaultsOnly, Category = DOM)
-	//FLinearColor TeamSkinOverlayColor[4];
-
 	TAssetSubclassOf<AUTWeapon> TranslocatorObject;
 
 	/**
@@ -66,15 +52,11 @@ class UTDOMGAMEMODE_API AUTDomGameMode : public AMultiTeamGameMode
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
-	//virtual void AnnounceMatchStart() override;
 	virtual void GiveDefaultInventory(APawn* PlayerPawn) override;
-	//virtual bool ChangeTeam(AController* Player, uint8 NewTeam = 255, bool bBroadcast = true) override;
-	//virtual bool MovePlayerToTeam(AController* Player, AUTPlayerState* PS, uint8 NewTeam) override;
 	virtual bool CheckScore_Implementation(AUTPlayerState* Scorer) override;
 	virtual void ScoreKill_Implementation(AController* Killer, AController* Other, APawn* KilledPawn, TSubclassOf<UDamageType> DamageType) override;
 	virtual void EndGame(AUTPlayerState* Winner, FName Reason) override;
 	virtual void SetEndGameFocus(AUTPlayerState* Winner) override;
-	//virtual void PlayEndOfMatchMessage() override;
 	virtual void Logout(AController* Exiting) override;
 	virtual void CreateGameURLOptions(TArray<TSharedPtr<TAttributePropertyBase>>& MenuProps) override;
 	void BuildServerResponseRules(FString& OutRules) override;
